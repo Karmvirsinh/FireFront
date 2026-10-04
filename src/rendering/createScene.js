@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createCameraControls } from './createCameraControls.js';
 
 export function createScene(canvas) {
   const scene = new THREE.Scene();
@@ -9,6 +10,7 @@ export function createScene(canvas) {
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const navigation = createCameraControls(camera, canvas);
 
   const groundGeometry = new THREE.PlaneGeometry(12, 12);
   const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x718d66 });
@@ -44,6 +46,7 @@ export function createScene(canvas) {
 
   // Only draw here. Future simulation updates belong outside the renderer.
   renderer.setAnimationLoop(() => {
+    navigation.update();
     renderer.render(scene, camera);
   });
 
@@ -51,6 +54,7 @@ export function createScene(canvas) {
     dispose() {
       window.removeEventListener('resize', resize);
       renderer.setAnimationLoop(null);
+      navigation.dispose();
       groundGeometry.dispose();
       groundMaterial.dispose();
       cubeGeometry.dispose();

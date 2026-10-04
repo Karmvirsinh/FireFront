@@ -11,6 +11,18 @@ The priority is simulation behavior supported by clear, stylized low-poly / voxe
 - If no safe route exists, surviving agents become trapped and retry when cooled ground becomes walkable. Lost agents remain lost.
 - Only ignition/reset controls and basic agent counts are required.
 
+## Subsequently approved MVP addition — 2026-10-04
+
+The user approved basic camera navigation (zoom, pan, orbit, reset-view) and a compact visible HTML/CSS panel explaining the controls. This addition supplements the original minimal ignition/reset UI scope above; it does not change simulation behavior or the acceptance scenarios below. The original Assignment 2 submission is not modified.
+
+- Mouse wheel: zoom; right-button drag: pan; middle-button drag: orbit.
+- `R`: reset camera position, target, and zoom to the initial view; this is not simulation reset.
+- Left-button drag remains unassigned to camera movement.
+- Keep the camera above ground, constrain zoom/pan around the scene, and preserve resizing.
+- The panel lists all four bindings with readable text and a semantic keyboard key for `R`; panel pointer interactions do not move the camera.
+- Camera behavior during future ignition mode remains undecided. No ignition is implemented by this addition; MVP ignition count remains one.
+- Multiple/configurable ignitions and compass-view presets remain later possibilities, not current tasks.
+
 ## Core technical challenge
 
 Keep navigation synchronized with changing fire hazards.

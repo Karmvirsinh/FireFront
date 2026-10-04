@@ -97,3 +97,35 @@ This discussion does not approve new MVP scope. No camera controls or ignition i
 - Non-blocking bundle-size warning remains; no runtime issue was observed in browser checks.
 - The educational simulation and its performance target remain unimplemented/unmeasured.
 - Next task: agree on the next bounded increment and its acceptance criteria with the user. Resolve pending interaction choices before implementing them; do not begin another feature during this closeout.
+
+## 2026-10-04 — Increment 2: camera navigation and controls panel
+
+### Acceptance criteria and changes
+
+- Implement approved wheel zoom, right-button pan, middle-button orbit, and `R` camera reset. Leave left drag unassigned; constrain navigation around the ground and preserve resizing.
+- Show a compact readable panel listing all bindings, including semantic `<kbd>R</kbd>`, with pointer interactions isolated from the canvas controls.
+- Integrate updates and cleanup; exclude editable-field/modifier shortcuts from reset. Build successfully; review the diff and leave uncommitted for user validation.
+- Initial Git status was clean on `main` at expected checkpoint `73d8ae7`. Read project rules, requirements, and progress first. No unrelated work was present.
+- Added `src/rendering/createCameraControls.js`; integrated it into the renderer's loop and disposal. Used OrbitControls from existing Three.js with no dependency installation/version changes.
+- Orbit polar angles: 15–75 degrees; camera-to-target distance: 6–22 world units. Ground-plane target X/Z: ±3, Y: 0. Clamping translates camera and target equally to preserve their offset. Saved the original position, target, and zoom with `saveState()` for `reset()`.
+- Added HTML/CSS controls panel at the bottom right with compact narrow/short-window styling. OrbitControls' canvas context-menu suppression and event cleanup are retained. Reset ignores editable composed paths, Ctrl/Alt/Meta, composition, and previously prevented keys.
+- Added `tests/cameraControls.test.js` and `npm test` using Node's built-in runner; tests exercise actual installed OrbitControls with DOM event stand-ins. Package lock and dependency versions are unchanged.
+- Updated requirements with a subsequently approved MVP camera-navigation addition; original simulation scope and acceptance scenarios are preserved. No original Assignment 2 submission was edited. Updated README controls, explanation, checks, and manual checklist.
+
+### Actual checks
+
+- Consulted the official [OrbitControls API](https://threejs.org/docs/pages/OrbitControls.html) and installed source for bindings, distance/angle limits, ground-plane panning, saved-state reset, and disposal.
+- `npm.cmd test`: all 3 tests passed. Covered left drag (including Ctrl+left), middle orbit, right pan, target bounds with unchanged camera offset, both zoom endpoints, above-ground orbit limits, combined movement/target/zoom reset without drift, editable/modifier/composition exclusions, context-menu prevention, and event-listener cleanup.
+- `npm.cmd run build`: passed, 10 transformed modules. JavaScript 552.28 kB minified / 137.03 kB gzip. The existing non-blocking chunk-size warning remains.
+- Existing development (`http://127.0.0.1:5173/`) and rebuilt production-preview (`http://127.0.0.1:4173/`) servers were accessible; no environment/version rechecks or new servers were needed.
+- Agent browser checks on production preview: panel text and `kbd`, wheel zoom in/out to both limits (further scrolling stops changing the view), `R` reset, inactive left drag, wheel isolation over panel, right-click context-menu suppression, and layouts at 1280x720, 360x640, and 640x360. Cube proportions and readable panel preserved; canvas/drawing buffer matched the narrow viewport. Restored the default viewport.
+- Browser automation exposes only left-button drags; right/middle dragging, extreme pan/orbit limits, combined reset, and editable-field guards were tested with DOM event stand-ins rather than physical mouse/browser interaction. These still require user manual validation.
+- Development browser inspection also confirmed panel appearance, zoom/reset, and no console warnings/errors. Production-preview console inspection likewise returned no warnings/errors.
+- Reviewed Git diffs and passed `git diff --check`. Changes are limited to navigation, panel, built-in tests/test script, and related documentation. Nothing is staged; the latest checkpoint remains `73d8ae7`. Dependency versions, lockfile contents, and the original Assignment 2 submission are unchanged; package.json only gained the test script.
+
+### Human validation, remaining issues, and next task
+
+- On 2026-10-04, the user reported that all four Increment 2 manual checklist items passed: all bindings and navigation limits (including physical-mouse right-drag panning and middle-drag orbit), reset after combined movements, pointer isolation over the panel/context-menu behavior, and resizing/readability/console checks on development and production preview. This is user-reported validation, separate from the agent checks above.
+- No ignition, simulation reset, fire, agents, compass presets, or other simulation features were added. `R` resets the camera only. Camera behavior during future ignition mode remains undecided; MVP ignition count remains one.
+- Full MVP performance target is unmeasured. The user accepted the current bundle-size warning as a non-blocking issue for this stage. Keep build warnings visible; do not change thresholds or suppress warnings solely to silence it. Mention this warning again in handoffs only if it materially changes, affects performance/loading, or becomes relevant to release review.
+- The user authorized the reviewed Increment 2 checkpoint: `feat: add bounded camera navigation and controls hints`. No application code changed during closeout. Next task: agree on the next bounded increment and acceptance criteria; do not start another feature during this closeout. No push, publication, or deployment.

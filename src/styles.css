@@ -52,3 +52,61 @@ body {
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
 }
+
+.controls-panel {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  width: 15rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid #23352926;
+  border-radius: 0.5rem;
+  background: #fffffff0;
+  font-size: 0.8125rem;
+  /* The panel sits above the canvas and receives its own pointer events. */
+  pointer-events: auto;
+}
+
+.controls-panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+}
+
+.controls-panel dl {
+  margin: 0;
+}
+
+.controls-panel dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.controls-panel dt {
+  font-weight: 600;
+}
+
+.controls-panel dd {
+  margin: 0;
+  text-align: right;
+}
+
+kbd {
+  padding: 0.05rem 0.3rem;
+  border: 1px solid #9ca69f;
+  border-bottom-width: 2px;
+  border-radius: 0.2rem;
+  font: inherit;
+  background: #fff;
+}
+
+@media (max-width: 480px), (max-height: 480px) {
+  .controls-panel {
+    right: 0.5rem;
+    bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    width: 14rem;
+  }
+}

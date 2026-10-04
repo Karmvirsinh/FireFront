@@ -4,7 +4,7 @@ An educational wildfire/evacuation simulator for a university project, mentored 
 
 ## Current status
 
-Increment 1 provides a minimal working 3D application: a green ground plane, an orange cube, a fixed camera, basic lighting, and a FireFront label. The canvas resizes with the browser window, with pixel ratio capped at 2. No fire, agents, procedural generation, or weather is implemented. The user reported successful manual visual validation on 2026-10-04 and authorized the Increment 1 Git checkpoint.
+Increment 1 provides the ground plane, orange cube, lighting, and FireFront label; it passed user-reported manual validation and was committed as `73d8ae7`. Increment 2 adds approved zoom, pan, orbit, reset-view, and a compact controls panel. The user reported passing all Increment 2 manual checks on 2026-10-04 and authorized its checkpoint. The canvas resizes with the browser window, with pixel ratio capped at 2. No fire, agents, procedural generation, or weather is implemented.
 
 The intended stack is JavaScript, Three.js, Vite/npm, and HTML/CSS. FireFront is not a validated wildfire prediction tool.
 
@@ -44,6 +44,28 @@ In PowerShell, `npm.cmd` can replace `npm` if script execution policy blocks the
 - The **camera** defines the viewing position and perspective. On resize, its aspect ratio and projection matrix are updated to keep objects proportional.
 - The **renderer** draws the camera's view of the scene into the HTML canvas. Its drawing buffer follows the canvas size and uses at most 2 pixels per CSS pixel in each dimension.
 - The **animation loop** requests repeated renders through Three.js. It does not update simulation state. Cleanup stops the loop and releases geometry, material, and renderer resources.
+- `src/rendering/createCameraControls.js` uses OrbitControls from the installed Three.js package. It updates before drawing and removes its pointer, context-menu, and reset-key listeners during cleanup.
+
+## Camera navigation
+
+Use these bindings over the scene; the compact “Camera controls” panel lists them:
+
+| Action | Binding |
+| --- | --- |
+| Zoom | Mouse wheel |
+| Pan | Right-button drag |
+| Orbit | Middle-button drag |
+| Reset view | `R` key |
+
+Left-button drag is unassigned to camera movement. Right-click context menus are suppressed over the canvas. Pointer interactions starting over the panel do not control the camera. `R` restores only the camera position, target, and zoom; it does not reset any simulation. The shortcut is ignored while typing in editable fields, composing text, or using Ctrl/Alt/Meta shortcuts.
+
+Orbit angles are limited to 15–75 degrees from vertical to keep the camera above the ground. Camera-to-target distance is limited to 6–22 world units. Panning stays on the ground plane, with target X/Z limited to ±3 inside the 12×12 ground. When clamping the target, the camera receives the same correction: this preserves the viewing direction and distance instead of unexpectedly changing zoom or orbit. The original initial view is saved for reset. Camera behavior during future ignition mode remains undecided.
+
+Run navigation checks with no additional test dependency:
+
+```powershell
+npm test
+```
 
 ## Manual validation
 
@@ -54,7 +76,16 @@ The user reported passing these checks on 2026-10-04, including wide/narrow and 
 3. Open browser developer tools and check for console errors.
 4. Build and open the production-preview URL; confirm the same scene and resize behavior.
 
-Automated/agent checks are recorded in [progress](docs/progress.md). The production build succeeds but emits a non-blocking warning for a JavaScript chunk above 500 kB (about 529 kB minified, 131 kB gzip). No performance target has been measured.
+The user reported all four Increment 2 checklist items passed on 2026-10-04, including physical-mouse right-drag panning and middle-drag orbit. Retain these steps for repeat validation:
+
+1. Check wheel zoom, right-drag pan, middle-drag orbit, and inactive left drag. Move repeatedly toward zoom, pan, and vertical-orbit limits; the camera should stay above ground and near the scene.
+2. Combine all movements, press `R`, and confirm the original view returns. Check that Ctrl/Alt/Meta+R and typing in an editable field do not trigger the camera shortcut (browser shortcuts may reload the page).
+3. Scroll and drag starting on the panel; confirm the camera stays still. Right-drag on the scene should not open a context menu.
+4. Resize wide/narrow and tall/short; confirm proportions, readable bindings, and a visible cube. Repeat on production preview and check the console.
+
+Agent browser checks cover wheel zoom and its limits, `R`, inactive left drag, panel wheel isolation, right-click suppression, resizing, and console inspection. Right/middle-button drags are covered by automated tests with DOM event stand-ins; the browser automation only exposes left-button dragging. Physical-mouse pan/orbit validation was subsequently reported as passed by the user.
+
+Automated/agent checks are recorded in [progress](docs/progress.md). The production build succeeds but emits a warning for a JavaScript chunk above 500 kB (about 552 kB minified, 137 kB gzip for Increment 2). The user accepted this as non-blocking for this stage. Keep build warnings visible and do not adjust thresholds or suppress them solely to silence it. Revisit in handoffs only if it materially changes, affects performance/loading, or becomes relevant to release review. No performance target has been measured.
 
 ## Intended organization
 
