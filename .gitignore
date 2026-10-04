@@ -1,0 +1,19 @@
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+
+# Logs
+logs/
+*.log
+
+# Local environment secrets (keep the example trackable)
+.env
+.env.*
+!.env.example
+
+# OS clutter
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
