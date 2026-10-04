@@ -3,15 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FireFront | Initial scene setup</title>
+    <title>FireFront | Fixed MVP map</title>
     <link rel="icon" href="data:," />
   </head>
   <body>
     <main id="app" aria-label="FireFront 3D scene">
-      <canvas id="scene" aria-label="An orange cube on a green ground plane"></canvas>
+      <canvas id="scene" aria-label="Fixed map with a start area, safe zone, two routes, vegetation, and blocked ground"></canvas>
       <header class="scene-label">
         <h1>FireFront</h1>
-        <p>Initial scene setup</p>
+        <p>Fixed MVP map · 64×64 grid</p>
+        <ul class="map-legend" aria-label="Map legend">
+          <li><span class="swatch start"></span>Start area</li>
+          <li><span class="swatch safe"></span>Safe zone</li>
+          <li><span class="swatch route"></span>Routes A / B</li>
+          <li><span class="swatch vegetation"></span>Vegetation / fuel</li>
+          <li><span class="swatch obstacle"></span>Blocked ground / rocks</li>
+        </ul>
       </header>
       <aside class="controls-panel" aria-labelledby="camera-controls-title">
         <h2 id="camera-controls-title">Camera controls</h2>

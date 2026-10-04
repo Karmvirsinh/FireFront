@@ -129,3 +129,52 @@ This discussion does not approve new MVP scope. No camera controls or ignition i
 - No ignition, simulation reset, fire, agents, compass presets, or other simulation features were added. `R` resets the camera only. Camera behavior during future ignition mode remains undecided; MVP ignition count remains one.
 - Full MVP performance target is unmeasured. The user accepted the current bundle-size warning as a non-blocking issue for this stage. Keep build warnings visible; do not change thresholds or suppress warnings solely to silence it. Mention this warning again in handoffs only if it materially changes, affects performance/loading, or becomes relevant to release review.
 - The user authorized the reviewed Increment 2 checkpoint: `feat: add bounded camera navigation and controls hints`. No application code changed during closeout. Next task: agree on the next bounded increment and acceptance criteria; do not start another feature during this closeout. No push, publication, or deployment.
+
+## 2026-10-04 — Increment 3: fixed MVP map
+
+### Acceptance criteria and changes
+
+- Replace the demonstration cube with a deterministic flat 64x64 map containing explicit start/safe areas, two initially connected corridors, vegetation, and blocked ground. Keep fuel and walkability independent.
+- Separate logical layout in `src/world/` from rendering; use shared geometry/instancing. Preserve controls and hints, adapt framing/bounds/reset to the map, and add a legend.
+- Verify dimensions, determinism, endpoints, and BFS connectivity under each route cut and both cuts. Run camera regressions and build; inspect browser appearance/resizing/reset/console. Leave uncommitted pending human validation.
+- Read rules, requirements, and progress; confirmed clean Git status and Increment 2 committed as `7b4d189` on `main`. No unrelated work was present.
+- Added `src/world/createFixedMap.js` and `src/world/isConnected.js`. Cells are plain data with terrain, fuel type, and base walkability. Grid cell size is 0.5; rendered map is 32x32 world units.
+- Start `(9,32)` and safe zone `(54,32)` connect via upper Route A and lower Route B, with four-cell-wide corridors and side stems. Only these corridors/zones are walkable. Central/border gray ground and green brush are blocked, so neither can bypass the two routes.
+- A continuous vegetation patch X 27–36 / Z 20–47 carries brush off-route and grass on-route. Designated future hazard cuts span X 30–33 / Z 22–25 (A) and X 30–33 / Z 42–45 (B). No ignition markers or hazard behavior are present. README records full coordinate assumptions and future route-blocking/restoration cases.
+- Added `src/rendering/createMapView.js`: one 4096-instance tile batch plus brush, grass, and sparse rock batches; four locally drawn text sprites label START, SAFE, and routes. Built-in geometry only; no downloaded assets or dependencies. Rendering reads but does not mutate logical cells. Geometry/material/texture/instance buffers are disposed during hot replacement.
+- Updated initialization and scene rendering to consume the map. Camera bounds scale with the 32-unit map: minimum distance 16, pan target ±8 on X/Z, 15–75-degree polar limits retained. Maximum distance and saved initial/reset view use a fit of the bounding sphere to viewport aspect. Resize refits an untouched initial view, retaining navigated views subject to bounds; `R` fits the current viewport.
+- Added map legend, resized on-map text for readability, and preserved the controls panel. No terrain elevation, water, bridges, building interiors, fire behavior, moving agents, A*, or weather controls.
+
+### Actual checks
+
+- `npm.cmd test`: all 9 tests passed (existing camera tests, responsive map framing/bounds/reset test, and 5 map tests).
+- Verified dimensions/4096 independent cell objects, deterministic creation, valid walkable fuel-free endpoints, out-of-range lookup, and all four fuel/walkability combinations.
+- BFS checks on temporary clones: initially connected; blocking only A leaves B connected; blocking only B leaves A connected; blocking both disconnects safety; reopening either restores connectivity. Displayed/original map remains unchanged and connected. BFS rejects blocked endpoints and does not infer walkability from fuel.
+- Final `npm.cmd run build`: passed, 12 transformed modules; HTML 1.57 kB, CSS 1.65 kB, JavaScript 570.79 kB minified / 142.27 kB gzip. Existing accepted warning remains visible with unchanged thresholds and no suppression.
+- Agent browser inspection on existing development and rebuilt production preview confirmed start/safe markers, both routes, vegetation, obstacles, legend, and controls hints. Wheel zoom and `R` reset worked; the default complete overview refitted at 1280x720, 360x640, and 640x360. Checked canvas/drawing-buffer dimensions at 640x360 and restored the normal viewport. Enlarged labels following initial visual inspection, then rebuilt and verified final production labels and narrow-window reset.
+- Development and production browser console inspections returned no warnings/errors. No physical right/middle drag check was performed by the agent; automated camera tests and pending manual validation cover these.
+- Reviewed tracked and new map/rendering/test files and documentation diffs; whitespace checks passed. No dependency or requirements changes, unrelated edits, staged files, or new commit. Latest checkpoint remains `7b4d189`.
+
+### Human validation and next task
+
+- The user reported that the Increment 3 manual checklist looked acceptable and physical panning worked. The map is understood as an intermediate test layout. This is user-reported feedback, separate from automated/agent inspection; the subsequent framing refinement below awaits a quick visual check.
+- Full MVP performance target remains unmeasured: there are no moving agents or fire simulation, and no repeatable 60-second stress measurement was performed.
+- Browser tooling cannot physically right/middle-drag; camera event tests cover those bindings. Physical panning on the map was subsequently reported as working by the user.
+- Leave this increment uncommitted. Next: address map validation findings and checkpoint when authorized; do not begin fire/agent implementation. No push, publication, or deployment.
+
+### Initial/reset framing refinement following user feedback
+
+- Acceptance: frame START, SAFE, both routes, and vegetation more closely with comfortable margins; initial load and `R` match, important markers remain visible at typical desktop sizes, and navigation bounds/controls remain unchanged. Map logic, assets, and simulation scope are unchanged.
+- Rendering derives a useful framing rectangle from existing start/safe areas and vegetation bounds, with extra space for text/margins: 29×16 world units centered at `(0,0,1)`. Camera fit uses this smaller area's bounding sphere; saved reset position includes the same target offset. Maximum zoom-out distance continues to use the original full-map fit. Minimum distance, pan bounds, polar limits, bindings, and resize behavior are preserved.
+- `npm.cmd test`: all 10 tests passed. Added projected-area visibility checks at 1280×720, 1440×900, 640×360, and 360×640, unchanged navigation limits, and exact position/target reset after combined pan/orbit. Existing map/BFS checks pass.
+- `npm.cmd run build`: passed, 12 modules; JavaScript 571.22 kB minified / 142.44 kB gzip. Existing accepted build warning remains visible without threshold changes.
+- Browser checks: production preview at all four sizes above; all important markers visible with margins and unobscured at both desktop sizes and 360×640. At 640×360, the unchanged legend can overlap part of START; small-window overlay layout was left unchanged as this refinement is limited to framing. Proportions and responsive framing remained correct. Wheel zoom followed by `R` produced a byte-identical screenshot to initial load at 1280×720. Development view matched; both browser consoles returned no warnings/errors. Temporary viewport override restored.
+- Updated README framing description and recorded user feedback. Reviewed the diff and whitespace checks; all Increment 3 work remains unstaged and uncommitted on checkpoint `7b4d189`. No full MVP performance measurement was performed.
+- Next: user quick visual check of closer framing, resize, and reset; checkpoint only when authorized. No new feature, push, or deployment.
+
+### Increment 3 closeout
+
+- Final user-reported validation: the revised camera view frames the useful map area more closely; panning works; resizing works. The earlier validation record above is retained. This report does not claim additional user checks of reset, console errors, or production preview.
+- The user authorized the Increment 3 checkpoint: `feat: add fixed two-route MVP test map`. Reviewed Git status and the map, rendering, camera-framing, test, and related documentation diffs; no unrelated work was present. Whitespace checks passed. No application code changed during closeout; the recorded 10 passing tests and successful production build remain the latest automated results.
+- Full MVP performance target remains unmeasured. The small 640×360 legend overlap noted above remains an issue for later UI review.
+- Next task: agree on the next bounded increment and acceptance criteria with the user. Do not begin another feature during closeout. No push, publication, or deployment.

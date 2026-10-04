@@ -10,7 +10,7 @@ function emit(target, type, properties = {}) {
   return event;
 }
 
-function fixture() {
+function fixture(mapBounds = null) {
   // Exercise the actual installed OrbitControls with a small DOM event stand-in.
   const document = new EventTarget();
   const canvas = new EventTarget();
@@ -24,7 +24,8 @@ function fixture() {
   const camera = new PerspectiveCamera(45, 1280 / 720, 0.1, 100);
   camera.position.set(7, 6, 9);
   camera.lookAt(0, 0, 0);
-  const navigation = createCameraControls(camera, canvas, keyboard);
+  const navigation = createCameraControls(camera, canvas, keyboard, mapBounds);
+  navigation.frameMap(camera.aspect);
   const { controls } = navigation;
   function drag(button, dx, dy, modifiers = {}) {
     const properties = { pointerId: 1, pointerType: 'mouse', button,
@@ -40,6 +41,36 @@ function fixture() {
 function closeVector(actual, expected) {
   assert.ok(actual.distanceTo(expected) < 1e-9, `${actual.toArray()} != ${expected.toArray()}`);
 }
+
+test('useful-area framing keeps markers visible, reset identical, and navigation bounds unchanged', () => {
+  const f = fixture({ worldWidth: 32, worldDepth: 32,
+    framing: { width: 29, depth: 16, centerX: 0, centerZ: 1 } });
+  try {
+    for (const aspect of [1280 / 720, 1440 / 900, 640 / 360, 360 / 640]) {
+      f.camera.aspect = aspect;
+      f.camera.updateProjectionMatrix();
+      f.navigation.frameMap(aspect);
+      emit(f.keyboard, 'keydown', { key: 'r' });
+      const initial = f.camera.position.clone();
+      f.camera.updateMatrixWorld();
+      // Enclose the entire useful ground area and the endpoint sprite extents.
+      for (const x of [-14.5, 14.5]) for (const z of [-7, 9]) {
+        const projected = new Vector3(x, 1.4, z).project(f.camera);
+        assert.ok(Math.abs(projected.x) < 0.94 && Math.abs(projected.y) < 0.94);
+      }
+      assert.equal(f.controls.minDistance, 16);
+      const halfAngle = Math.min(Math.PI / 8, Math.atan(Math.tan(Math.PI / 8) * aspect));
+      assert.ok(Math.abs(f.controls.maxDistance - Math.hypot(32, 32) / 2
+        / Math.sin(halfAngle) * 1.08 * 1.5) < 1e-9);
+      f.drag(1, 120, 80);
+      f.drag(2, 20000, 20000);
+      assert.ok(Math.abs(f.controls.target.x) <= 8 && Math.abs(f.controls.target.z) <= 8);
+      emit(f.keyboard, 'keydown', { key: 'r' });
+      closeVector(f.camera.position, initial);
+      closeVector(f.controls.target, new Vector3(0, 0, 1));
+    }
+  } finally { f.navigation.dispose(); }
+});
 
 test('mouse bindings, ground/zoom limits, bounded pan, and combined reset', () => {
   const f = fixture();
@@ -112,4 +143,26 @@ test('context menu is prevented on canvas; cleanup removes pointer/wheel/reset l
   emit(f.keyboard, 'keydown', { key: 'r' });
   f.drag(1, 100, 100);
   closeVector(f.camera.position, moved);
+});
+
+test('map framing fits both axes, adapts reset on resize, and scales navigation bounds', () => {
+  const f = fixture({ worldWidth: 32, worldDepth: 32 });
+  try {
+    const radius = Math.hypot(32, 32) / 2;
+    assert.ok(f.controls.getDistance() * Math.sin(Math.PI / 8) > radius);
+    assert.equal(f.controls.minDistance, 16);
+    f.drag(2, 20000, 20000);
+    assert.ok(Math.abs(f.controls.target.x) <= 8 && Math.abs(f.controls.target.z) <= 8);
+    const navigated = f.camera.position.clone();
+    f.navigation.frameMap(360 / 640);
+    closeVector(f.camera.position, navigated);
+    emit(f.keyboard, 'keydown', { key: 'r' });
+    closeVector(f.controls.target, new Vector3());
+    const horizontalHalfAngle = Math.atan(Math.tan(Math.PI / 8) * 360 / 640);
+    assert.ok(f.controls.getDistance() * Math.sin(horizontalHalfAngle) > radius);
+    assert.ok(f.controls.maxDistance > f.controls.getDistance());
+    const narrowView = f.camera.position.clone();
+    f.navigation.frameMap(1280 / 720);
+    assert.ok(f.camera.position.length() < narrowView.length());
+  } finally { f.navigation.dispose(); }
 });

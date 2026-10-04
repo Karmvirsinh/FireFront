@@ -102,6 +102,34 @@ kbd {
   background: #fff;
 }
 
+.map-legend {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 1px solid #23352950;
+}
+
+.swatch.start { background: #478ecb; }
+.swatch.safe { background: #55b69b; }
+.swatch.route { background: #e0c58e; }
+.swatch.vegetation { background: #527648; }
+.swatch.obstacle { background: #8c9698; }
+
 @media (max-width: 480px), (max-height: 480px) {
   .controls-panel {
     right: 0.5rem;

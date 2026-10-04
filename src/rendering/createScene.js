@@ -1,30 +1,34 @@
 import * as THREE from 'three';
 import { createCameraControls } from './createCameraControls.js';
+import { createMapView } from './createMapView.js';
 
-export function createScene(canvas) {
+export function createScene(canvas, map) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xdce8ef);
 
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(7, 6, 9);
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+  camera.position.set(0, 40, 30);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  const navigation = createCameraControls(camera, canvas);
-
-  const groundGeometry = new THREE.PlaneGeometry(12, 12);
-  const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x718d66 });
-  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-  // PlaneGeometry starts in XY; rotate it onto the world's XZ ground surface.
-  ground.rotation.x = -Math.PI / 2;
-  scene.add(ground);
-
-  const cubeGeometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-  const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0xe87932 });
-  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-  cube.position.y = 0.75;
-  cube.rotation.y = Math.PI / 6;
-  scene.add(cube);
+  // Frame the authored useful area, rather than the surrounding blocked border.
+  // Extra space includes the endpoint text sprites and comfortable ground margins.
+  const areas = [...Object.values(map.zones), map.vegetationPatch];
+  const x0 = Math.min(...areas.map((area) => area.x0));
+  const x1 = Math.max(...areas.map((area) => area.x1)) + 1;
+  const z0 = Math.min(...areas.map((area) => area.z0));
+  const z1 = Math.max(...areas.map((area) => area.z1)) + 1;
+  const navigation = createCameraControls(camera, canvas, window, {
+    worldWidth: map.width * map.cellSize, worldDepth: map.height * map.cellSize,
+    framing: {
+      width: (x1 - x0) * map.cellSize + 3,
+      depth: (z1 - z0) * map.cellSize + 2,
+      centerX: ((x0 + x1) / 2 - map.width / 2) * map.cellSize,
+      centerZ: ((z0 + z1) / 2 - map.height / 2) * map.cellSize,
+    },
+  });
+  const mapView = createMapView(map);
+  scene.add(mapView.group);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x526247, 2));
   const sunlight = new THREE.DirectionalLight(0xffffff, 3);
@@ -39,6 +43,7 @@ export function createScene(canvas) {
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    navigation.frameMap(camera.aspect);
   }
 
   window.addEventListener('resize', resize);
@@ -55,10 +60,7 @@ export function createScene(canvas) {
       window.removeEventListener('resize', resize);
       renderer.setAnimationLoop(null);
       navigation.dispose();
-      groundGeometry.dispose();
-      groundMaterial.dispose();
-      cubeGeometry.dispose();
-      cubeMaterial.dispose();
+      mapView.dispose();
       renderer.dispose();
     },
   };
