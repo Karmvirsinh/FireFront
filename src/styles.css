@@ -1,0 +1,54 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #233529;
+  background: #dce8ef;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+}
+
+#app {
+  position: relative;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.scene-label {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid #23352926;
+  border-radius: 0.5rem;
+  background: #fffffff0;
+  pointer-events: none;
+}
+
+.scene-label h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.scene-label p {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+}
