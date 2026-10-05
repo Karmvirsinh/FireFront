@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { createCameraControls } from './createCameraControls.js';
 import { createMapView } from './createMapView.js';
+import { createGroundPicker } from './createGroundPicker.js';
 
-export function createScene(canvas, map) {
+export function createScene(canvas, map, onFrame = () => {}) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xdce8ef);
 
@@ -49,13 +50,16 @@ export function createScene(canvas, map) {
   window.addEventListener('resize', resize);
   resize();
 
-  // Only draw here. Future simulation updates belong outside the renderer.
-  renderer.setAnimationLoop(() => {
+  // The application owns simulation rules; rendering supplies elapsed wall time.
+  renderer.setAnimationLoop((time) => {
     navigation.update();
+    onFrame(time);
     renderer.render(scene, camera);
   });
 
   return {
+    pickCell: createGroundPicker(camera, canvas, map),
+    syncFire: mapView.syncFire,
     dispose() {
       window.removeEventListener('resize', resize);
       renderer.setAnimationLoop(null);

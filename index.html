@@ -20,6 +20,22 @@
           <li><span class="swatch obstacle"></span>Blocked ground / rocks</li>
         </ul>
       </header>
+      <aside id="simulation-panel" class="simulation-panel" aria-labelledby="simulation-title">
+        <h2 id="simulation-title">Single-cell fire</h2>
+        <div class="simulation-actions">
+          <button id="place-ignition" type="button" aria-pressed="false">Place ignition</button>
+          <button id="start-fire" type="button" disabled>Start fire</button>
+          <button id="reset-simulation" type="button">Reset simulation</button>
+        </div>
+        <p id="fire-status" role="status" aria-live="polite"></p>
+        <ul class="map-legend" aria-label="Fire legend">
+          <li><span class="swatch selected"></span>Selected ignition</li>
+          <li><span class="swatch burning"></span>Burning · hazardous</li>
+          <li><span class="swatch hot"></span>Burned-hot · hazardous</li>
+          <li><span class="swatch cool"></span>Burned-cool · no hazard</li>
+        </ul>
+        <p class="simulation-note">Only one cell burns. No spread yet.</p>
+      </aside>
       <aside class="controls-panel" aria-labelledby="camera-controls-title">
         <h2 id="camera-controls-title">Camera controls</h2>
         <dl>

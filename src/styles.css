@@ -40,7 +40,7 @@ body {
   border: 1px solid #23352926;
   border-radius: 0.5rem;
   background: #fffffff0;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .scene-label h1 {
@@ -129,6 +129,40 @@ kbd {
 .swatch.route { background: #e0c58e; }
 .swatch.vegetation { background: #527648; }
 .swatch.obstacle { background: #8c9698; }
+.swatch.selected { background: #b349df; }
+.swatch.burning { background: #ff8a20; }
+.swatch.hot { background: #d33138; }
+.swatch.cool { background: #4e5663; }
+
+#scene.placing-ignition { cursor: crosshair; }
+.simulation-panel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 16rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem;
+  background: #fffffff0;
+  border: 1px solid #23352926;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+}
+.simulation-panel h2 { margin: 0 0 0.5rem; font-size: 0.875rem; }
+.simulation-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+button { font: inherit; padding: 0.35rem 0.5rem; cursor: pointer; }
+button:disabled { cursor: default; }
+button[aria-pressed="true"] { background: #efdbfa; border-color: #8736ad; }
+#fire-status { min-height: 2.5em; margin: 0.5rem 0; }
+.simulation-note { margin: 0.5rem 0 0; }
+
+@media (max-width: 600px) {
+  .scene-label { top: 0.5rem; left: 0.5rem; padding: 0.5rem; }
+  .simulation-panel { top: auto; bottom: 0.5rem; left: 0.5rem; right: auto;
+    width: calc(100% - 1rem); max-height: 34vh; overflow: auto; }
+  .simulation-panel .map-legend { grid-template-columns: 1fr 1fr; }
+  .scene-label { max-width: calc(100% - 13.5rem); }
+  .scene-label p { font-size: 0.7rem; }
+}
 
 @media (max-width: 480px), (max-height: 480px) {
   .controls-panel {
@@ -137,4 +171,14 @@ kbd {
     padding: 0.5rem 0.75rem;
     width: 14rem;
   }
+}
+
+@media (max-width: 600px) {
+  .controls-panel { top: 0.5rem; bottom: auto; width: 12rem; }
+}
+
+@media (max-height: 480px) and (min-width: 601px) {
+  .scene-label { max-height: 36vh; overflow: auto; }
+  .simulation-panel { top: 0.5rem; right: 0.5rem; width: 12rem;
+    max-height: 40vh; overflow: auto; }
 }

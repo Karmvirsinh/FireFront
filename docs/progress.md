@@ -178,3 +178,74 @@ This discussion does not approve new MVP scope. No camera controls or ignition i
 - The user authorized the Increment 3 checkpoint: `feat: add fixed two-route MVP test map`. Reviewed Git status and the map, rendering, camera-framing, test, and related documentation diffs; no unrelated work was present. Whitespace checks passed. No application code changed during closeout; the recorded 10 passing tests and successful production build remain the latest automated results.
 - Full MVP performance target remains unmeasured. The small 640×360 legend overlap noted above remains an issue for later UI review.
 - Next task: agree on the next bounded increment and acceptance criteria with the user. Do not begin another feature during closeout. No push, publication, or deployment.
+
+## 2026-10-04 — Increment 4: single-point ignition, burnout, cooling, reset
+
+### Acceptance criteria and changes
+
+- Explicit placement toggle/crosshair, one movable eligible ignition marker before starting, fuel-free rejection without mutation, Start fire validity/placement lock, and simulation reset preserving camera. All camera controls remain available; panels and camera gestures do not place ignition.
+- Independent plain fire state in `src/simulation/`: unburned → burning → burned-hot → burned-cool, fuel exhaustion, hazardous burning/hot states, cooled hazard removal with base walkability retained, no reignition. Fixed simulation steps with capped long-gap catch-up; one demonstration configuration. No neighboring spread, agents, or weather.
+- Read AGENTS, requirements, and progress; confirmed clean working tree on `main` at expected Increment 3 checkpoint `f30222b`. No unrelated work present.
+- Added `fireConfig.js` and `createFireSimulation.js`. Each simulation owns copies of initial fuel/state/walkability, with reset restoring copies rather than mutating authored map data. Only the selected cell advances. Configuration: grass fuel 4, brush 6, consumption 1 unit/second, cooling 5 seconds, fixed step 50 ms, maximum accumulated frame contribution 250 ms. Demonstration values, not calibrated wildfire physics. Excess long-gap wall time is discarded.
+- Added ground-plane raycasting in `src/rendering/createGroundPicker.js`; picking uses current camera matrices and canvas rectangle, then floors to logical grid coordinates. Decorative geometry cannot intercept it. Added `src/ui/createIgnitionControls.js` with button/status handling, primary mouse click guards, drag threshold, modifier/button exclusion, cleanup, and explicit placement mode.
+- Updated initialization/render loop to pass elapsed time to the independent model. Rendering updates changed tile colors and affected vegetation instance matrices; exhausted decoration disappears and returns on reset. One purple ring denotes selection; orange/red/dark-gray raised indicators distinguish lifecycle states. No map layout, dependency, or camera-bound changes.
+- Added HTML fire controls/status/legend and compact responsive CSS. Existing map legend now receives pointer events instead of passing clicks to the canvas. Short panels scroll to keep controls/legends accessible. Browser inspection found OrbitControls' inline cursor overrode CSS; placement now updates that inline cursor explicitly.
+- Clarified approved single-ignition interaction in requirements without changing original simulation scope, acceptance scenarios, or Assignment 2 submission. Updated README with controls, configuration/time policy, state/render separation, and manual checklist.
+
+### Actual checks
+
+- `npm.cmd test`: all 18 tests passed (10 existing map/navigation checks plus 6 simulation tests and 2 picking/UI interaction tests).
+- Covered eligibility/invalid selection without state mutation, single movable selection/start lock, both fuel durations, exact exhaustion and cooling boundaries, hazardous-state removal with original walkability, no spread/reignition, configurable cooling, reset during/after a run, repeatable outcomes, and unchanged original map.
+- Compared identical state/fuel/timers after ordinary intervals at 20/30/60/144 FPS. A 120-second gap contributed only 250 ms, then the next step advanced normally; invalid/nonpositive time intervals were ignored. Tests verify accumulator reset and no remaining catch-up backlog.
+- Actual Three.js raycasting tests projected known cells through cameras with zoom, translated targets, orbit, canvas offsets, and desktop/narrow aspects; recovered the expected grid indices and rejected out-of-canvas input. Initial test fixture placed a point off-screen in a narrow camera; corrected the fixture to a visible view and reran successfully.
+- Consulted official Three.js [Raycaster](https://threejs.org/docs/pages/Raycaster.html), [Ray ground-plane intersection](https://threejs.org/docs/pages/Ray.html), and [InstancedMesh](https://threejs.org/docs/pages/InstancedMesh.html) APIs for picking and instance updates.
+- Event-based UI checks cover off/on toggle, crosshair, disabled Start fire, valid replacement/invalid rejection, right/middle/modifier/touch exclusions, left-drag rejection, cancellation when wheel zoom occurs during a pending click, panel isolation, start lock, reset-to-off, and listener cleanup. Actual installed OrbitControls tests continue to pass.
+- Final `npm.cmd run build`: passed, 16 modules; HTML 2.57 kB, CSS 2.92 kB, JavaScript 578.36 kB minified / 145.05 kB gzip. Existing accepted bundle warning remains visible; no threshold changes or suppression.
+- Browser checks on existing development and rebuilt production preview: initial disabled Start fire, placement/crosshair, fuel picking after wheel zoom, one-marker replacement, invalid-cell rejection, mode-off clicks, panel click/wheel isolation, right/middle clicks and left-drag exclusion, start locking, orange burning/red burned-hot/dark burned-cool visuals, unchanged neighboring cells, reset restoring appearance/selection/off mode and allowing another run. Visually confirmed zoomed camera framing remained unchanged by simulation reset; `R` restored responsive camera framing without clearing the fire state.
+- Checked 1280×720, 360×640, and 640×360 layouts; viewport/canvas/drawing buffer matched in the narrow view. Short-window legends use scrollable panels. Restored viewport override. Both development/production console inspections returned no warnings/errors.
+- Browser automation cannot perform physical right/middle drags. Picking after physical pan/orbit remains pending human validation; automated mathematical camera/picking and controls tests cover those transformations/bindings. Browser timing wait sometimes expired before burnout; direct subsequent inspection confirmed red burned-hot, with cooling separately observed. No full MVP performance target was measured.
+
+### Human validation, remaining issues, and next task
+
+- Increment 4 human validation is pending; use the README checklist. All checks above are agent/automated results, not user-reported validation.
+- Only the selected cell burns. Neighboring spread comes next after this increment is validated and the next bounded task is authorized. No agents, weather, advanced flames/smoke, assets, or new dependencies added.
+- Reviewed tracked diffs and new simulation/UI/picking/test files; `git diff --check` passed. All Increment 4 work remains unstaged and uncommitted on `f30222b`; no unrelated work was changed. No push, deployment, or next feature during this task.
+
+### Increment 4 validation follow-up
+
+- User-reported checks passed: moving the single marker; rejection of nonburnable ground; camera/selection interactions from checklist item 2; reset during and after burning, restoration and preserved camera; camera reset; resizing; and no observed errors. This confirms the previously pending physical camera/selection validation. Do not infer additional user lifecycle/color checks from this report.
+- Investigated reported cells `(32,41)` and `(32,43)`. `(32,41)` is vegetation with brush fuel, initial fuel 6, base walkability false, grid index 2656. Its ground center is `(0.25,0,4.75)`, footprint X 0–0.5 / Z 4.5–5.0. `(32,43)` is Route B with grass fuel, initial fuel 4, base walkability true, index 2784. Its ground center is `(0.25,0,5.75)`, footprint X 0–0.5 / Z 5.5–6.0.
+- The vegetation patch contains continuous logical fuel; brush/grass models are deliberately sparse and placed only at even X and even Z. Both reported cells have odd Z, so neither has its own decorative fuel model. Ignition between those models is intentional. Model gaps do not remove fuel or determine base walkability.
+- Added `tests/firePresentation.test.js`, exercising the actual Three.js map objects, ground raycasting, simulation, and UI refresh with a text-canvas/DOM event stand-in. Confirmed each reported ground center projects and picks back to the same logical cell, matches the tile instance matrix, and shares X/Z with selection and lifecycle indicators. Ring center Y is 0.55; fire indicator center Y is 0.325 (bottom on ground, top 0.65). No picking/rendering mismatch found, so no runtime or visual fix was made.
+- Verified each reported cell's full `unburned → burning → burned-hot → burned-cool` progression. Status text matches the active cell/state; tile and raised indicator colors match legend swatches: orange `#ff8a20` burning, red `#d33138` burned-hot/cooling, dark gray `#4e5663` burned-cool. Burning and burned-hot are hazardous; fully cooled is not. At cooling completion both remaining fuel and hot timer are zero; exhausted fuel remains ineligible for ignition.
+- For traversal eligibility, base walkability must be combined with absence of a fire hazard: `cell.walkable && !isHazardous(cell)`. The test confirms `(32,43)` is unavailable while burning/hot and eligible again after cooling; `(32,41)` remains blocked after cooling because its base walkability is false. This verifies state eligibility, not actual agent movement or pathfinding; no agents added.
+- `npm.cmd test`: all 19 tests passed, including the new presentation/position/legend/hazard check and all existing regressions. Only verification and progress documentation changed in this follow-up; the application build is unchanged from the last successful Increment 4 build. Reviewed follow-up diff and passed whitespace checks.
+- User dislikes the purple selection ring. Recorded as a deferred visual refinement; ring appearance is unchanged and no redesign is approved/implemented in this follow-up.
+- Remaining human recheck: observe red hot/cooling changing to dark gray fully cooled, with matching status, in one uninterrupted active-tab run. Brush burns for 6 simulated seconds plus 5 cooling; route grass burns for 4 plus 5. Long frame gaps drop excess wall time, so suspended/background runs can take longer in real time. Earlier passed user checks are retained without claiming this lifecycle recheck passed.
+- Increment 4 remains unstaged and uncommitted on `f30222b`. Full MVP performance remains unmeasured. No push, deployment, or next feature.
+
+### Increment 4 completed and validated — session break
+
+- Final user-reported validation: the user watched an uninterrupted run reach dark gray with `burned-cool` status. This completes the remaining lifecycle visual check alongside the previously recorded marker movement, invalid-ground rejection, camera/selection interactions, reset during/after burning and restoration, preserved camera/camera reset, resizing, and no observed errors. Agent/automated verification remains separately recorded above.
+- Increment 4 is completed and validated. Only the selected cell burns; no agents or neighboring fire spread are implemented yet. Next increment: neighboring fire spread, with bounded acceptance criteria to be supplied/agreed before implementation. No next feature started during this closeout.
+- Retain deferred visual feedback: replace/refine the purple ignition-selection ring; make grass, brush, and tree-covered fuel areas visually distinguishable. Current logical fuel can occupy decorative gaps, as verified above. This is deferred visual direction, not a new tree fuel type or simulation change; no visual redesign or simulation logic changes made during closeout.
+- Known issues: accepted non-blocking bundle-size warning remains visible with unchanged thresholds; narrow/short panels may require scrolling; long frame gaps intentionally discard excess time and can lengthen wall-clock runs. Full MVP performance is unmeasured: no 20-agent, repeatable 60-second performance scenario has run.
+- Closeout review: Git status/diff contains only Increment 4 application, tests, and related documentation; preserve unrelated work. Latest automated results are 19 passing tests and the successful production build recorded above. No runtime code changes during closeout, so no additional build/test run required. User authorized commit `feat: add single-cell ignition and fire lifecycle`.
+- Stopped only the existing FireFront development/preview execution sessions using Ctrl+C. Verified their project-specific Vite/npm processes ended and ports 5173/4173 have no listeners; unrelated Node processes were not terminated. No push or deployment.
+
+Restart development in a fresh PowerShell terminal:
+
+```powershell
+Set-Location -LiteralPath 'C:\Users\karmv\Desktop\USA\Rutgers\Fall 2026\AI for Visual Compute\FireFront'
+npm.cmd run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Open `http://127.0.0.1:5173/`. Restart production preview in a separate fresh PowerShell terminal, rebuilding first:
+
+```powershell
+Set-Location -LiteralPath 'C:\Users\karmv\Desktop\USA\Rutgers\Fall 2026\AI for Visual Compute\FireFront'
+npm.cmd run build
+npm.cmd run preview -- --host 127.0.0.1 --port 4173 --strictPort
+```
+
+Open `http://127.0.0.1:4173/`. Existing dependencies are installed; on a fresh checkout without `node_modules`, run `npm.cmd ci` before the commands above. Stop either server with Ctrl+C. Resume by reading AGENTS, requirements, this log, and Git status; proceed only with the next agreed neighboring-spread increment.

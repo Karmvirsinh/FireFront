@@ -20,8 +20,16 @@ The user approved basic camera navigation (zoom, pan, orbit, reset-view) and a c
 - Left-button drag remains unassigned to camera movement.
 - Keep the camera above ground, constrain zoom/pan around the scene, and preserve resizing.
 - The panel lists all four bindings with readable text and a semantic keyboard key for `R`; panel pointer interactions do not move the camera.
-- Camera behavior during future ignition mode remains undecided. No ignition is implemented by this addition; MVP ignition count remains one.
+- This camera addition originally left ignition-mode behavior undecided; the Increment 4 clarification below now defines it. MVP ignition count remains one.
 - Multiple/configurable ignitions and compass-view presets remain later possibilities, not current tasks.
+
+## Ignition interaction clarification — Increment 4
+
+- Explicit **Place ignition** toggle: while on, the scene cursor is a crosshair and a stationary unmodified left mouse click selects one eligible unburned fuel cell. Another valid selection moves the marker before starting; invalid/nonburnable selections leave it unchanged. Mode off means no placement.
+- **Start fire** requires a valid selection, exits placement mode, and locks further placement until **Reset simulation**. One ignition per run remains the MVP scope.
+- Existing wheel zoom, right-drag pan, middle-drag orbit, and camera-only `R` remain available during placement and fire. Camera gestures and panel interactions must not place ignition. Picking resolves the logical ground grid beneath decorative geometry.
+- **Reset simulation** restores initial fuel, states, timers, and ignition selection, turns placement off, and permits a new run while preserving the current camera view and authoritative map data.
+- Increment 4 implements only the selected cell's burning, burnout, and cooling. Neighboring spread and agents remain unimplemented; the existing MVP acceptance scenarios and performance target are unchanged.
 
 ## Core technical challenge
 

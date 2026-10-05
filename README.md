@@ -4,7 +4,7 @@ An educational wildfire/evacuation simulator for a university project, mentored 
 
 ## Current status
 
-Increment 1 established the Three.js application (`73d8ae7`); Increment 2 added validated camera navigation and controls hints (`7b4d189`). Increment 3 replaces the demonstration cube with an authored fixed MVP map: start area, safe zone, two routes, vegetation, and blocked ground. The user reported acceptable map validation, closer revised framing, working panning, and working resizing, and authorized the Increment 3 checkpoint. The canvas resizes with the browser window, with pixel ratio capped at 2. No ignition, fire behavior, moving agents, A*, procedural generation, or weather is implemented.
+Increment 1 established the Three.js application (`73d8ae7`); Increment 2 added validated camera navigation and controls hints (`7b4d189`). Increment 3 added the validated fixed two-route map (`f30222b`). Increment 4 adds completed, user-validated single-point ignition, burnout, cooling, and simulation reset. The canvas resizes with the browser window, with pixel ratio capped at 2. Only the selected cell burns; neighboring spread is the next increment. No agents, A*, procedural generation, or weather is implemented.
 
 The intended stack is JavaScript, Three.js, Vite/npm, and HTML/CSS. FireFront is not a validated wildfire prediction tool.
 
@@ -39,11 +39,11 @@ In PowerShell, `npm.cmd` can replace `npm` if script execution policy blocks the
 
 ## How the scene works
 
-- `src/main.js` imports styling and starts the rendering module. Vite hot replacement disposes the previous scene.
+- `src/main.js` initializes the map, independent fire simulation, UI, and renderer. Vite hot replacement disposes the previous scene and UI listeners.
 - The **scene** contains the instanced map meshes, text markers, background, and lights. Built-in geometries require no external assets.
 - The **camera** defines the viewing position and perspective. On resize, its aspect ratio and projection matrix are updated to keep objects proportional.
 - The **renderer** draws the camera's view of the scene into the HTML canvas. Its drawing buffer follows the canvas size and uses at most 2 pixels per CSS pixel in each dimension.
-- The **animation loop** requests repeated renders through Three.js. It does not update simulation state. Cleanup stops the loop and releases geometry, material, and renderer resources.
+- The **animation loop** requests repeated renders through Three.js and passes its timestamp to the application. The application advances the independent simulation in fixed steps and sends changed state to rendering. Cleanup stops the loop and releases geometry, material, and renderer resources.
 - `src/rendering/createCameraControls.js` uses OrbitControls from the installed Three.js package. It updates before drawing and removes its pointer, context-menu, and reset-key listeners during cleanup.
 
 ## Fixed map data and layout
@@ -80,9 +80,21 @@ Use these bindings over the scene; the compact “Camera controls” panel lists
 
 Left-button drag is unassigned to camera movement. Right-click context menus are suppressed over the canvas. Pointer interactions starting over the panel do not control the camera. `R` restores only the camera position, target, and zoom; it does not reset any simulation. The shortcut is ignored while typing in editable fields, composing text, or using Ctrl/Alt/Meta shortcuts.
 
-Orbit angles remain limited to 15–75 degrees from vertical. For the 32×32 map, minimum camera-to-target distance is 16 units and target X/Z are limited to ±8, with Y kept at zero. Maximum distance remains 1.5 times the full-map fitted distance. Initial/reset framing instead fits the useful start/safe/routes/vegetation area with margins (29×16 world units, centered at X 0 / Z 1) to both viewport axes, including narrow windows. Resize updates the saved reset view; a camera still at its initial view refits automatically, while a navigated view is retained subject to movement limits. `R` returns to the same framing as initial load for the current window. When clamping the target, the camera receives the same correction to preserve viewing direction and distance. Camera behavior during future ignition mode remains undecided.
+Orbit angles remain limited to 15–75 degrees from vertical. For the 32×32 map, minimum camera-to-target distance is 16 units and target X/Z are limited to ±8, with Y kept at zero. Maximum distance remains 1.5 times the full-map fitted distance. Initial/reset framing instead fits the useful start/safe/routes/vegetation area with margins (29×16 world units, centered at X 0 / Z 1) to both viewport axes, including narrow windows. Resize updates the saved reset view; a camera still at its initial view refits automatically, while a navigated view is retained subject to movement limits. `R` returns to the same framing as initial load for the current window. When clamping the target, the camera receives the same correction to preserve viewing direction and distance. All camera controls stay available during ignition placement and burning; those gestures never select ignition cells.
 
-Run navigation and map checks with no additional test dependency:
+## Single-cell ignition and lifecycle
+
+Toggle **Place ignition** on for a crosshair cursor. An unmodified stationary left mouse click on green brush or grass-bearing route ground selects one fuel cell, shown with a purple ring. Clicking another eligible cell moves that ring before starting. Fuel-free ground is rejected without changing the cell or existing selection. Turning placement off retains the selection but disables picking. Panel interactions and left drags do not place ignition.
+
+**Start fire** is enabled only after a valid selection. It ignites that cell, turns placement off, and locks selection until **Reset simulation**. Orange indicates burning, red burned-hot, and dark gray burned-cool; a small raised indicator and recolored ground distinguish the states. Exhausted decorative fuel is hidden and restored on reset. Only the selected cell burns in this increment; neighboring spread comes next.
+
+`src/simulation/createFireSimulation.js` owns plain fire-state copies independent of Three.js and DOM. The lifecycle is `unburned → burning → burned-hot → burned-cool`. Burning/hot cells are hazardous. Cooled cells are no longer hazardous, but retain their original base walkability: burned brush stays blocked, and cooled grass on routes retains walkability. Exhausted fuel cannot reignite. The single-run ignition lock also remains in force after cooling.
+
+Demonstration configuration lives in `src/simulation/fireConfig.js`: grass starts with 4 fuel units, brush with 6, consumption is 1 unit per simulated second, and cooling lasts 5 simulated seconds. Thus grass burns for 4 seconds and brush for 6 before cooling. These are illustrative values, **not calibrated wildfire physics**. A 50 ms fixed-step accumulator produces the same results at ordinary frame rates; each frame contributes at most 250 ms. Excess time from long frame gaps/background suspension is discarded, so resuming cannot skip the whole lifecycle in one catch-up jump. Simulation time may consequently lag wall time after suspension.
+
+**Reset simulation** restores initial fuel, unburned states, timers, and selection, turns placement off, and allows a repeatable new run. It preserves the current camera. `R` resets only the camera. Neither operation changes the authoritative map. `src/rendering/createGroundPicker.js` raycasts from current pointer/camera coordinates onto the ground plane and resolves grid coordinates; vegetation and text sprites cannot intercept picking. Rendering updates affected tile/decoration instances on state changes, rather than rebuilding the map each frame.
+
+Run navigation, map, fire lifecycle, and interaction checks with no additional test dependency:
 
 ```powershell
 npm test
@@ -115,17 +127,27 @@ The user reported that the Increment 3 checklist looked acceptable and physical 
 3. Resize wide/narrow and tall/short, then press `R`. Check map proportions, framing, labels, legend, and camera hints.
 4. Repeat on production preview and inspect the console. No fire, ignition controls, or moving agents should appear.
 
+The user reported passing Increment 4 marker movement, invalid-ground rejection, camera/selection interactions, reset/restoration with preserved camera, camera reset, resizing, and no observed errors. The final uninterrupted-run check reached dark gray with `burned-cool` status. Retain this checklist for repeat validation:
+
+1. Toggle placement on/off; check crosshair, one movable ring, invalid-cell rejection, and disabled Start fire before selection. Try brush and grass-bearing route cells.
+2. Zoom, physically pan/orbit, then select visible fuel. Camera gestures, left drags, and all panel interactions must not select cells.
+3. Start fire: placement locks and only the selected cell changes orange → red → dark gray (4/6 seconds burning, then 5 seconds cooling in an active tab). Neighbors stay unchanged.
+4. Move the camera, reset simulation during burning/hot/cool, and repeat a run. Fuel/appearance/selection reset, placement turns off, and camera stays put. `R` resets camera only.
+5. Resize and check readable/scrollable panels, repeat on production preview, and check the console. Physical mouse checks remain necessary; automated/agent checks are separate from user validation. Full MVP performance is unmeasured.
+
+Deferred visual refinements: improve/replace the purple selection ring and distinguish grass, brush, and tree-covered fuel areas more clearly. Decorative gaps intentionally can contain logical fuel; tests verified picking, positions, lifecycle colors, and hazard flags agree. These visual improvements are not implemented in this checkpoint.
+
 ## Intended organization
 
-The current application uses `src/main.js`, `src/styles.css`, `src/rendering/`, `src/world/`, and `tests/`. Other directories will be created when first needed:
+The current application uses `src/main.js`, `src/styles.css`, `src/rendering/`, `src/world/`, `src/simulation/`, `src/ui/`, and `tests/`. Other directories will be created when first needed:
 
 | Path | Purpose |
 | --- | --- |
-| `src/simulation/` | Fire state, rules, and simulation updates |
+| `src/simulation/` | Independent single-cell fire state, fixed-step lifecycle, and demonstration configuration |
 | `src/agents/` | Navigation and agent state machines |
 | `src/world/` | Authored logical grid and BFS connectivity validation |
 | `src/rendering/` | Three.js visualization |
-| `src/ui/` | Ignition/reset controls and agent counts |
+| `src/ui/` | Ignition placement, Start fire, and simulation reset controls |
 | `public/assets/` | Simple or licensed assets |
 | `tests/` | Relevant automated checks |
 | `docs/` | Requirements and progress |
