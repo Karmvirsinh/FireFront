@@ -24,9 +24,9 @@ function advance(simulation, seconds, fps = 20) {
 test('adjacent fuel ignites after exposure delay; fuel amount affects duration, not delay', () => {
   for (const type of ['b', 'g']) {
     const simulation = run(mapOf(`b${type}`));
-    advance(simulation, 0.95);
+    advance(simulation, 1.95);
     assert.equal(simulation.cells[1].state, 'unburned');
-    assert.ok(Math.abs(simulation.cells[1].exposure - 0.95) < 1e-9);
+    assert.ok(Math.abs(simulation.cells[1].exposure - 1.95) < 1e-9);
     simulation.advance(0.05);
     assert.equal(simulation.cells[1].state, 'burning');
     assert.equal(simulation.cells[1].fuel, type === 'b' ? 6 : 4);
@@ -34,7 +34,7 @@ test('adjacent fuel ignites after exposure delay; fuel amount affects duration, 
   }
   const twoSources = run(mapOf('bgb'));
   twoSources.cells[2].state = 'burning'; // Arrange two existing burning neighbors.
-  advance(twoSources, 0.5);
+  advance(twoSources, 1);
   assert.equal(twoSources.cells[1].state, 'burning');
 });
 
@@ -50,7 +50,7 @@ test('no diagonal-only spread, row wrapping, or jumping a nonfuel gap', () => {
 
 test('incomplete exposure resets without burning sources; hot/cool never spread', () => {
   const simulation = run(mapOf('bg'), 0, { ...FIRE_CONFIG,
-    fuelByType: { ...FIRE_CONFIG.fuelByType, brush: 0.25 } });
+    fuelPerSecond: 1, fuelByType: { ...FIRE_CONFIG.fuelByType, brush: 0.25 } });
   advance(simulation, 0.25);
   assert.equal(simulation.cells[0].state, 'burned-hot');
   assert.ok(simulation.cells[1].exposure > 0);
@@ -73,11 +73,11 @@ test('a snapshot prevents same-step cascades and new cells retain full fuel', ()
 
 test('exhausted cells cannot reignite beside a burning neighbor', () => {
   const simulation = run(mapOf('gb'));
-  advance(simulation, 4);
+  advance(simulation, 12);
   assert.equal(simulation.cells[0].state, 'burned-hot');
   assert.equal(simulation.cells[1].state, 'burning');
   assert.equal(simulation.eligible(0), false);
-  advance(simulation, 6);
+  advance(simulation, 8);
   assert.equal(simulation.cells[0].state, 'burned-cool');
   assert.equal(simulation.cells[0].fuel, 0);
   assert.equal(simulation.cells[0].exposure, 0);
@@ -122,7 +122,7 @@ test('fixed-map spread makes bare road passages unsafe via buffers without burni
   const map = createFixedMap();
   const simulation = run(map, 32 * 64 + 32);
   const reached = new Set();
-  for (let step = 0; step < 800; step += 1) {
+  for (let step = 0; step < 1200; step += 1) {
     simulation.advance(0.05);
     const unsafe = getNavigationHazards(simulation);
     for (const route of map.routes) {

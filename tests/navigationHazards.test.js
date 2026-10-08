@@ -50,10 +50,10 @@ test('buffer does not add fuel or spread to roads; reset/replay clears derived h
   simulation.start();
   const initialMask = getNavigationHazards(simulation);
   assert.equal(isConnected(map, map.start, map.safeZone, initialMask), true);
-  for (let i = 0; i < 200; i += 1) simulation.advance(0.05);
+  for (let i = 0; i < 600; i += 1) simulation.advance(0.05);
   assert.equal(simulation.cells[12].state, 'burned-hot');
   assert.ok(simulation.cells.every((cell, i) => i === 12 || (cell.fuel === 0 && cell.state === 'unburned')));
-  for (let i = 0; i < 100; i += 1) simulation.advance(0.05);
+  for (let i = 0; i < 160; i += 1) simulation.advance(0.05);
   assert.equal(simulation.cells[12].state, 'burned-cool');
   assert.equal(simulation.cells[12].walkable, false);
   assert.equal(map.cells[12].walkable && !getNavigationHazards(simulation)[12], false);
@@ -73,12 +73,12 @@ test('fuel quantity sets duration at the same consumption rate, not ignition exp
     const simulation = createFireSimulation(map);
     simulation.select(0);
     simulation.start();
-    for (let i = 0; i < 19; i += 1) simulation.advance(0.05);
+    for (let i = 0; i < 39; i += 1) simulation.advance(0.05);
     assert.equal(simulation.cells[1].state, 'unburned');
     simulation.advance(0.05);
     assert.equal(simulation.cells[1].state, 'burning');
     assert.equal(simulation.cells[1].fuel, FIRE_CONFIG.fuelByType[fuelType]);
-    for (let i = 0; i < FIRE_CONFIG.fuelByType[fuelType] * 20; i += 1) simulation.advance(0.05);
+    for (let i = 0; i < FIRE_CONFIG.fuelByType[fuelType] / FIRE_CONFIG.fuelPerSecond * 20; i += 1) simulation.advance(0.05);
     assert.equal(simulation.cells[1].state, 'burned-hot');
   }
 });
@@ -91,7 +91,7 @@ test('cooling preserves blocked and walkable fuel eligibility; buffers cannot ov
     simulation.select(12);
     simulation.start();
     assert.equal(walkable && !getNavigationHazards(simulation)[12], false);
-    for (let i = 0; i < 180; i += 1) simulation.advance(0.05);
+    for (let i = 0; i < 400; i += 1) simulation.advance(0.05);
     assert.equal(simulation.cells[12].state, 'burned-cool');
     assert.equal(simulation.cells[12].walkable && !getNavigationHazards(simulation)[12], walkable);
   }
@@ -123,20 +123,20 @@ test('one forest ignition closes A with B available, then both routes, while eve
     assert.deepEqual(getNavigationHazards(simulation), initial);
     simulation.select(32 * 64 + 32);
     simulation.start();
-    for (let i = 0; i < 150; i += 1) simulation.advance(0.05); // 7.5 seconds
+    for (let i = 0; i < 300; i += 1) simulation.advance(0.05); // 15 seconds: A closed, B open
     let unsafe = getNavigationHazards(simulation);
     assert.equal(routeAvailable(map, unsafe, 0), false);
     assert.equal(routeAvailable(map, unsafe, 1), true);
     assert.equal(isConnected(map, map.start, map.safeZone, unsafe), true);
     for (let x = 30; x <= 33; x += 1) assert.equal(unsafe[24 * 64 + x], 1);
-    for (let i = 0; i < 60; i += 1) simulation.advance(0.05); // 10.5 seconds
+    for (let i = 0; i < 120; i += 1) simulation.advance(0.05); // 21 seconds: both closed
     unsafe = getNavigationHazards(simulation);
     assert.equal(routeAvailable(map, unsafe, 0), false);
     assert.equal(routeAvailable(map, unsafe, 1), false);
     assert.equal(isConnected(map, map.start, map.safeZone, unsafe), false);
     for (const z of [24, 43]) for (let x = 30; x <= 33; x += 1) assert.equal(unsafe[z * 64 + x], 1);
     outcomes.push({ cells: structuredClone(simulation.cells), unsafe });
-    for (let i = 0; i < 690; i += 1) simulation.advance(0.05); // 45 seconds total
+    for (let i = 0; i < 780; i += 1) simulation.advance(0.05); // 60 seconds total: all fuel cooled
     assert.ok(getNavigationHazards(simulation).every((value) => value === 0));
     assert.equal(isConnected(map, map.start, map.safeZone, getNavigationHazards(simulation)), true);
     for (const [i, cell] of map.cells.entries()) if (cell.terrain === 'route') {

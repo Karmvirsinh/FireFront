@@ -66,7 +66,7 @@ test('trapping and a burning neighbor buffer cause no loss until actual spread i
   assert.equal(sim.hazards[6], 1);
   assert.deepEqual(sim.agents.counts(), { waiting: 0, evacuating: 0, trapped: 3, evacuated: 0, lost: 0 });
   const positions = sim.agents.agents.map(({ x, z }) => ({ x, z }));
-  for (let i = 0; i < 19; i += 1) sim.advance(0.05);
+  for (let i = 0; i < 39; i += 1) sim.advance(0.05);
   assert.equal(sim.cells[6].state, 'unburned');
   assert.equal(sim.agents.counts().lost, 0);
   sim.advance(0.05); // Fire ignites fuel, then loss runs, before any movement.

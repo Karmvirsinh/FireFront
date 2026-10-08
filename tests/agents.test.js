@@ -14,9 +14,10 @@ function fixture() {
   return { width: 7, height: 5, cellSize: 0.5, start: { x: 1, z: 2 }, safeZone: { x: 5, z: 2 },
     cells: rows.join('').split('').map((c) => ({ walkable: c === '#', fuelType: 'none' })) };
 }
+// Controlled geometry fixtures retain 2 cells/s to exercise exact partial-segment positions.
 function setup() {
   const map = fixture();
-  const agents = createAgentSimulation(map, { ...AGENT_CONFIG, population: 1, spawnCells: [15] });
+  const agents = createAgentSimulation(map, { ...AGENT_CONFIG, speedCellsPerSecond: 2, population: 1, spawnCells: [15] });
   const unsafe = new Uint8Array(map.cells.length);
   const fire = map.cells.map(() => ({ state: 'unburned' }));
   agents.start();
@@ -137,12 +138,17 @@ test('20-agent reset/replay, population conservation and shared timing match ord
     assert.deepEqual(simulation.agents.agents, initial);
     simulation.select(32 * 64 + 32);
     simulation.start();
-    for (let frame = 0; frame < 20 * fps; frame += 1) {
+    const checkpoints = [];
+    for (let frame = 0; frame < 80 * fps; frame += 1) {
       simulation.advance(1 / fps);
       assert.equal(Object.values(simulation.agents.counts()).reduce((sum, count) => sum + count), 20);
+      // Compare intermediate fire/movement as well as the terminal outcome.
+      if ((frame + 1) % (20 * fps) === 0) checkpoints.push({
+        agents: structuredClone(simulation.agents.agents), fire: structuredClone(simulation.cells),
+        plans: simulation.agents.plans,
+      });
     }
-    outcomes.push({ agents: structuredClone(simulation.agents.agents), fire: structuredClone(simulation.cells),
-      plans: simulation.agents.plans });
+    outcomes.push(checkpoints);
   }
   for (const outcome of outcomes) assert.deepEqual(outcome, outcomes[0]);
   simulation.reset();
@@ -194,15 +200,15 @@ test('actual forest ignition reroutes toward B, traps all 20, resumes, then evac
   simulation.start();
   const routeCells = (z) => [30, 31, 32, 33].map((x) => z * 64 + x);
   assert.ok(simulation.agents.agents[0].path.some((cell) => routeCells(24).includes(cell)));
-  for (let i = 0; i < 142; i += 1) simulation.advance(0.05); // 7.1 seconds
+  for (let i = 0; i < 280; i += 1) simulation.advance(0.05); // 14 seconds: actual A closure and westward turn
   const agent = simulation.agents.agents[0];
   assert.ok(agent.path.some((cell) => routeCells(43).includes(cell)));
   assert.ok(agent.target % 64 < agent.cell % 64, 'turn back west toward the B connector');
-  for (let i = 142; i < 200; i += 1) simulation.advance(0.05);
+  for (let i = 280; i < 410; i += 1) simulation.advance(0.05);
   assert.equal(simulation.agents.counts().trapped, 20);
-  for (let i = 200; i < 222; i += 1) simulation.advance(0.05);
+  for (let i = 410; i < 524; i += 1) simulation.advance(0.05);
   assert.equal(simulation.agents.counts().evacuating, 20);
-  for (let i = 222; i < 800; i += 1) simulation.advance(0.05);
+  for (let i = 524; i < 1240; i += 1) simulation.advance(0.05);
   assert.equal(simulation.agents.counts().evacuated, 20);
   assert.equal(simulation.agents.counts().lost, 0);
 });

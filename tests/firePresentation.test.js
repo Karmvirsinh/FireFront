@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { Matrix4, PerspectiveCamera, Vector3, Color } from 'three';
 import { createFixedMap } from '../src/world/createFixedMap.js';
 import { createFireSimulation, isHazardous } from '../src/simulation/createFireSimulation.js';
+import { FIRE_CONFIG } from '../src/simulation/fireConfig.js';
 import { createMapView } from '../src/rendering/createMapView.js';
 import { createGroundPicker } from '../src/rendering/createGroundPicker.js';
 import { createIgnitionControls } from '../src/ui/createIgnitionControls.js';
@@ -72,8 +73,8 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
       simulation.start();
       for (const [state, seconds, hex, hazardous, legend, swatch] of [
         ['burning', 0, 0xff8a20, true, 'Burning · hazardous', 'burning'],
-        ['burned-hot', fuel, 0xd33138, true, 'Burned-hot · hazardous', 'hot'],
-        ['burned-cool', 5, 0x4e5663, false, 'Burned-cool · no direct hazard', 'cool'],
+        ['burned-hot', fuel / FIRE_CONFIG.fuelPerSecond, 0xd33138, true, 'Burned-hot · hazardous', 'hot'],
+        ['burned-cool', FIRE_CONFIG.coolingSeconds, 0x4e5663, false, 'Burned-cool · no direct hazard', 'cool'],
       ]) {
         for (let step = 0; step < seconds * 20; step += 1) simulation.advance(0.05);
         view.syncFire(simulation);

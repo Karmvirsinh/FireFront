@@ -30,7 +30,7 @@ test('eligibility and movable single selection reject fuel-free cells without mu
 });
 
 test('isolated fuel exhaustion, hot cooling, base walkability, and no reignition', () => {
-  for (const [index, duration, walkable] of [[grass, 4, false], [brush, 6, false]]) {
+  for (const [index, duration, walkable] of [[grass, 12, false], [brush, 18, false]]) {
     // Isolate lifecycle boundaries; neighboring propagation has separate tests.
     const simulation = createFireSimulation(createFixedMap(), { ...FIRE_CONFIG, ignitionExposure: Infinity });
     simulation.select(index);
@@ -40,10 +40,10 @@ test('isolated fuel exhaustion, hot cooling, base walkability, and no reignition
     assert.equal(simulation.cells[index].state, 'burning');
     simulation.advance(0.05);
     assert.deepEqual(simulation.cells[index], {
-      state: 'burned-hot', fuel: 0, hotRemaining: 5, exposure: 0, walkable,
+      state: 'burned-hot', fuel: 0, hotRemaining: 8, exposure: 0, walkable,
     });
     assert.equal(isHazardous(simulation.cells[index]), true);
-    advanceSeconds(simulation, 4.95, 20);
+    advanceSeconds(simulation, 7.95, 20);
     assert.equal(simulation.cells[index].state, 'burned-hot');
     simulation.advance(0.05);
     assert.equal(simulation.cells[index].state, 'burned-cool');
@@ -103,25 +103,25 @@ test('long gaps drop excess time and invalid intervals do not advance', () => {
   simulation.select(brush);
   simulation.start();
   simulation.advance(120);
-  assert.ok(Math.abs(simulation.cells[brush].fuel - (6 - FIRE_CONFIG.maxFrameSeconds)) < 1e-9);
+  assert.ok(Math.abs(simulation.cells[brush].fuel - (6 - FIRE_CONFIG.maxFrameSeconds * FIRE_CONFIG.fuelPerSecond)) < 1e-9);
   const before = structuredClone(simulation.cells);
   for (const delta of [NaN, Infinity, -1, 0]) simulation.advance(delta);
   assert.deepEqual(simulation.cells, before);
   simulation.advance(0.05);
-  assert.ok(Math.abs(simulation.cells[brush].fuel - 5.7) < 1e-9);
+  assert.ok(Math.abs(simulation.cells[brush].fuel - (6 - 0.3 * FIRE_CONFIG.fuelPerSecond)) < 1e-9);
 });
 
 test('configuration controls cooling duration and reset restores an in-progress run', () => {
   const simulation = createFireSimulation(createFixedMap(), { ...FIRE_CONFIG, coolingSeconds: 1 });
   simulation.select(grass);
   simulation.start();
-  advanceSeconds(simulation, 4.5);
+  advanceSeconds(simulation, 12.5);
   assert.equal(simulation.cells[grass].state, 'burned-hot');
   simulation.reset();
   assert.equal(simulation.cells[grass].fuel, 4);
   assert.equal(simulation.cells[grass].hotRemaining, 0);
   simulation.select(grass);
   simulation.start();
-  advanceSeconds(simulation, 5);
+  advanceSeconds(simulation, 13);
   assert.equal(simulation.cells[grass].state, 'burned-cool');
 });

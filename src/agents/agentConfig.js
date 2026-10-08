@@ -1,2 +1,2 @@
-// Illustrative walking speed: two logical cells (one world unit) per second.
-export const AGENT_CONFIG = Object.freeze({ population: 20, speedCellsPerSecond: 2 });
+// Illustrative walking speed: 1.5 logical cells (0.75 world units) per second.
+export const AGENT_CONFIG = Object.freeze({ population: 20, speedCellsPerSecond: 1.5 });

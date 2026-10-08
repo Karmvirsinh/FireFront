@@ -10,7 +10,7 @@ The intended stack is JavaScript, Three.js, Vite/npm, and HTML/CSS. FireFront is
 
 ## Dashboard exploration — Increment 8 (user-validated)
 
-The validated dashboard is preserved at `19858c3` on `feature/dashboard-layout` and has been fast-forward adopted on main, followed by adoption-documentation commit `3fcf20c`. Annotated tags preserve `layout-original` (`0e42f8c`) and `layout-dashboard-baseline` (`19858c3`). The forest styling increment on `feature/forest-ui` is completed with user-reported manual validation; main retains the adopted dashboard.
+The validated dashboard is preserved at `19858c3` on `feature/dashboard-layout` and has been fast-forward adopted on main, followed by adoption-documentation commit `3fcf20c`. Annotated tags preserve `layout-original` (`0e42f8c`) and `layout-dashboard-baseline` (`19858c3`). The forest styling increment on `feature/forest-ui` is completed with user-reported manual validation; main now contains the adopted forest UI at `d549293`; the pacing increment is retained on `feature/simulation-pacing` following user feedback.
 
 The dark HTML/CSS workspace puts one dedicated simulation viewport beside a scrollable panel for ignition/reset, selection status, five evacuation counts and map/fire legends. Compact camera hints sit below the canvas. At widths up to 800 px the panel stacks below a usable viewport and the page scrolls. Short desktop windows also allow page scrolling instead of shrinking the scene indefinitely. Fonts use the local system stack; no frameworks, assets or dependencies added. The scene background/assets, purple marker, map, fire/agent rules and pacing are unchanged.
 
@@ -29,7 +29,7 @@ Repeat-check checklist:
 
 ### Compare layouts safely after Increment 8 is committed
 
-Do not switch with uncommitted work. After forest UI validation and its separate commit, stop project servers and confirm `git status --short` is empty. Use `git switch --detach layout-original` for the overlay layout or `git switch --detach layout-dashboard-baseline` for the dark dashboard. Return using `git switch feature/forest-ui`, stopping servers/checking clean before each switch. Rebuild before previewing each version: ignored dist output does not switch with Git. Main now contains the adopted dashboard. Do not edit comparison snapshots or discard changes to compare; no comparison switches were performed here.
+Do not switch with uncommitted work. After pacing validation and its separate commit, stop project servers and confirm `git status --short` is empty. Use `git switch --detach layout-original` for the overlay layout or `git switch --detach layout-dashboard-baseline` for the dark dashboard. Return using `git switch feature/simulation-pacing`, stopping servers/checking clean before each switch. Rebuild before previewing each version: ignored dist output does not switch with Git. Main now contains the adopted forest UI. Do not edit comparison snapshots or discard changes to compare; no comparison switches were performed here.
 
 Pacing tuning and performance validation follow this layout exploration; no tuning is included here. Purple-marker redesign, richer assets/effects and abrupt road-width presentation remain deferred. Actual automated/browser results are recorded in `docs/progress.md`; Increment 8 manual checklist completion is user-reported. Full MVP performance remains unmeasured.
 
@@ -123,17 +123,17 @@ Toggle **Place ignition** on with its button or **I** for a torch cursor with a 
 
 **Start fire** is enabled only after a valid selection. It ignites that cell, turns placement off, and locks selection until **Reset simulation**. Orange indicates burning, red burned-hot, and dark gray burned-cool; raised indicators and recolored ground distinguish every affected cell. Exhausted decorative fuel is hidden and restored on reset. The status text describes the original selected cell; neighbors can still burn after that cell has cooled.
 
-Each unburned fuel cell accumulates exposure from its four edge-sharing burning neighbors: 1 exposure unit per neighbor per simulated second, with ignition at 1 unit. One burning neighbor takes 1 second; two take 0.5 seconds. Exposure returns to zero when no burning neighbor remains. Only burning cells contribute; hot/cooled cells do not. There is no diagonal spread or jumping across nonfuel gaps. Fuel quantity controls burn duration, independently of ignition delay and base walkability; blocked or walkable fuel can burn. The eight-neighbor navigation buffer does not change this four-neighbor spread rule.
+Each unburned fuel cell accumulates exposure from its four edge-sharing burning neighbors: 1 exposure unit per neighbor per simulated second, with ignition at 2 units. One burning neighbor takes 2 seconds; two take 1 second. Exposure returns to zero when no burning neighbor remains. Only burning cells contribute; hot/cooled cells do not. There is no diagonal spread or jumping across nonfuel gaps. Fuel quantity controls burn duration, independently of ignition delay and base walkability; blocked or walkable fuel can burn. The eight-neighbor navigation buffer does not change this four-neighbor spread rule.
 
 Every fixed step snapshots the burning sources, evaluates targets, and applies new ignitions together. A newly ignited cell contributes only in the next step and retains full fuel until then; a source burning at the start of a step contributes even if it burns out during that step. This avoids iteration-order effects and same-step cascades. This simplified deterministic four-neighbor rule is **not calibrated wildfire physics**; wind, moisture, slope and stochastic behavior are absent.
 
 `src/simulation/createFireSimulation.js` owns plain fire-state copies independent of Three.js and DOM. The lifecycle is `unburned → burning → burned-hot → burned-cool`. Burning/hot cells are directly hazardous; cooling clears their own hazard but not another cell's buffer. Original base walkability is preserved. Exhausted fuel cannot reignite. The single-run ignition lock also remains in force after cooling.
 
-Demonstration configuration lives in `src/simulation/fireConfig.js`: grass starts with 4 fuel units, brush with 6, and forest with 10, consumed at 1 unit per simulated second. They burn for 4, 6 and 10 seconds respectively, followed by 5 seconds cooling. Forest has more fuel to keep it burning longer; ignition exposure is unchanged. These are illustrative values, **not calibrated wildfire physics**. A 50 ms fixed-step accumulator produces the same results at ordinary frame rates; each frame contributes at most 250 ms. Excess time from long frame gaps/background suspension is discarded, so resuming cannot skip the whole lifecycle in one catch-up jump. Simulation time may consequently lag wall time after suspension.
+Demonstration configuration lives in `src/simulation/fireConfig.js`: grass starts with 4 fuel units, brush with 6, and forest with 10, consumed at 1/3 unit per simulated second. They burn for 12, 18 and 30 seconds respectively, followed by 8 seconds cooling. Forest retains more fuel and burns longest; fuel quantity does not accelerate ignition. These are illustrative values, **not calibrated wildfire physics**. A 50 ms fixed-step accumulator produces the same results at ordinary frame rates; each frame contributes at most 250 ms. Excess time from long frame gaps/background suspension is discarded, so resuming cannot skip the whole lifecycle in one catch-up jump. Simulation time may consequently lag wall time after suspension.
 
 **Reset simulation** restores initial fuel, unburned states, exposure, timers, and selection, turns placement off, and allows a repeatable new run. Derived navigation hazards clear because no reset cell is burning/hot. It preserves the current camera. `R` resets only the camera. Neither operation changes the authoritative map. `src/rendering/createGroundPicker.js` raycasts from current pointer/camera coordinates onto the ground plane and resolves grid coordinates; vegetation and text sprites cannot intercept picking. Rendering updates affected tile/decoration instances and one shared fire-indicator batch on state changes, with partial instance-buffer updates rather than rebuilding the map each frame.
 
-Suggested demonstration: select forest cell **(32, 32)**. Automated BFS verifies A is unavailable and B reachable at **7.5 simulated seconds**, with road cells X 30–33 / Z 24 unsafe. At **10.5 seconds**, both passages (X 30–33 at Z 24 and Z 43) are unsafe and safety is unreachable. Both routes are reachable again by 45 seconds with every hazard cleared. This uses one ignition and the approved local narrow passages; all road cells remain unburned with zero fuel/exposure. The buffer is invisible, so these are test results, not visible road-color changes or agent rerouting. Background suspension can extend wall-clock times. A second optional ignition **(32,25)** makes A's full designated passage unsafe at about 1 second while B remains reachable; reset before changing ignition.
+Suggested demonstration: forest cell **(32,32)**. Measured route connectivity closes A at **14 s**, B at **20 s**, reopens A at **26.15 s** and B at **32.1 s**. Invisible buffers cause closures; roads remain fuel-free/unburned. Alternative ignition **(32,25)** closes A immediately, so agents initially choose B; A reopens at 16 s and all agents cross B by 26.35 s before its 34 s closure. Reset between scenarios. These are simulation measurements; background suspension can extend wall time.
 
 Run navigation, map, fire lifecycle, and interaction checks with no additional test dependency:
 
@@ -145,15 +145,15 @@ npm test
 
 Twenty boxes spawn in the existing blue starting area (X 7–11, Z 30–33), waiting until **Start fire** automatically begins evacuation. `src/agents/` owns plain state/navigation with no Three.js or DOM dependency. `findPath.js` uses four-neighbor A* with Manhattan distance and deterministic f-score, heuristic, then cell-index tie-breaking. Normal paths require base walkability and a clear hazard mask at every cell. No diagonal corners, off-path movement, collisions or crowd avoidance; agents may overlap as paths merge.
 
-`agentConfig.js` sets an illustrative speed of **2 logical cells per simulated second**, or **1 world unit/second**. Continuous X/Z positions move along axis-aligned cell-center segments in fixed steps; logical occupancy is the cell containing the actual position, and rendering reads those same coordinates. START/SAFE text is positioned just below its area so it does not cover the boxes. Box colors are white waiting, blue evacuating, brown trapped, teal evacuated and crimson lost; the labeled live counts are authoritative and always total 20.
+`agentConfig.js` sets an illustrative speed of **1.5 logical cells per simulated second**, or **0.75 world units/second**. Continuous X/Z positions move along axis-aligned cell-center segments in fixed steps; logical occupancy is the cell containing the actual position, and rendering reads those same coordinates. START/SAFE text is positioned just below its area so it does not cover the boxes. Box colors are white waiting, blue evacuating, brown trapped, teal evacuated and crimson lost; the labeled live counts are authoritative and always total 20.
 
 Paths are cached until a relevant hazard invalidates the occupied cell, target or remaining route. Trapped agents retry on hazard changes, not every rendered frame. When a segment becomes invalid, the agent smoothly returns to the center of its **currently occupied cell**, then replans; it does not teleport to an endpoint or enter a newly unsafe next cell. If already inside a precautionary buffer, an emergency BFS can leave through the nearest walkable buffered cells toward safe ground, excluding burning/hot cells. After leaving, normal safe A* resumes. This exception only exits an existing buffer; safe agents cannot use it to enter buffers as shortcuts. An actively burning occupied cell causes immediate terminal loss before movement. A burned-hot occupied cell stops movement as trapped and retries after hazards change without causing loss.
 
 Implemented states: **waiting** before ignition; **evacuating** while following a route or emergency exit; **trapped** when no available route/exit exists; **evacuated** at the safe-zone center and **lost** from active fire in the occupied cell, both terminal until reset. Reset restores all 20 starting positions, waiting states, paths, retry caches, fire and simulation time while preserving the camera. R still resets the camera only.
 
-Actual-fire trace on the unchanged map/config with ignition **(32,32)**: agent 0 initially plans Route A, turns west toward Route B at approximately **7.1 seconds**, all 20 are trapped at **10.0 seconds**, all resume at **11.1 seconds**, and evacuation completes between **36.05 and 39.55 seconds**. These are independent simulation checks, separate from controlled-hazard tests and browser observations. Keep the tab active; background suspension can lengthen wall time. This road-only scenario produces zero losses; no full MVP performance target has been measured.
+Current trace at **(32,32)**: agent 0 initially plans A and turns west toward B at **14 s**; trapping starts at **20.15 s**, all 20 are trapped by **20.2 s**, and all resume at **26.15 s**. All fuel is cool at **52.7 s** and evacuation completes at **60.8 s**, Lost = 0. Automated measurements are separate from browser/human validation; full MVP performance is unmeasured.
 
-Increment 6 repeat-check checklist (the user-reported closeout results are recorded below):
+Historical Increment 6 checklist (old timings retained for its validation record; use the current pacing checklist below):
 
 1. Confirm 20 white waiting boxes in START and counts 20/0/0/0. Bare road rejects ignition; selecting vegetation alone must not start movement.
 2. Ignite `(32,32)`. Watch movement toward A, a turn back toward B around 7 seconds, brief Trapped = 20 around 10–11.1 seconds, then resumed evacuation. By roughly 40 active-tab seconds, Evacuated = 20. Counts must always sum to 20.
@@ -162,7 +162,7 @@ Increment 6 repeat-check checklist (the user-reported closeout results are recor
 
 Increment 6 user-reported validation passed: 20 waiting agents; ignition at (32,32) produced turn-back, trapping, recovery and evacuation as described; reset during movement and after completion preserved the camera; pan/orbit, zoom, R, resizing and console checks passed. These reports are distinct from automated checks.
 
-Pending pacing issue: the user finds fire progression too fast. After loss handling, perform a focused tuning pass on spread, burn duration, cooling and agent speed together, preserving meaningful rerouting/trapping scenarios. No timing or speed changes were made during closeout.
+The earlier pacing feedback is addressed by the coordinated settings below, pending new human validation. Historical validation records used the old settings.
 
 ## Direct-fire loss — Increment 7 (manual checklist passed)
 
@@ -213,7 +213,7 @@ The user reported passing Increment 4 marker movement, invalid-ground rejection,
 4. Move the camera, reset simulation during burning/hot/cool, and repeat a run. Fuel/appearance/selection reset, placement turns off, and camera stays put. `R` resets camera only.
 5. Resize and check readable/scrollable panels, repeat on production preview, and check the console. Physical mouse checks remain necessary; automated/agent checks are separate from user validation. Full MVP performance is unmeasured.
 
-Increment 5 feedback: the user reported the checklist mostly passed, but fuel appearance was misleading. Individual results were not specified; full validation is **not recorded as passed**. The approved environment/navigation correction now requires this human recheck:
+Increment 5 feedback: the user reported the checklist mostly passed, but fuel appearance was misleading. Individual results were not specified; full validation is **not recorded as passed**. The approved environment/navigation correction used this historical checklist (timings predate the pacing increment):
 
 1. Identify bare yellow roads, light-green grass, medium-green brush with low shrubs, and dark-green forest floor with trees. Follow both roads through the narrow passages; no green strip should cross them. Check the legend and narrow-window scrolling.
 2. Try selecting yellow road: it must be rejected. Grass/brush/forest ground, including gaps between models, can be selected. Move the single marker before starting and confirm placement locks afterward.
@@ -258,3 +258,48 @@ User-reported validation: all four final manual checklist items passed. The flam
 4. Repeat on preview; inspect console, physical right/middle drags, flame containment and reduced-motion static versus ordinary animated treatment.
 
 Pending future work: terrain thickness, scene-readability improvements, purple-marker refinement, richer assets/effects, road-width presentation and coordinated pacing/performance validation. None is implemented here.
+
+## Coordinated simulation pacing (user feedback accepted)
+
+Main fast-forward adopted validated forest UI `d549293`; existing branches/tags are preserved. This bounded increment is checkpointed on `feature/simulation-pacing` following user feedback. Runtime changes are confined to fireConfig and agentConfig; measurement/tests and documentation support the tuning.
+
+| Setting | Previous | New | Rationale |
+| --- | --- | --- | --- |
+| Exposure per burning neighbor | 1 unit/s | 1 unit/s | Retain simple accumulation |
+| Ignition threshold | 1 unit | 2 units | One neighbor now takes 2 s; two take 1 s |
+| Grass / brush / forest fuel | 4 / 6 / 10 units | 4 / 6 / 10 units | Preserve relative quantities |
+| Fuel consumption | 1 unit/s | 1/3 unit/s | Burn durations increase from 4 / 6 / 10 s to 12 / 18 / 30 s |
+| Cooling after burnout | 5 s | 8 s | Longer readable hot-to-cool transition |
+| Agent speed | 2 cells/s (1 world unit/s) | 1.5 cells/s (0.75 world units/s) | 25% slower walking coordinated with later closures |
+| Fixed step / frame cap | 0.05 / 0.25 s | 0.05 / 0.25 s | Preserve shared clock and long-gap handling |
+
+These are **illustrative simulation settings, not physically calibrated wildfire values**. The 60–90 s demonstration goal is a usability target, not a required duration for every ignition. Four-neighbor exposure, snapshot spread, map, hazards, direct-fire loss, UI/scene styling and dependencies remain unchanged.
+
+Measure with `node scripts/measurePacing.js`. The script uses the actual shared simulation and reports seconds from Start fire at 0.05 s resolution. Route availability uses BFS with the other route disabled on a temporary map copy. Turn-back tracks representative agent 0 moving west while planning B; trapping/recovery track actual agent states. It checks conserved population every step. This is scenario measurement, not an FPS benchmark.
+
+| Event | (32,32) old → new | (32,25) old → new |
+| --- | --- | --- |
+| First spread | 1 → 2 s | 1 → 2 s |
+| A closes | 7 → 14 s | 0 → 0 s |
+| B closes | 10 → 20 s | 17 → 34 s |
+| Agent 0 reroute/turn toward B | 7.1 → 14 s | Initially plans B in both |
+| All 20 trapped | 10 → 20.2 s | Never in either run |
+| Recovery / A reopens | 11.1 → 26.15 s | A reopens 6 → 16 s; no trapping |
+| B reopens | 14.1 → 32.1 s | 21.1 → 46.1 s |
+| All fuel cooled | 22.4 → 52.7 s | 29.2 → 66.2 s |
+| All 20 evacuated | 39.55 → 60.8 s | 63.5 → 47.35 s |
+
+Central trapping begins at 20.15 s, reaches all 20 by 20.2 s, and lasts about 5.95 s for the whole population (formerly 1.1 s). First burnout anywhere is 8 → 22 s; the central selected forest cell itself burns for 30 s, then cools for 8 s.
+
+Tradeoff: at (32,25), all agents cross B by 26.35 s before its 34 s closure, avoiding the old detour and shortening evacuation despite slower walking. Remaining fire/cooling continues until 66.2 s. Initial B routing should be compared with the central reroute/trap scenario, not expected to trap too. Nonfuel roads reopen when adjacent burning buffers clear; hot fuel remains hazardous itself, so longer cooling does not delay road reopening. Agent overlap and normal zero-loss road scenarios remain. No map/rule redesign forced these outcomes.
+
+User-reported feedback: the checklist was satisfactory and movement was not objectionably slow. All current values, including agent speed 1.5 cells/second, are retained. This does not claim additional individual manual checks or exact measured browser timings. Repeat-check checklist (keep the tab active; suspension/long frames can extend wall time):
+
+1. Ignite **(32,32)**: first neighbors around 2 s, turn-back around 14 s, Trapped = 20 around 20.2–26.15 s, recovery, then Evacuated = 20 around 61 s. Judge readability and walking speed; counts sum to 20 and Lost stays zero.
+2. Reset; ignite **(32,25)**: agents initially choose B, no trapping expected, evacuation around 47 s, all remaining fuel cooled by 66 s. Roads remain yellow/unburned.
+3. Reset during spread/trapping and after completion; confirm 20 waiting, restored vegetation/selection, camera preserved. Replay; R resets only the view, with existing navigation and ignition locks intact.
+4. Repeat on preview and inspect console. Report whether the longer burning, six-second trapped interval and recovery are comfortable to follow. The user accepted the current pacing based on the feedback recorded above; no additional checks are inferred.
+
+Automated verification: **52/52 tests passed**, including measured scenarios, reset/replay, population conservation, ordinary render intervals through 80 s, long-gap handling and existing loss/navigation/camera regressions. Production build succeeds. These checks are not a full MVP performance benchmark.
+
+Deferred button-flame animation, purple marker, scene readability, terrain thickness, richer assets and road-width feedback remain pending. Formal performance validation is separate future work.
