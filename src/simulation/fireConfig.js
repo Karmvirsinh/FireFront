@@ -5,4 +5,6 @@ export const FIRE_CONFIG = Object.freeze({
   fuelByType: Object.freeze({ none: 0, grass: 4, brush: 6 }),
   fuelPerSecond: 1,
   coolingSeconds: 5,
+  exposurePerNeighborPerSecond: 1,
+  ignitionExposure: 1,
 });

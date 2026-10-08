@@ -29,9 +29,10 @@ test('eligibility and movable single selection reject fuel-free cells without mu
   assert.equal(simulation.cells.filter((cell) => cell.state === 'burning').length, 1);
 });
 
-test('fuel exhaustion, hot cooling, base walkability, and no reignition or spread', () => {
+test('isolated fuel exhaustion, hot cooling, base walkability, and no reignition', () => {
   for (const [index, duration, walkable] of [[grass, 4, true], [brush, 6, false]]) {
-    const simulation = createFireSimulation(createFixedMap());
+    // Isolate lifecycle boundaries; neighboring propagation has separate tests.
+    const simulation = createFireSimulation(createFixedMap(), { ...FIRE_CONFIG, ignitionExposure: Infinity });
     simulation.select(index);
     simulation.start();
     assert.equal(isHazardous(simulation.cells[index]), true);
@@ -39,7 +40,7 @@ test('fuel exhaustion, hot cooling, base walkability, and no reignition or sprea
     assert.equal(simulation.cells[index].state, 'burning');
     simulation.advance(0.05);
     assert.deepEqual(simulation.cells[index], {
-      state: 'burned-hot', fuel: 0, hotRemaining: 5, walkable,
+      state: 'burned-hot', fuel: 0, hotRemaining: 5, exposure: 0, walkable,
     });
     assert.equal(isHazardous(simulation.cells[index]), true);
     advanceSeconds(simulation, 4.95, 20);

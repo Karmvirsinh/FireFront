@@ -80,8 +80,11 @@ test('reported fuel gaps: picking, instance placement, lifecycle presentation an
         assert.equal(elements['fire-status'].textContent, `Cell (32, ${z}): ${state}.`);
         assert.equal(indicator.visible, true);
         assert.equal(marker.visible, false);
-        assert.deepEqual(indicator.position.toArray(), [0.25, 0.325, worldZ]);
-        assert.equal(indicator.material.color.getHex(), hex);
+        indicator.getMatrixAt(index, matrix);
+        assert.ok(new Vector3().setFromMatrixPosition(matrix)
+          .distanceTo(new Vector3(0.25, 0.325, worldZ)) < 1e-6);
+        indicator.getColorAt(index, color);
+        assert.equal(color.getHex(), hex);
         view.group.children[0].getColorAt(index, color);
         assert.equal(color.getHex(), hex);
         assert.ok(html.includes(legend));
@@ -89,9 +92,71 @@ test('reported fuel gaps: picking, instance placement, lifecycle presentation an
       }
       assert.equal(simulation.cells[index].fuel, 0);
       assert.equal(simulation.cells[index].hotRemaining, 0);
+      // Every propagated cell gets a state indicator and reset restores them all.
+      const affected = simulation.cells.flatMap((cell, i) => cell.state !== 'unburned' ? [i] : []);
+      assert.ok(affected.length > 1);
+      for (const i of affected) {
+        indicator.getColorAt(i, color);
+        assert.equal(color.getHex(), { burning: 0xff8a20, 'burned-hot': 0xd33138,
+          'burned-cool': 0x4e5663 }[simulation.cells[i].state]);
+      }
+      simulation.reset();
+      view.syncFire(simulation);
+      for (const i of affected) {
+        indicator.getMatrixAt(i, matrix);
+        assert.equal(new Vector3().setFromMatrixScale(matrix).length(), 0);
+        view.group.children[0].getColorAt(i, color);
+        assert.equal(color.getHex(), { brush: 0x527648, grass: 0x91aa59 }[map.cells[i].fuelType]);
+      }
     }
   } finally {
     ui.dispose();
+    view.dispose();
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  }
+});
+
+test('full ground tiles show fuel classification at crossings and every vegetation boundary', () => {
+  const originalDocument = globalThis.document;
+  globalThis.document = { createElement: () => ({ getContext: () => ({ fillRect() {}, fillText() {} }) }) };
+  const map = createFixedMap();
+  const original = structuredClone(map);
+  const view = createMapView(map);
+  const tiles = view.group.children[0];
+  const simulation = createFireSimulation(map);
+  const color = new Color();
+  const matrix = new Matrix4();
+  const terrainColors = { obstacle: 0x8c9698, route: 0xe0c58e, start: 0x478ecb, safe: 0x55b69b };
+  try {
+    assert.equal(tiles.count, 64 * 64);
+    // Each tile covers its entire logical cell, including undecorated cells.
+    assert.equal(tiles.geometry.parameters.width, map.cellSize);
+    assert.equal(tiles.geometry.parameters.height, map.cellSize);
+    map.cells.forEach((cell, index) => {
+      tiles.getColorAt(index, color);
+      const expected = { brush: 0x527648, grass: 0x91aa59 }[cell.fuelType]
+        ?? terrainColors[cell.terrain];
+      assert.equal(color.getHex(), expected, `ground color at cell ${index}`);
+      assert.equal(simulation.eligible(index), cell.fuelType !== 'none');
+      tiles.getMatrixAt(index, matrix);
+      assert.deepEqual(new Vector3().setFromMatrixPosition(matrix).toArray(),
+        [(index % 64 + 0.5 - 32) * map.cellSize, 0,
+          (Math.floor(index / 64) + 0.5 - 32) * map.cellSize]);
+    });
+    for (const z of [23, 43]) {
+      for (const [x, hex] of [[26, 0xe0c58e], [27, 0x91aa59], [36, 0x91aa59], [37, 0xe0c58e]]) {
+        tiles.getColorAt(z * 64 + x, color);
+        assert.equal(color.getHex(), hex, `crossing boundary (${x}, ${z})`);
+      }
+    }
+    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+    assert.ok(html.includes('Ground color shows fuel coverage.'));
+    assert.ok(html.includes('Models do not mark fuel boundaries.'));
+    assert.ok(css.includes('.swatch.grass { background: #91aa59; }'));
+    assert.deepEqual(map, original);
+  } finally {
     view.dispose();
     if (originalDocument === undefined) delete globalThis.document;
     else globalThis.document = originalDocument;

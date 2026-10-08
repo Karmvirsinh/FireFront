@@ -4,7 +4,7 @@ An educational wildfire/evacuation simulator for a university project, mentored 
 
 ## Current status
 
-Increment 1 established the Three.js application (`73d8ae7`); Increment 2 added validated camera navigation and controls hints (`7b4d189`). Increment 3 added the validated fixed two-route map (`f30222b`). Increment 4 adds completed, user-validated single-point ignition, burnout, cooling, and simulation reset. The canvas resizes with the browser window, with pixel ratio capped at 2. Only the selected cell burns; neighboring spread is the next increment. No agents, A*, procedural generation, or weather is implemented.
+Increments 1–4 established the application, camera navigation, fixed two-route map, and user-validated ignition/lifecycle/reset (`9daf155`). Increment 5 adds deterministic neighboring fire spread and awaits human validation. The canvas resizes with the browser window, with pixel ratio capped at 2. No agents, A*, procedural generation, or weather is implemented.
 
 The intended stack is JavaScript, Three.js, Vite/npm, and HTML/CSS. FireFront is not a validated wildfire prediction tool.
 
@@ -56,14 +56,14 @@ Grid coordinates are zero-based `(x, z)`; Z increases toward the lower corridor 
 | --- | --- | --- |
 | Start | `(9, 32)`; area X 6–13, Z 28–35 | Blue, walkable, no fuel |
 | Safe zone | `(54, 32)`; area X 50–57, Z 28–35 | Teal, walkable, no fuel |
-| Route A | X 10–53, Z 22–25 | Upper, shorter corridor; tan |
-| Route B | X 10–53, Z 42–45 | Lower alternative corridor; tan |
+| Route A | X 10–53, Z 22–25 | Upper, shorter corridor; tan except grass crossing |
+| Route B | X 10–53, Z 42–45 | Lower alternative corridor; tan except grass crossing |
 | Connecting stems | X 10–13 and 50–53, Z 22–45 | Join both corridors to endpoints |
 | Vegetation patch | X 27–36, Z 20–47 | Continuous fuel band crossing both routes |
 | Route A test section | X 30–33, Z 22–25 | Full corridor width, walkable grass fuel |
 | Route B test section | X 30–33, Z 42–45 | Full corridor width, walkable grass fuel |
 
-Only corridors and endpoint areas are walkable. Gray ground is blocked everywhere, even between the sparse rock meshes. Green brush in the patch is also blocked; its fuel can later spread toward the walkable grass-bearing route cells. Fuel-free routes remain walkable: nonburnable does not mean blocked. A walkable cell can contain grass fuel. Sparse tufts on tan route sections show that fuel without hiding the corridor. Decorative geometry does not define collision or walkability.
+Only corridors and endpoint areas are walkable. Gray ground is blocked everywhere, even between the sparse rock meshes. Dark-green ground covers every brush-fuel cell; brush is blocked but can spread fire toward the walkable grass crossings. Light-green ground covers every grass-fuel cell across the full route width. Yellow road has no fuel and cannot ignite. The ground treatment follows `fuelType` independently of walkability and decorative model placement; gaps between sparse models are still fuel wherever the ground is green. The legend distinguishes grass crossings from brush and nonfuel road. Decorative geometry does not define fuel boundaries, collision, or walkability.
 
 Future hazard cases: blocking A's designated section must leave B connected; blocking B must leave A connected; blocking both must disconnect start from safety. Reopening either section should restore connectivity. The central blocked area prevents unrestricted shortcuts. `src/world/isConnected.js` is a four-neighbor BFS validation helper, not agent pathfinding. All blocking tests use temporary cloned data; the displayed map remains initially open. Diagonal movement and physical collision are not implemented. Later navigation must honor base walkability and overlay changing hazards; cooling should not make permanently blocked brush/obstacle cells walkable.
 
@@ -82,17 +82,23 @@ Left-button drag is unassigned to camera movement. Right-click context menus are
 
 Orbit angles remain limited to 15–75 degrees from vertical. For the 32×32 map, minimum camera-to-target distance is 16 units and target X/Z are limited to ±8, with Y kept at zero. Maximum distance remains 1.5 times the full-map fitted distance. Initial/reset framing instead fits the useful start/safe/routes/vegetation area with margins (29×16 world units, centered at X 0 / Z 1) to both viewport axes, including narrow windows. Resize updates the saved reset view; a camera still at its initial view refits automatically, while a navigated view is retained subject to movement limits. `R` returns to the same framing as initial load for the current window. When clamping the target, the camera receives the same correction to preserve viewing direction and distance. All camera controls stay available during ignition placement and burning; those gestures never select ignition cells.
 
-## Single-cell ignition and lifecycle
+## Ignition, neighboring spread, and lifecycle
 
 Toggle **Place ignition** on for a crosshair cursor. An unmodified stationary left mouse click on green brush or grass-bearing route ground selects one fuel cell, shown with a purple ring. Clicking another eligible cell moves that ring before starting. Fuel-free ground is rejected without changing the cell or existing selection. Turning placement off retains the selection but disables picking. Panel interactions and left drags do not place ignition.
 
-**Start fire** is enabled only after a valid selection. It ignites that cell, turns placement off, and locks selection until **Reset simulation**. Orange indicates burning, red burned-hot, and dark gray burned-cool; a small raised indicator and recolored ground distinguish the states. Exhausted decorative fuel is hidden and restored on reset. Only the selected cell burns in this increment; neighboring spread comes next.
+**Start fire** is enabled only after a valid selection. It ignites that cell, turns placement off, and locks selection until **Reset simulation**. Orange indicates burning, red burned-hot, and dark gray burned-cool; raised indicators and recolored ground distinguish every affected cell. Exhausted decorative fuel is hidden and restored on reset. The status text describes the original selected cell; neighbors can still burn after that cell has cooled.
+
+Each unburned fuel cell accumulates exposure from its four edge-sharing burning neighbors: 1 exposure unit per neighbor per simulated second, with ignition at 1 unit. One burning neighbor takes 1 second; two take 0.5 seconds. Exposure returns to zero when no burning neighbor remains. Only burning cells contribute; hot/cooled cells do not. There is no diagonal spread or jumping across nonfuel gaps. Fuel quantity controls burn duration, independently of ignition delay and base walkability. Blocked brush and walkable grass both burn.
+
+Every fixed step snapshots the burning sources, evaluates targets, and applies new ignitions together. A newly ignited cell contributes only in the next step and retains full fuel until then; a source burning at the start of a step contributes even if it burns out during that step. This avoids iteration-order effects and same-step cascades. This simplified deterministic four-neighbor rule is **not calibrated wildfire physics**; wind, moisture, slope, stochastic behavior, and agents are absent.
 
 `src/simulation/createFireSimulation.js` owns plain fire-state copies independent of Three.js and DOM. The lifecycle is `unburned → burning → burned-hot → burned-cool`. Burning/hot cells are hazardous. Cooled cells are no longer hazardous, but retain their original base walkability: burned brush stays blocked, and cooled grass on routes retains walkability. Exhausted fuel cannot reignite. The single-run ignition lock also remains in force after cooling.
 
 Demonstration configuration lives in `src/simulation/fireConfig.js`: grass starts with 4 fuel units, brush with 6, consumption is 1 unit per simulated second, and cooling lasts 5 simulated seconds. Thus grass burns for 4 seconds and brush for 6 before cooling. These are illustrative values, **not calibrated wildfire physics**. A 50 ms fixed-step accumulator produces the same results at ordinary frame rates; each frame contributes at most 250 ms. Excess time from long frame gaps/background suspension is discarded, so resuming cannot skip the whole lifecycle in one catch-up jump. Simulation time may consequently lag wall time after suspension.
 
-**Reset simulation** restores initial fuel, unburned states, timers, and selection, turns placement off, and allows a repeatable new run. It preserves the current camera. `R` resets only the camera. Neither operation changes the authoritative map. `src/rendering/createGroundPicker.js` raycasts from current pointer/camera coordinates onto the ground plane and resolves grid coordinates; vegetation and text sprites cannot intercept picking. Rendering updates affected tile/decoration instances on state changes, rather than rebuilding the map each frame.
+**Reset simulation** restores initial fuel, unburned states, exposure, timers, and selection, turns placement off, and allows a repeatable new run. It preserves the current camera. `R` resets only the camera. Neither operation changes the authoritative map. `src/rendering/createGroundPicker.js` raycasts from current pointer/camera coordinates onto the ground plane and resolves grid coordinates; vegetation and text sprites cannot intercept picking. Rendering updates affected tile/decoration instances and one shared fire-indicator batch on state changes, with partial instance-buffer updates rather than rebuilding the map each frame.
+
+Suggested demonstration: select **(32, 32)** near the center of the vegetation band. At approximately 1 simulated second its first neighbors ignite; Route A's designated section first becomes hazardous at 7 seconds and Route B's at 10. Their complete designated sections become hazardous at about 10.1 and 13.1 seconds respectively. All 280 fuel cells cool by about 26.25 seconds. These timings were checked in the independent simulation; background suspension can extend wall-clock time. The authored map is unchanged. Route hazards are verified, but agent rerouting is not implemented.
 
 Run navigation, map, fire lifecycle, and interaction checks with no additional test dependency:
 
@@ -127,15 +133,24 @@ The user reported that the Increment 3 checklist looked acceptable and physical 
 3. Resize wide/narrow and tall/short, then press `R`. Check map proportions, framing, labels, legend, and camera hints.
 4. Repeat on production preview and inspect the console. No fire, ignition controls, or moving agents should appear.
 
-The user reported passing Increment 4 marker movement, invalid-ground rejection, camera/selection interactions, reset/restoration with preserved camera, camera reset, resizing, and no observed errors. The final uninterrupted-run check reached dark gray with `burned-cool` status. Retain this checklist for repeat validation:
+The user reported passing Increment 4 marker movement, invalid-ground rejection, camera/selection interactions, reset/restoration with preserved camera, camera reset, resizing, and no observed errors. The final uninterrupted-run check reached dark gray with `burned-cool` status. The following records the historical Increment 4 checklist; Increment 5 now adds neighboring spread:
 
 1. Toggle placement on/off; check crosshair, one movable ring, invalid-cell rejection, and disabled Start fire before selection. Try brush and grass-bearing route cells.
 2. Zoom, physically pan/orbit, then select visible fuel. Camera gestures, left drags, and all panel interactions must not select cells.
-3. Start fire: placement locks and only the selected cell changes orange → red → dark gray (4/6 seconds burning, then 5 seconds cooling in an active tab). Neighbors stay unchanged.
+3. At Increment 4, placement locked and only the selected cell changed orange → red → dark gray (4/6 seconds burning, then 5 seconds cooling in an active tab). Neighbors stayed unchanged then.
 4. Move the camera, reset simulation during burning/hot/cool, and repeat a run. Fuel/appearance/selection reset, placement turns off, and camera stays put. `R` resets camera only.
 5. Resize and check readable/scrollable panels, repeat on production preview, and check the console. Physical mouse checks remain necessary; automated/agent checks are separate from user validation. Full MVP performance is unmeasured.
 
-Deferred visual refinements: improve/replace the purple selection ring and distinguish grass, brush, and tree-covered fuel areas more clearly. Decorative gaps intentionally can contain logical fuel; tests verified picking, positions, lifecycle colors, and hazard flags agree. These visual improvements are not implemented in this checkpoint.
+Increment 5 feedback: the user reports the checklist mostly passed, but fuel appearance was misleading. Individual checklist results were not specified; full validation is **not recorded as passed**. A minimal ground-color/legend clarification is now pending visual recheck:
+
+1. Select `(32, 32)` near the middle of the green patch (the status confirms coordinates), then start. Check a delayed advancing orange front, followed by red and dark gray cells; both route sections should be reached. Keep the tab active for about 27 seconds.
+2. Verify only one user ignition can be selected, selection locks after starting, and nonfuel areas never burn. Decorative gaps inside the fuel band can burn.
+3. During spread, zoom/pan/orbit and press `R`; fire must continue. Reset simulation while spread is active: all fuel/indicators/selection restore, placement turns off, and the camera stays put. Re-select the same coordinate to replay.
+4. Resize wide/narrow and tall/short; check labels and controls. Repeat on production preview and inspect the console. Physical right/middle drag checks remain human checks. No full MVP performance result is claimed.
+
+Visual recheck: compare both light-green crossings with the yellow road, try selecting fuel between decorative models, confirm yellow road rejects ignition, then burn/reset and confirm the original green coverage returns. Check the updated legend at desktop and narrow sizes.
+
+Deferred visual refinements: improve/replace the purple selection ring and further distinguish grass, brush, and tree-covered decorative models. Grass/brush ground coverage is now clarified; broader asset refinement and tree-covered appearance remain deferred. Decorative gaps intentionally can contain logical fuel; tests verified picking, positions, lifecycle colors, and hazard flags agree. No purple-marker redesign or new tree fuel type is included.
 
 ## Intended organization
 
@@ -143,7 +158,7 @@ The current application uses `src/main.js`, `src/styles.css`, `src/rendering/`, 
 
 | Path | Purpose |
 | --- | --- |
-| `src/simulation/` | Independent single-cell fire state, fixed-step lifecycle, and demonstration configuration |
+| `src/simulation/` | Independent fire state, fixed-step spread/lifecycle, and demonstration configuration |
 | `src/agents/` | Navigation and agent state machines |
 | `src/world/` | Authored logical grid and BFS connectivity validation |
 | `src/rendering/` | Three.js visualization |

@@ -5,6 +5,13 @@ const COLORS = {
   start: 0x478ecb, safe: 0x55b69b,
 };
 const FIRE_COLORS = { burning: 0xff8a20, 'burned-hot': 0xd33138, 'burned-cool': 0x4e5663 };
+const FUEL_COLORS = { brush: 0x527648, grass: 0x91aa59 };
+
+// Full-cell ground coverage follows fuel data, including walkable crossings.
+// Sparse decorative models do not define the ignitable area.
+function groundColor(cell) {
+  return FUEL_COLORS[cell.fuelType] ?? COLORS[cell.terrain];
+}
 
 export function createMapView(map) {
   const group = new THREE.Group();
@@ -41,7 +48,7 @@ export function createMapView(map) {
   map.cells.forEach((cell, index) => {
     const x = index % map.width;
     const z = Math.floor(index / map.width);
-    color.setHex(COLORS[cell.terrain]);
+    color.setHex(groundColor(cell));
     tiles.setColorAt(index, color);
     if (cell.fuelType === 'brush' && x % 2 === 0 && z % 2 === 0) {
       brush.push(positionFor(x, z, 0.25));
@@ -104,8 +111,16 @@ export function createMapView(map) {
   marker.visible = false;
   group.add(marker);
   const indicatorGeometry = new THREE.BoxGeometry(map.cellSize * 0.8, 0.65, map.cellSize * 0.8);
-  const indicatorMaterial = new THREE.MeshBasicMaterial({ color: FIRE_COLORS.burning });
-  const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+  const indicatorMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  // One shared batch for every fuel cell; zero-scale instances are initially hidden.
+  const indicator = new THREE.InstancedMesh(indicatorGeometry, indicatorMaterial, map.cells.length);
+  const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
+  for (let index = 0; index < map.cells.length; index += 1) {
+    indicator.setMatrixAt(index, hidden);
+    indicator.setColorAt(index, color.setHex(0xffffff));
+  }
+  // Active instance positions change after construction; avoid stale cached bounds.
+  indicator.frustumCulled = false;
   indicator.visible = false;
   group.add(indicator);
   resources.push(markerGeometry, markerMaterial, indicatorGeometry, indicatorMaterial);
@@ -113,13 +128,25 @@ export function createMapView(map) {
   function syncFire(simulation) {
     for (const index of simulation.takeChanges()) {
       const cell = simulation.cells[index];
-      tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? COLORS[map.cells[index].terrain]));
+      tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index])));
+      tiles.instanceColor.addUpdateRange(index * 3, 3);
       tiles.instanceColor.needsUpdate = true;
+      const x = index % map.width;
+      const z = Math.floor(index / map.width);
+      const active = cell.state !== 'unburned';
+      indicator.setMatrixAt(index, active
+        ? new THREE.Matrix4().makeTranslation(...positionFor(x, z, 0.325)) : hidden);
+      indicator.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? 0xffffff));
+      indicator.instanceMatrix.addUpdateRange(index * 16, 16);
+      indicator.instanceMatrix.needsUpdate = true;
+      indicator.instanceColor.addUpdateRange(index * 3, 3);
+      indicator.instanceColor.needsUpdate = true;
       const decoration = decorationByCell.get(index);
       if (decoration) {
         const matrix = decoration.matrix.clone();
         if (cell.fuel === 0) matrix.scale(new THREE.Vector3(0, 0, 0));
         decoration.mesh.setMatrixAt(decoration.instanceIndex, matrix);
+        decoration.mesh.instanceMatrix.addUpdateRange(decoration.instanceIndex * 16, 16);
         decoration.mesh.instanceMatrix.needsUpdate = true;
       }
     }
@@ -129,9 +156,6 @@ export function createMapView(map) {
       const x = simulation.selected % map.width;
       const z = Math.floor(simulation.selected / map.width);
       marker.position.set(...positionFor(x, z, 0.55));
-      indicator.position.set(...positionFor(x, z, 0.325));
-      indicatorMaterial.color.setHex(FIRE_COLORS[simulation.cells[simulation.selected].state]
-        ?? FIRE_COLORS.burning);
     }
   }
 

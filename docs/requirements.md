@@ -29,7 +29,7 @@ The user approved basic camera navigation (zoom, pan, orbit, reset-view) and a c
 - **Start fire** requires a valid selection, exits placement mode, and locks further placement until **Reset simulation**. One ignition per run remains the MVP scope.
 - Existing wheel zoom, right-drag pan, middle-drag orbit, and camera-only `R` remain available during placement and fire. Camera gestures and panel interactions must not place ignition. Picking resolves the logical ground grid beneath decorative geometry.
 - **Reset simulation** restores initial fuel, states, timers, and ignition selection, turns placement off, and permits a new run while preserving the current camera view and authoritative map data.
-- Increment 4 implements only the selected cell's burning, burnout, and cooling. Neighboring spread and agents remain unimplemented; the existing MVP acceptance scenarios and performance target are unchanged.
+- Increment 4 implemented only the selected cell's burning, burnout, and cooling. Increment 5 adds deterministic four-edge-neighbor exposure spread: accumulate exposure per burning neighbor, ignite at threshold, and clear incomplete exposure when no burning neighbors remain. Evaluate from a step-start snapshot and apply ignitions together; no diagonal spread, nonfuel jumps, or reignition. Keep one user ignition per run. Agents remain unimplemented; existing MVP acceptance scenarios and performance target are unchanged. These are illustrative rules, not calibrated wildfire physics.
 
 ## Core technical challenge
 

@@ -128,6 +128,7 @@ kbd {
 .swatch.safe { background: #55b69b; }
 .swatch.route { background: #e0c58e; }
 .swatch.vegetation { background: #527648; }
+.swatch.grass { background: #91aa59; }
 .swatch.obstacle { background: #8c9698; }
 .swatch.selected { background: #b349df; }
 .swatch.burning { background: #ff8a20; }
@@ -154,9 +155,11 @@ button:disabled { cursor: default; }
 button[aria-pressed="true"] { background: #efdbfa; border-color: #8736ad; }
 #fire-status { min-height: 2.5em; margin: 0.5rem 0; }
 .simulation-note { margin: 0.5rem 0 0; }
+.scene-label .fuel-note { max-width: 15rem; font-size: 0.7rem; }
 
 @media (max-width: 600px) {
-  .scene-label { top: 0.5rem; left: 0.5rem; padding: 0.5rem; }
+  .scene-label { top: 0.5rem; left: 0.5rem; padding: 0.5rem;
+    max-height: 36vh; overflow: auto; }
   .simulation-panel { top: auto; bottom: 0.5rem; left: 0.5rem; right: auto;
     width: calc(100% - 1rem); max-height: 34vh; overflow: auto; }
   .simulation-panel .map-legend { grid-template-columns: 1fr 1fr; }

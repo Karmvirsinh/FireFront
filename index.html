@@ -15,13 +15,15 @@
         <ul class="map-legend" aria-label="Map legend">
           <li><span class="swatch start"></span>Start area</li>
           <li><span class="swatch safe"></span>Safe zone</li>
-          <li><span class="swatch route"></span>Routes A / B</li>
-          <li><span class="swatch vegetation"></span>Vegetation / fuel</li>
+          <li><span class="swatch route"></span>Road · no fuel</li>
+          <li><span class="swatch grass"></span>Grass fuel · route crossings</li>
+          <li><span class="swatch vegetation"></span>Brush fuel · blocked</li>
           <li><span class="swatch obstacle"></span>Blocked ground / rocks</li>
         </ul>
+        <p class="fuel-note">Ground color shows fuel coverage.<br />Models do not mark fuel boundaries.</p>
       </header>
       <aside id="simulation-panel" class="simulation-panel" aria-labelledby="simulation-title">
-        <h2 id="simulation-title">Single-cell fire</h2>
+        <h2 id="simulation-title">Fire simulation</h2>
         <div class="simulation-actions">
           <button id="place-ignition" type="button" aria-pressed="false">Place ignition</button>
           <button id="start-fire" type="button" disabled>Start fire</button>
@@ -34,7 +36,7 @@
           <li><span class="swatch hot"></span>Burned-hot · hazardous</li>
           <li><span class="swatch cool"></span>Burned-cool · no hazard</li>
         </ul>
-        <p class="simulation-note">Only one cell burns. No spread yet.</p>
+        <p class="simulation-note">One ignition. Fire spreads through adjacent fuel.</p>
       </aside>
       <aside class="controls-panel" aria-labelledby="camera-controls-title">
         <h2 id="camera-controls-title">Camera controls</h2>
