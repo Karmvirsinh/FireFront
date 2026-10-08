@@ -1,4 +1,4 @@
-export function createIgnitionControls(canvas, panel, simulation, pickCell, onChange) {
+export function createIgnitionControls(canvas, panel, simulation, pickCell, onChange, keyboardTarget = window) {
   const place = panel.querySelector('#place-ignition');
   const start = panel.querySelector('#start-fire');
   const reset = panel.querySelector('#reset-simulation');
@@ -25,11 +25,21 @@ export function createIgnitionControls(canvas, panel, simulation, pickCell, onCh
     }
   }
   function toggle() {
-    if (simulation.started) return;
+    if (place.disabled || simulation.started) return;
     placing = !placing;
     gesture = null;
     message = '';
     refresh();
+  }
+  function shortcut(event) {
+    if (event.key?.toLowerCase() !== 'i' || event.repeat || event.isComposing
+      || event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented
+      || place.disabled || simulation.started) return;
+    const typing = event.composedPath().some((element) => element.isContentEditable
+      || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName));
+    if (typing) return;
+    event.preventDefault();
+    toggle();
   }
   function startFire() {
     if (!simulation.start()) return;
@@ -72,7 +82,7 @@ export function createIgnitionControls(canvas, panel, simulation, pickCell, onCh
     refresh();
   }
   function cancel() { gesture = null; }
-  const listeners = [[place, 'click', toggle], [start, 'click', startFire],
+  const listeners = [[place, 'click', toggle], [keyboardTarget, 'keydown', shortcut], [start, 'click', startFire],
     [reset, 'click', resetSimulation], [canvas, 'pointerdown', down],
     [canvas, 'pointermove', move], [canvas, 'pointerup', up],
     [canvas, 'wheel', cancel],

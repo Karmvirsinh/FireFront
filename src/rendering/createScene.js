@@ -3,6 +3,7 @@ import { createCameraControls } from './createCameraControls.js';
 import { createMapView } from './createMapView.js';
 import { createGroundPicker } from './createGroundPicker.js';
 import { createAgentView } from './createAgentView.js';
+import { createViewportResize } from './createViewportResize.js';
 
 export function createScene(canvas, map, onFrame = () => {}, agents = null) {
   const scene = new THREE.Scene();
@@ -39,19 +40,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null) {
   sunlight.position.set(4, 8, 5);
   scene.add(sunlight);
 
-  function resize() {
-    const width = Math.max(1, canvas.clientWidth);
-    const height = Math.max(1, canvas.clientHeight);
-    // Cap GPU work on high-density displays while preserving CSS layout size.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    navigation.frameMap(camera.aspect);
-  }
-
-  window.addEventListener('resize', resize);
-  resize();
+  const stopResizing = createViewportResize(canvas.parentElement, renderer, camera, navigation);
 
   // The application owns simulation rules; rendering supplies elapsed wall time.
   renderer.setAnimationLoop((time) => {
@@ -65,7 +54,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null) {
     syncFire: mapView.syncFire,
     syncAgents: () => agentView?.sync(),
     dispose() {
-      window.removeEventListener('resize', resize);
+      stopResizing();
       renderer.setAnimationLoop(null);
       navigation.dispose();
       mapView.dispose();

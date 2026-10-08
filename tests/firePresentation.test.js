@@ -25,7 +25,7 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
   const elements = Object.fromEntries(['place-ignition', 'start-fire', 'reset-simulation', 'fire-status']
     .map((id) => [id, element()]));
   const ui = createIgnitionControls(canvas, { querySelector: (id) => elements[id.slice(1)] },
-    simulation, () => null, () => {});
+    simulation, () => null, () => {}, new EventTarget());
   const [marker, indicator] = view.group.children.slice(-2);
   const camera = new PerspectiveCamera(45, 1280 / 720, 0.1, 500);
   camera.position.set(0, 40, 30);

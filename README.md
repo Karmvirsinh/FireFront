@@ -8,6 +8,31 @@ Increment 5 is checkpointed at `37adf4c`: nonburnable roads, distinct vegetation
 
 The intended stack is JavaScript, Three.js, Vite/npm, and HTML/CSS. FireFront is not a validated wildfire prediction tool.
 
+## Dashboard exploration — Increment 8 (user-validated)
+
+Work is on `feature/dashboard-layout`, created from the clean, validated Increment 7 checkpoint `0e42f8c`. `main` remains at that checkpoint with the original overlay layout for comparison. Increment 8 is completed with user-reported manual validation on this branch; no merge, push or deployment.
+
+The dark HTML/CSS workspace puts one dedicated simulation viewport beside a scrollable panel for ignition/reset, selection status, five evacuation counts and map/fire legends. Compact camera hints sit below the canvas. At widths up to 800 px the panel stacks below a usable viewport and the page scrolls. Short desktop windows also allow page scrolling instead of shrinking the scene indefinitely. Fonts use the local system stack; no frameworks, assets or dependencies added. The scene background/assets, purple marker, map, fire/agent rules and pacing are unchanged.
+
+`src/rendering/createViewportResize.js` observes the viewport container with `ResizeObserver`, updating renderer dimensions, camera projection and responsive reset framing even when panel layout changes without a window resize. A window listener retains pixel-ratio updates, capped at 2. Cleanup disconnects both. The absolutely sized canvas cannot resize its parent through its drawing buffer. Picking continues using the canvas's current bounding rectangle in client coordinates, so page offsets and scrolling do not change cell alignment. Controls/legends live outside the canvas and cannot initiate scene pointer gestures. Existing keyboard guards remain; R is camera-only and simulation reset preserves the camera.
+
+Press **I** to toggle ignition placement through the same action as **Place ignition**; the button shows an I key hint using the existing R style. This shortcut never selects a cell or starts fire and remains locked while the button is disabled/after ignition. Held-key repeats, typing in inputs/editable elements, Ctrl/Alt/Meta combinations, composition and already-handled events are ignored. Reset re-enables placement. The shortcut listener is removed during cleanup.
+
+The user reported all four Increment 8 manual checklist items passed: dashboard sizing/scrolling/selection alignment; I/button toggling and keyboard guards without automatic selection/start; shortcut lock during a run and re-enablement after reset; physical pan/orbit, zoom, camera-only R, evacuation/reset and console in development and preview. These user reports are separate from automated checks.
+
+Repeat-check checklist:
+
+1. At desktop, narrow and short sizes, identify START/SAFE, both routes, vegetation and all controls/counts/legends. Scroll the panel/page; ensure the viewport stays usable and proportions remain correct.
+2. Toggle placement with I and the button; hold I to confirm no repeated toggles. Check modifier/typing guards where applicable. Confirm the shortcut alone neither selects nor starts fire. Click visible vegetation, and confirm marker/status alignment after resizing and page scrolling. Yellow road must reject ignition without moving the marker. Clicking/scrolling/dragging on panels must not select cells or move the camera.
+3. After Start fire, confirm I cannot re-enable placement; after reset, confirm it works again. Check physical right-drag pan, middle-drag orbit, wheel zoom and R. Run the usual (32,32) scenario; confirm evacuation/fire/counts, camera-only R, and reset during/after a run with camera preservation.
+4. Repeat on rebuilt production preview and inspect the console. Direct-fire loss remains fixture-verified, not visibly demonstrated on nonburnable roads. Full MVP performance remains unmeasured.
+
+### Compare layouts safely after Increment 8 is committed
+
+Do not switch branches with uncommitted changes. With the validated Increment 8 checkpoint saved, stop the project servers, confirm `git status --short` is empty, and use `git switch main` to inspect the preserved overlay layout. Start development normally. To return, stop that server and use `git switch feature/dashboard-layout`, again only with a clean working tree. Rebuild with `npm.cmd run build` on each branch before starting production preview: ignored `dist/` output is not changed by switching Git branches. Do not merge or discard files to compare layouts. Both layouts use this same project folder and dependencies.
+
+Pacing tuning and performance validation follow this layout exploration; no tuning is included here. Purple-marker redesign, richer assets/effects and abrupt road-width presentation remain deferred. Actual automated/browser results are recorded in `docs/progress.md`; Increment 8 manual checklist completion is user-reported. Full MVP performance remains unmeasured.
+
 ## Local development
 
 Use a modern browser with WebGL2 support and Node.js compatible with Vite: `^20.19.0 || >=22.12.0`. This increment was checked with the regular Windows Node.js v24.21.0 and npm 11.19.0. Direct dependencies are pinned to Three.js 0.186.1 and Vite 8.3.2.
@@ -41,7 +66,7 @@ In PowerShell, `npm.cmd` can replace `npm` if script execution policy blocks the
 
 - `src/main.js` initializes the map, shared evacuation simulation, UI, and renderer. Vite hot replacement disposes the previous scene and UI listeners.
 - The **scene** contains the instanced map meshes, text markers, background, and lights. Built-in geometries require no external assets.
-- The **camera** defines the viewing position and perspective. On resize, its aspect ratio and projection matrix are updated to keep objects proportional.
+- The **camera** defines the viewing position and perspective. On viewport-container resize, its aspect ratio and projection matrix are updated to keep objects proportional.
 - The **renderer** draws the camera's view of the scene into the HTML canvas. Its drawing buffer follows the canvas size and uses at most 2 pixels per CSS pixel in each dimension.
 - The **animation loop** requests repeated renders through Three.js and passes its timestamp to the application. A shared 50 ms clock updates fire, derives hazards, then checks direct-fire loss before agent decisions/movement and rendering. Both fire and movement drop excess elapsed time beyond the existing 250 ms frame cap. Cleanup stops the loop and releases geometry, material, and renderer resources.
 - `src/rendering/createCameraControls.js` uses OrbitControls from the installed Three.js package. It updates before drawing and removes its pointer, context-menu, and reset-key listeners during cleanup.
@@ -94,7 +119,7 @@ Orbit angles remain limited to 15–75 degrees from vertical. For the 32×32 map
 
 ## Ignition, neighboring spread, and lifecycle
 
-Toggle **Place ignition** on for a crosshair cursor. An unmodified stationary left mouse click on grass, brush or forest ground selects one fuel cell, shown with a purple ring. Clicking another eligible cell moves that ring before starting. Fuel-free roads/ground are rejected without changing the cell or existing selection. Turning placement off retains the selection but disables picking. Panel interactions and left drags do not place ignition.
+Toggle **Place ignition** on with its button or **I** for a crosshair cursor. An unmodified stationary left mouse click on grass, brush or forest ground selects one fuel cell, shown with a purple ring. Clicking another eligible cell moves that ring before starting. Fuel-free roads/ground are rejected without changing the cell or existing selection. Turning placement off retains the selection but disables picking. Panel interactions and left drags do not place ignition.
 
 **Start fire** is enabled only after a valid selection. It ignites that cell, turns placement off, and locks selection until **Reset simulation**. Orange indicates burning, red burned-hot, and dark gray burned-cool; raised indicators and recolored ground distinguish every affected cell. Exhausted decorative fuel is hidden and restored on reset. The status text describes the original selected cell; neighbors can still burn after that cell has cooled.
 
@@ -207,7 +232,7 @@ The current application uses `src/main.js`, `src/styles.css`, `src/rendering/`, 
 | Path | Purpose |
 | --- | --- |
 | `src/simulation/` | Independent fire state, fixed-step spread/lifecycle, and demonstration configuration |
-| `src/agents/` | Implemented deterministic A*, movement, buffer exit and four-state agent logic |
+| `src/agents/` | Implemented deterministic A*, movement, buffer exit and five-state agent logic |
 | `src/world/` | Authored logical grid and BFS connectivity validation |
 | `src/rendering/` | Three.js visualization |
 | `src/ui/` | Ignition placement, Start fire, and simulation reset controls |

@@ -53,6 +53,12 @@ A non-evacuated, non-lost agent becomes lost when its occupied logical cell is a
 
 Planned follow-up, not this increment: explore a dedicated simulation viewport and surrounding controls/statistics on a future `feature/dashboard-layout` branch, retaining the current layout for comparison; follow with coordinated pacing tuning and performance validation. No branch creation, dashboard redesign or pacing changes are authorized for Increment 7.
 
+## Increment 8 — approved dashboard layout exploration
+
+Explore a restrained dark HTML/CSS dashboard on `feature/dashboard-layout` from validated checkpoint `0e42f8c`, preserving `main` for comparison in the same project folder. A dedicated simulation viewport stays the focus, with existing ignition/reset/status, five counts, concise legends and camera hints around it. Narrow screens stack panels and allow page scrolling. Renderer/camera sizing follows the viewport container; picking must remain accurate with offsets and scrolling. Preserve all simulation/map/fuel/timing/agent/hazard/loss rules, single ignition, camera bindings, shortcut guards and reset semantics. No new dependencies/assets, inactive controls, marker redesign, merge or deployment. This approved presentation exploration does not redefine the MVP or acceptance scenarios. Coordinated pacing and performance validation remain subsequent work.
+
+Approved Increment 8 shortcut: I toggles the same ignition-placement action as the button, with a visible key hint; never selects a cell or starts fire. Respect disabled/run-lock state and ignore held repeats, editable-field typing and Ctrl/Alt/Meta combinations. Camera bindings and simulation semantics remain unchanged.
+
 ## Core technical challenge
 
 Keep navigation synchronized with changing fire hazards.
