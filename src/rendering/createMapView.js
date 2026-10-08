@@ -116,8 +116,9 @@ export function createMapView(map) {
     group.add(sprite);
     resources.push(texture, material);
   }
-  label('START', map.start.x, map.start.z, 5.5);
-  label('SAFE', map.safeZone.x, map.safeZone.z, 5.5);
+  // Keep endpoint text below the areas rather than obscuring the agents.
+  label('START', map.start.x, map.zones.start.z1 + 2, 5.5);
+  label('SAFE', map.safeZone.x, map.zones.safe.z1 + 2, 5.5);
   label('ROUTE A', 21, 23, 6);
   label('ROUTE B', 21, 43, 6);
 

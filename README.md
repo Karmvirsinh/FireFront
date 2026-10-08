@@ -4,7 +4,7 @@ An educational wildfire/evacuation simulator for a university project, mentored 
 
 ## Current status
 
-Increments 1–4 established the application, camera navigation, fixed two-route map, and user-validated ignition/lifecycle/reset (`9daf155`). Increment 5 spread was preserved as WIP `f66a32a`, then corrected to nonburnable roads, distinct grass/brush/forest and separate nearby-fire navigation hazards. Final user-reported checks confirmed road rejection, vegetation eligibility, reset restoration and physical pan/orbit. Invisible hazard/connectivity checks are automated results. The layout is accepted for functional development, with presentation refinements deferred. The canvas resizes with pixel ratio capped at 2. No agents, A*, loss conditions, off-path escape, procedural generation, or weather is implemented at this checkpoint.
+Increment 5 is checkpointed at `37adf4c`: nonburnable roads, distinct vegetation and nearby-fire navigation hazards. Final user-reported checks confirmed road rejection, vegetation eligibility, reset restoration and physical pan/orbit; invisible connectivity checks were automated. The layout is accepted for functional development, with visual refinements deferred. Increment 6 adds 20 basic evacuation agents and A* navigation, **completed with user-reported manual validation**. Loss handling, off-path escape, crowd avoidance, weather and procedural generation are not implemented. Full MVP performance is unmeasured.
 
 The intended stack is JavaScript, Three.js, Vite/npm, and HTML/CSS. FireFront is not a validated wildfire prediction tool.
 
@@ -39,11 +39,11 @@ In PowerShell, `npm.cmd` can replace `npm` if script execution policy blocks the
 
 ## How the scene works
 
-- `src/main.js` initializes the map, independent fire simulation, UI, and renderer. Vite hot replacement disposes the previous scene and UI listeners.
+- `src/main.js` initializes the map, shared evacuation simulation, UI, and renderer. Vite hot replacement disposes the previous scene and UI listeners.
 - The **scene** contains the instanced map meshes, text markers, background, and lights. Built-in geometries require no external assets.
 - The **camera** defines the viewing position and perspective. On resize, its aspect ratio and projection matrix are updated to keep objects proportional.
 - The **renderer** draws the camera's view of the scene into the HTML canvas. Its drawing buffer follows the canvas size and uses at most 2 pixels per CSS pixel in each dimension.
-- The **animation loop** requests repeated renders through Three.js and passes its timestamp to the application. The application advances the independent simulation in fixed steps and sends changed state to rendering. Cleanup stops the loop and releases geometry, material, and renderer resources.
+- The **animation loop** requests repeated renders through Three.js and passes its timestamp to the application. A shared 50 ms clock updates fire, derives hazards, then updates agent decisions/movement before rendering. Both fire and movement drop excess elapsed time beyond the existing 250 ms frame cap. Cleanup stops the loop and releases geometry, material, and renderer resources.
 - `src/rendering/createCameraControls.js` uses OrbitControls from the installed Three.js package. It updates before drawing and removes its pointer, context-menu, and reset-key listeners during cleanup.
 
 ## Fixed map data and layout
@@ -75,7 +75,7 @@ Light-green ground is grass, medium-green is brush with low polyhedral shrubs, a
 
 `src/simulation/getNavigationHazards.js` derives an invisible unsafe mask from current fire states. Burning and burned-hot cells are unsafe themselves. Every burning cell also marks exactly its eight immediately surrounding cells unsafe, including diagonals (one logical cell / 0.5 world units). Burned-hot cells project no buffer. A cell is usable only when its base map cell is walkable and its hazard-mask entry is clear. A cooled cell can still be unsafe beside another burning source, and blocked ground stays blocked after all fire clears.
 
-Recomputing the mask keeps overlapping sources effective until all clear and prevents stale hazards after reset. This calculation never changes fuel or states: nonburning roads can be unsafe but cannot ignite or transmit fire. No visible hazard overlay or additional UI is provided; hazards are verified by tests. A precautionary buffer does not define death or loss behavior, and agents are absent.
+Recomputing the mask keeps overlapping sources effective until all clear and prevents stale hazards after reset. This calculation never changes fuel or states: nonburning roads can be unsafe but cannot ignite or transmit fire. There is no visible hazard overlay. Agents now use the mask for navigation, with a limited emergency exit for an already-buffered occupant as described below. A precautionary buffer does not define death or loss behavior.
 
 ## Camera navigation
 
@@ -100,7 +100,7 @@ Toggle **Place ignition** on for a crosshair cursor. An unmodified stationary le
 
 Each unburned fuel cell accumulates exposure from its four edge-sharing burning neighbors: 1 exposure unit per neighbor per simulated second, with ignition at 1 unit. One burning neighbor takes 1 second; two take 0.5 seconds. Exposure returns to zero when no burning neighbor remains. Only burning cells contribute; hot/cooled cells do not. There is no diagonal spread or jumping across nonfuel gaps. Fuel quantity controls burn duration, independently of ignition delay and base walkability; blocked or walkable fuel can burn. The eight-neighbor navigation buffer does not change this four-neighbor spread rule.
 
-Every fixed step snapshots the burning sources, evaluates targets, and applies new ignitions together. A newly ignited cell contributes only in the next step and retains full fuel until then; a source burning at the start of a step contributes even if it burns out during that step. This avoids iteration-order effects and same-step cascades. This simplified deterministic four-neighbor rule is **not calibrated wildfire physics**; wind, moisture, slope, stochastic behavior, and agents are absent.
+Every fixed step snapshots the burning sources, evaluates targets, and applies new ignitions together. A newly ignited cell contributes only in the next step and retains full fuel until then; a source burning at the start of a step contributes even if it burns out during that step. This avoids iteration-order effects and same-step cascades. This simplified deterministic four-neighbor rule is **not calibrated wildfire physics**; wind, moisture, slope and stochastic behavior are absent.
 
 `src/simulation/createFireSimulation.js` owns plain fire-state copies independent of Three.js and DOM. The lifecycle is `unburned → burning → burned-hot → burned-cool`. Burning/hot cells are directly hazardous; cooling clears their own hazard but not another cell's buffer. Original base walkability is preserved. Exhausted fuel cannot reignite. The single-run ignition lock also remains in force after cooling.
 
@@ -116,7 +116,30 @@ Run navigation, map, fire lifecycle, and interaction checks with no additional t
 npm test
 ```
 
-## Manual validation
+## Basic evacuation agents — Increment 6
+
+Twenty boxes spawn in the existing blue starting area (X 7–11, Z 30–33), waiting until **Start fire** automatically begins evacuation. `src/agents/` owns plain state/navigation with no Three.js or DOM dependency. `findPath.js` uses four-neighbor A* with Manhattan distance and deterministic f-score, heuristic, then cell-index tie-breaking. Normal paths require base walkability and a clear hazard mask at every cell. No diagonal corners, off-path movement, collisions or crowd avoidance; agents may overlap as paths merge.
+
+`agentConfig.js` sets an illustrative speed of **2 logical cells per simulated second**, or **1 world unit/second**. Continuous X/Z positions move along axis-aligned cell-center segments in fixed steps; logical occupancy is the cell containing the actual position, and rendering reads those same coordinates. START/SAFE text is positioned just below its area so it does not cover the boxes. Box colors are white waiting, blue evacuating, brown trapped and teal evacuated; the labeled live counts are authoritative and always total 20.
+
+Paths are cached until a relevant hazard invalidates the occupied cell, target or remaining route. Trapped agents retry on hazard changes, not every rendered frame. When a segment becomes invalid, the agent smoothly returns to the center of its **currently occupied cell**, then replans; it does not teleport to an endpoint or enter a newly unsafe next cell. If already inside a precautionary buffer, an emergency BFS can leave through the nearest walkable buffered cells toward safe ground, excluding burning/hot cells. After leaving, normal safe A* resumes. This exception only exits an existing buffer; safe agents cannot use it to enter buffers as shortcuts. A directly burning/hot occupied cell stops movement and retries after hazards change; this temporary trapped behavior is **not a completed loss/death rule**.
+
+Implemented states: **waiting** before ignition; **evacuating** while following a route or emergency exit; **trapped** when no available route/exit exists; **evacuated** at the safe-zone center, terminal until reset. Reset restores all 20 starting positions, waiting states, paths, retry caches, fire and simulation time while preserving the camera. R still resets the camera only.
+
+Actual-fire trace on the unchanged map/config with ignition **(32,32)**: agent 0 initially plans Route A, turns west toward Route B at approximately **7.1 seconds**, all 20 are trapped at **10.0 seconds**, all resume at **11.1 seconds**, and evacuation completes between **36.05 and 39.55 seconds**. These are independent simulation checks, separate from controlled-hazard tests and browser observations. Keep the tab active; background suspension can lengthen wall time. Loss handling and its integration remain required before MVP completion; no full MVP performance target has been measured.
+
+Increment 6 repeat-check checklist (the user-reported closeout results are recorded below):
+
+1. Confirm 20 white waiting boxes in START and counts 20/0/0/0. Bare road rejects ignition; selecting vegetation alone must not start movement.
+2. Ignite `(32,32)`. Watch movement toward A, a turn back toward B around 7 seconds, brief Trapped = 20 around 10–11.1 seconds, then resumed evacuation. By roughly 40 active-tab seconds, Evacuated = 20. Counts must always sum to 20.
+3. Reset during movement/trapping and after evacuation: positions, vegetation, marker and counts restore, placement turns off, and camera stays put. Repeat the same ignition; R changes only the camera.
+4. Check wheel zoom, physical pan/orbit, UI isolation, wide/narrow and tall/short resizing, production preview and browser console. Agents may overlap. Loss behavior is not implemented or tested as complete.
+
+Increment 6 user-reported validation passed: 20 waiting agents; ignition at (32,32) produced turn-back, trapping, recovery and evacuation as described; reset during movement and after completion preserved the camera; pan/orbit, zoom, R, resizing and console checks passed. These reports are distinct from automated checks.
+
+Pending pacing issue: the user finds fire progression too fast. After loss handling, perform a focused tuning pass on spread, burn duration, cooling and agent speed together, preserving meaningful rerouting/trapping scenarios. No timing or speed changes were made during closeout.
+
+## Earlier manual validation records
 
 The user reported passing these checks on 2026-10-04, including wide/narrow and tall/short resizing, readable labeling, no red console errors, and matching development/production-preview appearance. The checklist remains available for repeat checks:
 
@@ -165,12 +188,12 @@ Deferred visual refinements: abrupt road-width changes near vegetation, purple s
 
 ## Intended organization
 
-The current application uses `src/main.js`, `src/styles.css`, `src/rendering/`, `src/world/`, `src/simulation/`, `src/ui/`, and `tests/`. Other directories will be created when first needed:
+The current application uses `src/main.js`, `src/styles.css`, `src/rendering/`, `src/world/`, `src/simulation/`, `src/agents/`, `src/ui/`, and `tests/`. Other directories will be created when first needed:
 
 | Path | Purpose |
 | --- | --- |
 | `src/simulation/` | Independent fire state, fixed-step spread/lifecycle, and demonstration configuration |
-| `src/agents/` | Navigation and agent state machines |
+| `src/agents/` | Implemented deterministic A*, movement, buffer exit and four-state agent logic |
 | `src/world/` | Authored logical grid and BFS connectivity validation |
 | `src/rendering/` | Three.js visualization |
 | `src/ui/` | Ignition placement, Start fire, and simulation reset controls |

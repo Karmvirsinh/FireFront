@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { createCameraControls } from './createCameraControls.js';
 import { createMapView } from './createMapView.js';
 import { createGroundPicker } from './createGroundPicker.js';
+import { createAgentView } from './createAgentView.js';
 
-export function createScene(canvas, map, onFrame = () => {}) {
+export function createScene(canvas, map, onFrame = () => {}, agents = null) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xdce8ef);
 
@@ -30,6 +31,8 @@ export function createScene(canvas, map, onFrame = () => {}) {
   });
   const mapView = createMapView(map);
   scene.add(mapView.group);
+  const agentView = agents ? createAgentView(map, agents) : null;
+  if (agentView) scene.add(agentView.mesh);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x526247, 2));
   const sunlight = new THREE.DirectionalLight(0xffffff, 3);
@@ -60,11 +63,13 @@ export function createScene(canvas, map, onFrame = () => {}) {
   return {
     pickCell: createGroundPicker(camera, canvas, map),
     syncFire: mapView.syncFire,
+    syncAgents: () => agentView?.sync(),
     dispose() {
       window.removeEventListener('resize', resize);
       renderer.setAnimationLoop(null);
       navigation.dispose();
       mapView.dispose();
+      agentView?.dispose();
       renderer.dispose();
     },
   };

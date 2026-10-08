@@ -157,6 +157,9 @@ button[aria-pressed="true"] { background: #efdbfa; border-color: #8736ad; }
 #fire-status { min-height: 2.5em; margin: 0.5rem 0; }
 .simulation-note { margin: 0.5rem 0 0; }
 .scene-label .fuel-note { max-width: 15rem; font-size: 0.7rem; }
+.agent-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem 0.75rem; margin: 0.5rem 0; }
+.agent-counts div { display: flex; justify-content: space-between; gap: 0.4rem; }
+.agent-counts dd { margin: 0; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 600px) {
   .scene-label { top: 0.5rem; left: 0.5rem; padding: 0.5rem;

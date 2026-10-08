@@ -1,28 +1,36 @@
 import './styles.css';
 import { createScene } from './rendering/createScene.js';
 import { createFixedMap } from './world/createFixedMap.js';
-import { createFireSimulation } from './simulation/createFireSimulation.js';
+import { createEvacuationSimulation } from './simulation/createEvacuationSimulation.js';
 import { createIgnitionControls } from './ui/createIgnitionControls.js';
+import { createAgentCounts } from './ui/createAgentCounts.js';
 
 const canvas = document.querySelector('#scene');
 const map = createFixedMap();
-const simulation = createFireSimulation(map);
+const simulation = createEvacuationSimulation(map);
+const panel = document.querySelector('#simulation-panel');
+const refreshCounts = createAgentCounts(panel, simulation.agents);
+refreshCounts();
 let previousTime = null;
 let previousState = null;
 const sceneView = createScene(canvas, map, (time) => {
   if (previousTime !== null) simulation.advance((time - previousTime) / 1000);
   previousTime = time;
-  sceneView.syncFire(simulation);
+  sceneView.syncFire(simulation.fire);
+  sceneView.syncAgents();
+  refreshCounts();
   const state = simulation.cells[simulation.selected]?.state;
   if (state !== previousState) {
     previousState = state;
     ignitionUI.refresh();
   }
-});
-const ignitionUI = createIgnitionControls(canvas, document.querySelector('#simulation-panel'),
+}, simulation.agents);
+const ignitionUI = createIgnitionControls(canvas, panel,
   simulation, sceneView.pickCell, () => {
     previousTime = null;
-    sceneView.syncFire(simulation);
+    sceneView.syncFire(simulation.fire);
+    sceneView.syncAgents();
+    refreshCounts();
   });
 
 // Dispose the old scene when Vite replaces this module during development.

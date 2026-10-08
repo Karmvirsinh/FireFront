@@ -31,6 +31,13 @@
           <button id="reset-simulation" type="button">Reset simulation</button>
         </div>
         <p id="fire-status" role="status" aria-live="polite"></p>
+        <dl class="agent-counts" aria-label="Evacuation counts">
+          <div><dt>Waiting</dt><dd id="count-waiting">20</dd></div>
+          <div><dt>Evacuating</dt><dd id="count-evacuating">0</dd></div>
+          <div><dt>Trapped</dt><dd id="count-trapped">0</dd></div>
+          <div><dt>Evacuated</dt><dd id="count-evacuated">0</dd></div>
+        </dl>
+        <p class="simulation-note">Start fire begins evacuation. Agents may overlap. Loss handling is not implemented.</p>
         <ul class="map-legend" aria-label="Fire legend">
           <li><span class="swatch selected"></span>Selected ignition</li>
           <li><span class="swatch burning"></span>Burning · hazardous</li>
