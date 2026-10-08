@@ -1,8 +1,9 @@
 import { cellAt } from './createFixedMap.js';
 
 // Validation only: four-neighbor reachability, with no agent path selection/A*.
-export function isConnected(map, from = map.start, to = map.safeZone) {
-  if (!cellAt(map, from.x, from.z)?.walkable || !cellAt(map, to.x, to.z)?.walkable) return false;
+export function isConnected(map, from = map.start, to = map.safeZone, unsafe = null) {
+  const usable = (x, z) => cellAt(map, x, z)?.walkable && !unsafe?.[z * map.width + x];
+  if (!usable(from.x, from.z) || !usable(to.x, to.z)) return false;
   const queue = [from];
   const visited = new Set([from.z * map.width + from.x]);
   for (let head = 0; head < queue.length; head += 1) {
@@ -12,7 +13,7 @@ export function isConnected(map, from = map.start, to = map.safeZone) {
       const nextX = x + dx;
       const nextZ = z + dz;
       const index = nextZ * map.width + nextX;
-      if (!visited.has(index) && cellAt(map, nextX, nextZ)?.walkable) {
+      if (!visited.has(index) && usable(nextX, nextZ)) {
         visited.add(index);
         queue.push({ x: nextX, z: nextZ });
       }

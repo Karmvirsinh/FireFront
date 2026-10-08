@@ -20,10 +20,10 @@ export function createFixedMap() {
       start: { x0: 6, x1: 13, z0: 28, z1: 35 },
       safe: { x0: 50, x1: 57, z0: 28, z1: 35 },
     },
-    vegetationPatch: { x0: 27, x1: 36, z0: 20, z1: 47 },
+    vegetationPatch: { x0: 27, x1: 36, z0: 25, z1: 42 },
     routes: [
-      { id: 'A', label: 'Route A', section: { x0: 30, x1: 33, z0: 22, z1: 25 } },
-      { id: 'B', label: 'Route B', section: { x0: 30, x1: 33, z0: 42, z1: 45 } },
+      { id: 'A', label: 'Route A', section: { x0: 30, x1: 33, z0: 24, z1: 24 } },
+      { id: 'B', label: 'Route B', section: { x0: 30, x1: 33, z0: 43, z1: 43 } },
     ],
   };
 
@@ -33,7 +33,9 @@ export function createFixedMap() {
     }
   }
 
-  paint(map.vegetationPatch, { terrain: 'vegetation', fuelType: 'brush' });
+  paint(map.vegetationPatch, { terrain: 'vegetation', fuelType: 'grass' });
+  paint({ x0: 27, x1: 30, z0: 28, z1: 39 }, { fuelType: 'brush' });
+  paint({ x0: 31, x1: 36, z0: 28, z1: 39 }, { fuelType: 'forest' });
   // Only these authored corridors and endpoint areas are walkable.
   const corridors = [
     { x0: 10, x1: 13, z0: 22, z1: 45 },
@@ -41,10 +43,15 @@ export function createFixedMap() {
     { x0: 10, x1: 53, z0: 22, z1: 25 },
     { x0: 10, x1: 53, z0: 42, z1: 45 },
   ];
-  for (const rect of corridors) paint(rect, { terrain: 'route', walkable: true });
-  // Fuel is independent of walkability: route cells in the patch contain grass.
-  for (const cell of map.cells) {
-    if (cell.terrain === 'route' && cell.fuelType === 'brush') cell.fuelType = 'grass';
+  for (const rect of corridors) paint(rect, { terrain: 'route', fuelType: 'none', walkable: true });
+  // Approved local one-cell passages: the fixed one-cell safety buffer can
+  // close these roads from the connected vegetation on their inner side.
+  for (const [z0, z1] of [[22, 23], [44, 45]]) {
+    paint({ x0: 30, x1: 33, z0, z1 }, { terrain: 'obstacle', fuelType: 'none', walkable: false });
+  }
+  for (const z of [25, 42]) {
+    paint({ x0: 30, x1: 33, z0: z, z1: z },
+      { terrain: 'vegetation', fuelType: 'grass', walkable: false });
   }
   paint(map.zones.start, { terrain: 'start', fuelType: 'none', walkable: true });
   paint(map.zones.safe, { terrain: 'safe', fuelType: 'none', walkable: true });

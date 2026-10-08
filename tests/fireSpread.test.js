@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createFireSimulation, isHazardous } from '../src/simulation/createFireSimulation.js';
+import { createFireSimulation } from '../src/simulation/createFireSimulation.js';
+import { getNavigationHazards } from '../src/simulation/getNavigationHazards.js';
+import { isConnected } from '../src/world/isConnected.js';
 import { FIRE_CONFIG } from '../src/simulation/fireConfig.js';
 import { createFixedMap } from '../src/world/createFixedMap.js';
 
@@ -116,22 +118,26 @@ test('spread reset/replay is repeatable across ordinary rendering intervals and 
   assert.deepEqual(map, original);
 });
 
-test('fixed-map fuel reaches both route sections without changing the map', () => {
+test('fixed-map spread makes bare road passages unsafe via buffers without burning roads', () => {
   const map = createFixedMap();
   const simulation = run(map, 32 * 64 + 32);
   const reached = new Set();
   for (let step = 0; step < 800; step += 1) {
     simulation.advance(0.05);
+    const unsafe = getNavigationHazards(simulation);
     for (const route of map.routes) {
       const { section } = route;
       let allHazardous = true;
       for (let z = section.z0; z <= section.z1; z += 1) for (let x = section.x0; x <= section.x1; x += 1) {
-        allHazardous &&= isHazardous(simulation.cells[z * map.width + x]);
+        allHazardous &&= Boolean(unsafe[z * map.width + x]);
       }
       if (allHazardous) reached.add(route.id);
     }
   }
   assert.deepEqual([...reached].sort(), ['A', 'B']);
+  assert.ok(map.cells.every((cell, i) => cell.terrain !== 'route'
+    || (simulation.cells[i].state === 'unburned' && simulation.cells[i].fuel === 0)));
+  assert.equal(isConnected(map, map.start, map.safeZone, getNavigationHazards(simulation)), true);
   assert.ok(simulation.cells.every((cell, i) => map.cells[i].fuelType === 'none'
     ? cell.state === 'unburned' : cell.state === 'burned-cool'));
   assert.deepEqual(map, createFixedMap());

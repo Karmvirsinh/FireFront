@@ -31,6 +31,18 @@ The user approved basic camera navigation (zoom, pan, orbit, reset-view) and a c
 - **Reset simulation** restores initial fuel, states, timers, and ignition selection, turns placement off, and permits a new run while preserving the current camera view and authoritative map data.
 - Increment 4 implemented only the selected cell's burning, burnout, and cooling. Increment 5 adds deterministic four-edge-neighbor exposure spread: accumulate exposure per burning neighbor, ignite at threshold, and clear incomplete exposure when no burning neighbors remain. Evaluate from a step-start snapshot and apply ignitions together; no diagonal spread, nonfuel jumps, or reignition. Keep one user ignition per run. Agents remain unimplemented; existing MVP acceptance scenarios and performance target are unchanged. These are illustrative rules, not calibrated wildfire physics.
 
+## Approved environment correction and nearby-fire safety — 2026-10-07
+
+The artificial fuel strips across roads were a test-layout shortcut, not the intended environment. Bare roads must be continuous, fuel-free and nonignitable. Grass, brush and forest each have a distinct representative fuel classification per cell, independent of base walkability; no layered vegetation simulation. Ground treatment shows fuel coverage, including forest-floor vegetation between trees. Brush uses shrub geometry, not trees. Models on roads must not suggest fuel where none exists.
+
+The user approved two short local one-cell-wide passages, because the specified one-cell safety buffer cannot close the previous four-cell-wide roads. Keep both routes, start/safe endpoints, initial connectivity and blocked off-path terrain. Connected vegetation beside these passages supports single-ignition route-hazard scenarios; roads never transmit fire.
+
+- Burning and burned-hot cells are unsafe themselves. Only burning cells additionally make the eight immediately surrounding cells unsafe (one logical cell, including diagonals).
+- A cell is usable only if its base map cell is walkable and the derived hazard mask is clear there. Overlapping buffers persist while any relevant source burns. Hot cells project no buffer; cooling never makes blocked ground walkable. A cooled cell can still be unsafe beside another burning source.
+- Navigation hazards are calculated separately from four-edge-neighbor exposure spread. Buffers do not add fuel, ignite roads, transmit fire, or imply agent death. No visible overlay, warning popup, debug toggle, additional UI, agents or A* in this correction.
+- Illustrative fuel amounts: grass 4, brush 6, forest 10; consume 1 unit per simulated second, giving 4/6/10 seconds burning plus 5 seconds cooling. Existing exposure rate 1 per burning neighbor per second and threshold 1 remain equal across fuel types. More fuel only lengthens burning; these are not calibrated physical measurements.
+- Reset restores fuel, fire/exposure/timers and clears derived hazards by recomputation from reset states, without moving the camera. R remains camera-only. Purple-marker redesign and richer assets/effects remain deferred. Increment 5 is not fully user-validated; full MVP performance and agent/loss scenarios remain unverified.
+
 ## Core technical challenge
 
 Keep navigation synchronized with changing fire hazards.

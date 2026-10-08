@@ -31,19 +31,23 @@ test('64x64 authored layout is deterministic, independent, and has valid endpoin
   assert.equal(a.cells[1].walkable, false);
 });
 
-test('fuel and walkability are independent; every designated section bears route fuel', () => {
+test('roads stay fuel-free and each passage has adjacent fuel without off-path escape', () => {
   const map = createFixedMap();
-  for (const [walkable, fuel] of [[true, false], [true, true], [false, true], [false, false]]) {
+  for (const [walkable, fuel] of [[true, false], [false, true], [false, false]]) {
     assert.ok(map.cells.some((cell) => cell.walkable === walkable
       && (cell.fuelType !== 'none') === fuel));
   }
   for (const { section } of map.routes) {
     for (let z = section.z0; z <= section.z1; z += 1) {
       for (let x = section.x0; x <= section.x1; x += 1) {
-        assert.deepEqual(cellAt(map, x, z), { terrain: 'route', fuelType: 'grass', walkable: true });
+        assert.deepEqual(cellAt(map, x, z), { terrain: 'route', fuelType: 'none', walkable: true });
+        assert.equal(cellAt(map, x, z === 24 ? 25 : 42).fuelType, 'grass');
       }
     }
   }
+  assert.ok(map.cells.filter((cell) => cell.terrain === 'route').every((cell) => cell.fuelType === 'none'));
+  assert.ok(map.cells.filter((cell) => cell.fuelType !== 'none').every((cell) => !cell.walkable));
+  for (const fuelType of ['grass', 'brush', 'forest']) assert.ok(map.cells.some((cell) => cell.fuelType === fuelType));
 });
 
 test('both routes initially connect; either full-width cut leaves the other connected', () => {

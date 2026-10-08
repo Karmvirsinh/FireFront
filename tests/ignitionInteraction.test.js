@@ -82,12 +82,12 @@ test('toggle, panel isolation, gesture guards, start lock, reset and cleanup', (
   click();
   assert.equal(simulation.selected, picked);
   assert.equal(elements['start-fire'].disabled, false);
-  picked = 23 * 64 + 31;
+  picked = 26 * 64 + 31;
   click();
   assert.equal(simulation.selected, picked);
   picked = 0;
   click();
-  assert.equal(simulation.selected, 23 * 64 + 31);
+  assert.equal(simulation.selected, 26 * 64 + 31);
   emit(elements['place-ignition'], 'click');
   const count = pickCount;
   click();

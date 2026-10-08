@@ -4,8 +4,8 @@ import { createFixedMap } from '../src/world/createFixedMap.js';
 import { createFireSimulation, isHazardous } from '../src/simulation/createFireSimulation.js';
 import { FIRE_CONFIG } from '../src/simulation/fireConfig.js';
 
-const grass = 23 * 64 + 31;
-const brush = 32 * 64 + 31;
+const grass = 26 * 64 + 32;
+const brush = 32 * 64 + 29;
 function advanceSeconds(simulation, seconds, fps = 60) {
   for (let i = 0; i < Math.round(seconds * fps); i += 1) simulation.advance(1 / fps);
 }
@@ -30,7 +30,7 @@ test('eligibility and movable single selection reject fuel-free cells without mu
 });
 
 test('isolated fuel exhaustion, hot cooling, base walkability, and no reignition', () => {
-  for (const [index, duration, walkable] of [[grass, 4, true], [brush, 6, false]]) {
+  for (const [index, duration, walkable] of [[grass, 4, false], [brush, 6, false]]) {
     // Isolate lifecycle boundaries; neighboring propagation has separate tests.
     const simulation = createFireSimulation(createFixedMap(), { ...FIRE_CONFIG, ignitionExposure: Infinity });
     simulation.select(index);
