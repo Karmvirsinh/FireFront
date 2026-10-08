@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const COLORS = { waiting: 0xffffff, evacuating: 0x2962ff, trapped: 0xb25f00, evacuated: 0x00b8a9 };
+const COLORS = { waiting: 0xffffff, evacuating: 0x2962ff, trapped: 0xb25f00, evacuated: 0x00b8a9, lost: 0xd90040 };
 
 export function createAgentView(map, simulation) {
   const geometry = new THREE.BoxGeometry(0.16, 0.42, 0.16);

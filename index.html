@@ -36,8 +36,9 @@
           <div><dt>Evacuating</dt><dd id="count-evacuating">0</dd></div>
           <div><dt>Trapped</dt><dd id="count-trapped">0</dd></div>
           <div><dt>Evacuated</dt><dd id="count-evacuated">0</dd></div>
+          <div><dt>Lost</dt><dd id="count-lost">0</dd></div>
         </dl>
-        <p class="simulation-note">Start fire begins evacuation. Agents may overlap. Loss handling is not implemented.</p>
+        <p class="simulation-note">Start fire begins evacuation. Agents may overlap. Lost agents are crimson: only active fire in their occupied cell causes loss.</p>
         <ul class="map-legend" aria-label="Fire legend">
           <li><span class="swatch selected"></span>Selected ignition</li>
           <li><span class="swatch burning"></span>Burning · hazardous</li>

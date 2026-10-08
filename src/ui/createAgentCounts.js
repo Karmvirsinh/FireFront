@@ -1,5 +1,5 @@
 export function createAgentCounts(panel, simulation) {
-  const nodes = Object.fromEntries(['waiting', 'evacuating', 'trapped', 'evacuated']
+  const nodes = Object.fromEntries(['waiting', 'evacuating', 'trapped', 'evacuated', 'lost']
     .map((state) => [state, panel.querySelector(`#count-${state}`)]));
   let previous = '';
   return function refresh() {

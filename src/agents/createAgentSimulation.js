@@ -21,7 +21,7 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
   }
   reset();
   function counts() {
-    const result = { waiting: 0, evacuating: 0, trapped: 0, evacuated: 0 };
+    const result = { waiting: 0, evacuating: 0, trapped: 0, evacuated: 0, lost: 0 };
     simulation.agents.forEach((agent) => { result[agent.state] += 1; });
     return result;
   }
@@ -49,7 +49,16 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
     lastUnsafe = unsafe.slice();
     lastDirect = direct;
     for (const agent of simulation.agents) {
-      if (agent.state === 'evacuated') continue;
+      if (agent.state === 'evacuated' || agent.state === 'lost') continue;
+      // Fire/hazards have already updated. Occupancy follows the actual position,
+      // not the last visited center: check before any centering or escape movement.
+      if (fireCells[agent.cell].state === 'burning') {
+        agent.state = 'lost';
+        agent.path = [];
+        agent.target = null;
+        agent.needsPlan = agent.centering = agent.escaping = false;
+        continue;
+      }
       if (changed && (agent.state === 'trapped' || agent.escaping || unsafe[agent.cell]
         || (agent.target !== null && unsafe[agent.target]) || agent.path.some((cell) => unsafe[cell]))) {
         agent.needsPlan = true;
@@ -58,7 +67,7 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
       // Decisions still run with zero elapsed time (immediately after Start fire).
       for (;;) {
         if (direct[agent.cell]) {
-          // No loss rule yet: stop in place and retry on hazard changes.
+          // Hot ground blocks movement but does not cause direct-fire loss.
           agent.state = 'trapped';
           agent.path = [];
           agent.needsPlan = true;

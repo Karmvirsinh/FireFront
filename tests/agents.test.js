@@ -91,6 +91,7 @@ test('already-buffered occupants exit buffered cells via walkable ground without
   advance(f, 2);
   assert.equal(f.unsafe[f.agent.cell], 0);
   assert.notEqual(f.agent.state, 'trapped');
+  assert.notEqual(f.agent.state, 'lost');
   const direct = new Uint8Array(f.map.cells.length);
   direct[10] = 1;
   const exit = findBufferExit(f.map, 9, f.unsafe, direct);
@@ -98,7 +99,7 @@ test('already-buffered occupants exit buffered cells via walkable ground without
   assert.equal(f.unsafe[exit.at(-1)], 0);
 });
 
-test('occupied burning/hot cells stop without inventing death, then retry after hazards clear', () => {
+test('occupied hot cells stop without loss, then retry after hazards clear', () => {
   const f = setup();
   advance(f, 0.85);
   const stopped = { x: f.agent.x, z: f.agent.z };
@@ -128,7 +129,7 @@ test('20-agent reset/replay, population conservation and shared timing match ord
   const original = structuredClone(map);
   const simulation = createEvacuationSimulation(map);
   const initial = structuredClone(simulation.agents.agents);
-  assert.deepEqual(simulation.agents.counts(), { waiting: 20, evacuating: 0, trapped: 0, evacuated: 0 });
+  assert.deepEqual(simulation.agents.counts(), { waiting: 20, evacuating: 0, trapped: 0, evacuated: 0, lost: 0 });
   for (const agent of initial) assert.ok(agent.x >= 6 && agent.x < 14 && agent.z >= 28 && agent.z < 36);
   const outcomes = [];
   for (const fps of [20, 30, 60, 144]) {
@@ -160,11 +161,11 @@ test('20-agent reset/replay, population conservation and shared timing match ord
   assert.deepEqual(map, original);
 });
 
-test('visible instances follow continuous positions and counts UI follows the four conserved states', () => {
+test('visible instances follow continuous positions and counts UI follows the five conserved states', () => {
   const map = createFixedMap();
   const simulation = createEvacuationSimulation(map);
   const view = createAgentView(map, simulation.agents);
-  const nodes = Object.fromEntries(['waiting', 'evacuating', 'trapped', 'evacuated'].map((state) => [state, {}]));
+  const nodes = Object.fromEntries(['waiting', 'evacuating', 'trapped', 'evacuated', 'lost'].map((state) => [state, {}]));
   const refresh = createAgentCounts({ querySelector: (id) => nodes[id.slice(7)] }, simulation.agents);
   const matrix = new Matrix4();
   try {
@@ -203,4 +204,5 @@ test('actual forest ignition reroutes toward B, traps all 20, resumes, then evac
   assert.equal(simulation.agents.counts().evacuating, 20);
   for (let i = 222; i < 800; i += 1) simulation.advance(0.05);
   assert.equal(simulation.agents.counts().evacuated, 20);
+  assert.equal(simulation.agents.counts().lost, 0);
 });
