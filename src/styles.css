@@ -1,9 +1,9 @@
 :root {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: #e3e9ef;
-  background: #11171d;
+  color: #f3e8c9;
+  background: #10291f;
   font-synthesis: none;
-  color-scheme: dark;
+  color-scheme: light;
   font-size: 14px;
 }
 * { box-sizing: border-box; }
@@ -11,42 +11,42 @@ body { margin: 0; }
 #app { display: flex; flex-direction: column; height: 100svh; min-height: 540px; padding: 0 16px 16px; }
 .workspace-header { display: flex; align-items: baseline; gap: 18px; padding: 18px 2px; }
 h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
-.workspace-header p { margin: 0; color: #bdc7d1; font-size: 13px; }
-.workspace-header p span { color: #8f9eac; }
+.workspace-header p { margin: 0; color: #c4d0ac; font-size: 13px; }
+.workspace-header p span { color: #b5c49a; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; flex: 1; min-height: 0; }
-.scene-column { display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid #35414c; border-radius: 6px; overflow: hidden; background: #1b242d; }
+.scene-column { display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid #718052; border-radius: 6px; overflow: hidden; background: #263f2b; }
 .viewport-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
 h2 { margin: 0; font-size: 13px; font-weight: 650; }
-.viewport-heading > span { color: #aebbc7; font-size: 12px; }
+.viewport-heading > span { color: #c9d3b0; font-size: 12px; }
 #simulation-viewport { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #dce8ef; }
 #scene { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-#scene.placing-ignition { cursor: crosshair; }
-.camera-hints { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 14px; color: #aebbc7; font-size: 12px; }
-.camera-hints strong { color: #e3e9ef; margin-right: 4px; font-weight: 550; }
-kbd { display: inline-block; padding: 0 5px; border: 1px solid #566472; border-bottom-width: 2px; border-radius: 3px; font: inherit; color: #e3e9ef; background: #27323d; }
-#simulation-panel { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: #53616e #1b242d; border: 1px solid #35414c; border-radius: 6px; background: #1b242d; }
+#scene { --torch-cursor: url("./ui/cursors/torch.svg") 4 4, crosshair; --torch-blocked-cursor: url("./ui/cursors/torch-blocked.svg") 4 4, not-allowed; }
+.camera-hints { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 14px; color: #c9d3b0; font-size: 12px; }
+.camera-hints strong { color: #f3e8c9; margin-right: 4px; font-weight: 550; }
+kbd { display: inline-block; padding: 0 5px; border: 2px solid #8e8054; border-bottom-width: 3px; border-radius: 1px; font: 600 11px ui-monospace, monospace; color: #2e3825; background: #f4e9cb; }
+#simulation-panel { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: #8a895d #e8ddbd; border: 2px solid #8b8b5c; border-radius: 3px; color: #2b3524; background: #efe4c7; box-shadow: inset 0 0 0 2px #fff7df, 0 3px 0 #091c14; }
 .panel-section { padding: 12px 15px; }
-.panel-section + .panel-section { border-top: 1px solid #35414c; }
+.panel-section + .panel-section { border-top: 1px solid #c7b98f; }
 .panel-section h2 { margin-bottom: 10px; }
-.section-detail { float: right; font-weight: 400; color: #9eacb9; font-size: 12px; }
+.section-detail { float: right; font-weight: 400; color: #5e664a; font-size: 12px; }
 .simulation-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 #reset-simulation { grid-column: 1 / -1; }
-button { padding: 9px 8px; border: 1px solid #596b79; border-radius: 4px; font: inherit; font-size: 12px; font-weight: 600; color: #e3e9ef; background: #293642; cursor: pointer; }
-button:hover:not(:disabled) { background: #354858; border-color: #91a8ba; }
-button:focus-visible { outline: 2px solid #aecdeb; outline-offset: 3px; }
-button:disabled { color: #99a3ad; background: #222b33; border-color: #384550; cursor: default; }
-button[aria-pressed="true"] { color: #f5dcff; background: #513461; border-color: #bd85d5; }
-#start-fire:not(:disabled) { background: #9f431b; border-color: #d9834f; color: #fff; }
-#fire-status { min-height: 36px; margin: 12px 0 8px; color: #e3e9ef; font-size: 13px; line-height: 1.45; }
-.note { margin: 9px 0 0; color: #aebbc7; font-size: 12px; line-height: 1.5; }
+button { position: relative; height: 42px; padding: 6px 7px; border: 3px solid; border-color: #8b9d5c #334727 #283b22 #70884c; border-radius: 1px; font: inherit; font-size: 12px; font-weight: 600; color: #f3e8c9; background: #526e38; box-shadow: inset 0 2px 0 #c7d28c55, 0 3px 0 #283b22; cursor: pointer; }
+button:hover:not(:disabled) { background: #637e43; border-color: #9eae70 #40582f #334727 #819a56; }
+button:focus-visible { outline: 2px solid #aa572d; outline-offset: 3px; }
+button:disabled { color: #5d624b; background: #d3d0ac; border-color: #b2b58d #979e76 #7c865e #b2b58d; box-shadow: inset 0 1px 0 #fff4ce; cursor: default; }
+
+#start-fire:not(:disabled) { background: #95502c; border-color: #c48b50 #713d26 #60341f #b87742; color: #fff5da; }
+#fire-status { min-height: 36px; margin: 12px 0 8px; color: #2b3524; font-size: 13px; line-height: 1.45; }
+.note { margin: 9px 0 0; color: #505b40; font-size: 12px; line-height: 1.5; }
 .agent-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 18px; margin: 0; }
 .agent-counts div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.agent-counts dt { color: #bdc7d1; font-size: 12px; }
+.agent-counts dt { color: #505b40; font-size: 12px; }
 .agent-counts dd { margin: 0; font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; }
-#count-evacuating { color: #93b7ff; }
-#count-trapped { color: #efbd73; }
-#count-evacuated { color: #80d9c6; }
-#count-lost { color: #ff91ae; }
+#count-evacuating { color: #2f5385; }
+#count-trapped { color: #8c4c13; }
+#count-evacuated { color: #276344; }
+#count-lost { color: #a2303e; }
 .map-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 10px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
 .map-legend li { display: flex; align-items: center; gap: 7px; }
 .swatch { flex: 0 0 10px; width: 10px; height: 10px; border: 1px solid #b8c4ce70; border-radius: 2px; }
@@ -70,4 +70,23 @@ button[aria-pressed="true"] { color: #f5dcff; background: #513461; border-color:
   .viewport-heading { flex-wrap: wrap; gap: 4px; padding: 10px 12px; }
   .camera-hints { gap: 7px 16px; padding: 10px 12px; }
   #simulation-panel { overflow: visible; }
+}
+
+/* Original pixel-inspired pine and contained border flames; no scene assets. */
+h1 { display: flex; align-items: center; gap: 9px; }
+h1::before { content: ""; width: 16px; height: 21px; background: #d3ac57;
+  clip-path: polygon(38% 0,62% 0,62% 19%,75% 19%,75% 38%,88% 38%,88% 57%,100% 57%,100% 76%,62% 76%,62% 100%,38% 100%,38% 76%,0 76%,0 57%,12% 57%,12% 38%,25% 38%,25% 19%,38% 19%); }
+#place-ignition { display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden; }
+#place-ignition > * { position: relative; z-index: 1; }
+#place-ignition.ignition-active { color: #30230f; background: #e4a052; border-color: #f6c46b #a9572b #8c4324 #d28239; box-shadow: inset 0 2px 0 #ffe6a4, 0 3px 0 #713d26; }
+#place-ignition.ignition-active:disabled { color: #30230f; cursor: default; }
+#place-ignition::before, #place-ignition::after { content: ""; position: absolute; left: 2px; right: 2px; height: 8px; opacity: 0; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='8' viewBox='0 0 22 8'%3E%3Cpath d='M7 8V5H9V1H11V3H13V5H15V8Z' fill='%23a83d20'/%3E%3Cpath d='M10 8V5H12V4H13V8Z' fill='%23ffdb77'/%3E%3C/svg%3E") repeat-x; }
+#place-ignition::before { top: 0; transform-origin: bottom; }
+#place-ignition::after { bottom: 0; transform-origin: bottom; background-position-x: 11px; }
+#place-ignition.ignition-active::before, #place-ignition.ignition-active::after { opacity: 1; animation: ember-edge 0.9s steps(3, end) infinite alternate; }
+#place-ignition.ignition-active::after { animation-delay: -0.4s; }
+@keyframes ember-edge { from { transform: scaleY(0.65); opacity: 0.75; } to { transform: scaleY(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  #place-ignition.ignition-active::before, #place-ignition.ignition-active::after { animation: none; transform: none; opacity: 1; }
 }

@@ -98,3 +98,7 @@ Potential later features include watchtower alerts and burning bridges. These ar
 - 1–2 page PDF report: plan versus reality, AI utility, roadmap to final.
 
 These are future deliverables. Publishing, pushing, and deployment require explicit instruction.
+
+## Subsequently approved forest UI presentation increment
+
+Adopt the validated dashboard while retaining annotated comparison snapshots. Preserve layout and simulation scope. Apply forest framing, parchment panels, moss stepped/raised buttons and warm accents using existing HTML/CSS and original SVG. Placement/I enables orange contained border flames; off clears them; Start fire locks the button as "Ignition locked" with decoration retained until reset. This is ignition-usage feedback, independent of actual fire status. Reduced motion uses static flames. Native torch/blocked cursor variants use existing picking/eligibility and clear outside placement/canvas or during camera gestures. Keyboard guards, separate Start fire, camera controls and reset semantics remain unchanged. Terrain thickness and scene readability are future work; no map, pacing, fire, agent, dependency or acceptance-scenario changes.

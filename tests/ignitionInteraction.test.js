@@ -92,7 +92,7 @@ test('I shares placement toggle, guards keys/typing/locks, never selects or star
   try {
     assert.equal(key().defaultPrevented, true);
     assert.equal(placing(), 'true');
-    assert.equal(canvas.style.cursor, 'crosshair');
+    assert.equal(canvas.style.cursor, 'auto'); // Torch appears only while hovering the canvas.
     assert.equal(simulation.selected, null);
     assert.equal(simulation.started, false);
     for (const props of [{ repeat: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true },
@@ -151,8 +151,10 @@ test('toggle, panel isolation, gesture guards, start lock, reset and cleanup', (
   const panel = { querySelector: (selector) => elements[selector.slice(1)] };
   const simulation = createFireSimulation(createFixedMap());
   let picked = 32 * 64 + 31;
-  let pickCount = 0;
-  const ui = createIgnitionControls(canvas, panel, simulation, () => { pickCount += 1; return picked; }, () => {}, new EventTarget());
+  let selectionAttempts = 0;
+  const selectCell = simulation.select;
+  simulation.select = (index) => { selectionAttempts += 1; return selectCell(index); };
+  const ui = createIgnitionControls(canvas, panel, simulation, () => picked, () => {}, new EventTarget());
   const properties = { button: 0, buttons: 1, isPrimary: true, pointerType: 'mouse',
     pointerId: 1, clientX: 500, clientY: 300 };
   function click(props = {}) {
@@ -160,11 +162,11 @@ test('toggle, panel isolation, gesture guards, start lock, reset and cleanup', (
     emit(canvas, 'pointerup', { ...properties, ...props });
   }
   click();
-  assert.equal(pickCount, 0);
+  assert.equal(selectionAttempts, 0);
   assert.equal(elements['start-fire'].disabled, true);
   emit(elements['place-ignition'], 'click');
   assert.equal(canvas.classList.contains('placing-ignition'), true);
-  assert.equal(canvas.style.cursor, 'crosshair');
+  assert.equal(canvas.style.cursor, 'var(--torch-cursor, crosshair)');
   for (const props of [{ button: 1, buttons: 4 }, { button: 2, buttons: 2 },
     { ctrlKey: true }, { pointerType: 'touch' }]) click(props);
   emit(canvas, 'pointerdown', properties);
@@ -175,7 +177,7 @@ test('toggle, panel isolation, gesture guards, start lock, reset and cleanup', (
   emit(canvas, 'pointerup', properties);
   emit(elements['fire-status'], 'pointerdown', properties);
   emit(elements['fire-status'], 'pointerup', properties);
-  assert.equal(pickCount, 0);
+  assert.equal(selectionAttempts, 0);
   click();
   assert.equal(simulation.selected, picked);
   assert.equal(elements['start-fire'].disabled, false);
@@ -186,14 +188,14 @@ test('toggle, panel isolation, gesture guards, start lock, reset and cleanup', (
   click();
   assert.equal(simulation.selected, 26 * 64 + 31);
   emit(elements['place-ignition'], 'click');
-  const count = pickCount;
+  const count = selectionAttempts;
   click();
-  assert.equal(pickCount, count);
+  assert.equal(selectionAttempts, count);
   emit(elements['start-fire'], 'click');
   assert.equal(elements['place-ignition'].disabled, true);
   assert.equal(canvas.classList.contains('placing-ignition'), false);
   click();
-  assert.equal(pickCount, count);
+  assert.equal(selectionAttempts, count);
   emit(elements['reset-simulation'], 'click');
   assert.equal(simulation.selected, null);
   assert.equal(elements['place-ignition'].disabled, false);
@@ -201,5 +203,80 @@ test('toggle, panel isolation, gesture guards, start lock, reset and cleanup', (
   ui.dispose();
   emit(elements['place-ignition'], 'click');
   click();
-  assert.equal(pickCount, count);
+  assert.equal(selectionAttempts, count);
+});
+
+test('ignition visual states and torch eligibility follow placement/run/reset without altering selection', () => {
+  const canvas = element();
+  const keyboard = new EventTarget();
+  const elements = Object.fromEntries(['place-ignition', 'start-fire', 'reset-simulation', 'fire-status', 'ignition-label']
+    .map((name) => [name, element()]));
+  const simulation = createFireSimulation(createFixedMap());
+  let picked = 32 * 64 + 32;
+  const calls = [];
+  const ui = createIgnitionControls(canvas, { querySelector: (id) => elements[id.slice(1)] }, simulation,
+    (x, y) => { calls.push([x, y]); return picked; }, () => {}, keyboard);
+  const place = elements['place-ignition'];
+  const pointer = { pointerType: 'mouse', clientX: 481, clientY: 376, buttons: 0 };
+  const pressI = () => emit(keyboard, 'keydown', { key: 'i', composedPath: () => [] });
+  try {
+    assert.equal(place.classList.contains('ignition-active'), false);
+    emit(canvas, 'pointerenter', pointer);
+    assert.equal(canvas.style.cursor, 'auto');
+    pressI();
+    assert.equal(place.classList.contains('ignition-active'), true);
+    assert.equal(canvas.style.cursor, 'var(--torch-cursor, crosshair)');
+    assert.deepEqual(calls.at(-1), [481, 376]);
+    assert.equal(simulation.selected, null);
+    assert.equal(simulation.started, false);
+    picked = 24 * 64 + 32; // Actual nonfuel road, existing simulation eligibility.
+    emit(canvas, 'pointermove', pointer);
+    assert.equal(canvas.style.cursor, 'var(--torch-blocked-cursor, not-allowed)');
+    picked = null; // Off map/viewport.
+    ui.updateCursor();
+    assert.equal(canvas.style.cursor, 'var(--torch-blocked-cursor, not-allowed)');
+    picked = 32 * 64 + 32;
+    ui.updateCursor(); // Re-pick a stationary pointer after camera changes.
+    assert.equal(canvas.style.cursor, 'var(--torch-cursor, crosshair)');
+    for (const [button, buttons] of [[1, 4], [2, 2]]) {
+      emit(canvas, 'pointerdown', { ...pointer, button, buttons });
+      assert.equal(canvas.style.cursor, 'auto');
+      emit(canvas, 'pointermove', { ...pointer, buttons });
+      assert.equal(canvas.style.cursor, 'auto');
+      emit(canvas, 'pointerup', { ...pointer, button });
+      assert.equal(canvas.style.cursor, 'var(--torch-cursor, crosshair)');
+      assert.equal(simulation.selected, null);
+    }
+    emit(canvas, 'pointerleave', pointer);
+    assert.equal(canvas.style.cursor, 'auto');
+    emit(canvas, 'pointerenter', pointer);
+    pressI();
+    assert.equal(place.classList.contains('ignition-active'), false);
+    assert.equal(canvas.style.cursor, 'auto');
+    emit(place, 'click');
+    simulation.select(picked);
+    emit(elements['start-fire'], 'click');
+    assert.equal(place.disabled, true);
+    assert.equal(place.attributes['aria-pressed'], 'false');
+    assert.equal(place.classList.contains('ignition-active'), true);
+    assert.equal(elements['ignition-label'].textContent, 'Ignition locked');
+    assert.equal(canvas.style.cursor, 'auto');
+    // Decoration describes ignition usage, not ongoing burning.
+    simulation.cells[picked].state = 'burned-cool';
+    ui.refresh();
+    pressI();
+    assert.equal(place.classList.contains('ignition-active'), true);
+    assert.equal(place.attributes['aria-pressed'], 'false');
+    emit(elements['reset-simulation'], 'click');
+    assert.equal(place.classList.contains('ignition-active'), false);
+    assert.equal(place.disabled, false);
+    assert.equal(elements['ignition-label'].textContent, 'Place ignition');
+    assert.equal(canvas.style.cursor, 'auto');
+    assert.equal(simulation.selected, null);
+  } finally { ui.dispose(); }
+  const count = calls.length;
+  emit(canvas, 'pointerenter', pointer);
+  pressI();
+  assert.equal(calls.length, count);
+  assert.equal(canvas.style.cursor, 'auto');
 });

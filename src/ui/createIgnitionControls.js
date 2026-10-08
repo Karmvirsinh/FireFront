@@ -1,8 +1,12 @@
+import { createIgnitionCursor } from './createIgnitionCursor.js';
+
 export function createIgnitionControls(canvas, panel, simulation, pickCell, onChange, keyboardTarget = window) {
   const place = panel.querySelector('#place-ignition');
   const start = panel.querySelector('#start-fire');
   const reset = panel.querySelector('#reset-simulation');
   const status = panel.querySelector('#fire-status');
+  const label = panel.querySelector('#ignition-label');
+  const cursor = createIgnitionCursor(canvas, pickCell, simulation.eligible);
   let placing = false;
   let gesture = null;
   let message = '';
@@ -10,9 +14,11 @@ export function createIgnitionControls(canvas, panel, simulation, pickCell, onCh
   function refresh() {
     place.disabled = simulation.started;
     place.setAttribute('aria-pressed', String(placing));
+    place.classList.toggle('ignition-active', placing || simulation.started);
+    place.setAttribute('aria-label', simulation.started ? 'Ignition locked' : 'Place ignition');
+    if (label) label.textContent = simulation.started ? 'Ignition locked' : 'Place ignition';
     canvas.classList.toggle('placing-ignition', placing);
-    // OrbitControls initializes an inline cursor, so update that same property.
-    canvas.style.cursor = placing ? 'crosshair' : 'auto';
+    cursor.setEnabled(placing && !simulation.started);
     start.disabled = simulation.started || simulation.selected === null;
     if (message) status.textContent = message;
     else if (simulation.selected === null) status.textContent = placing
@@ -89,9 +95,9 @@ export function createIgnitionControls(canvas, panel, simulation, pickCell, onCh
     [canvas, 'pointercancel', cancel], [canvas, 'pointerleave', cancel]];
   listeners.forEach(([target, type, handler]) => target.addEventListener(type, handler));
   refresh();
-  return { refresh, dispose() {
+  return { refresh, updateCursor: cursor.refresh, dispose() {
     listeners.forEach(([target, type, handler]) => target.removeEventListener(type, handler));
     canvas.classList.remove('placing-ignition');
-    canvas.style.cursor = 'auto';
+    cursor.dispose();
   } };
 }

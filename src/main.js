@@ -19,6 +19,7 @@ const sceneView = createScene(canvas, map, (time) => {
   sceneView.syncFire(simulation.fire);
   sceneView.syncAgents();
   refreshCounts();
+  ignitionUI.updateCursor();
   const state = simulation.cells[simulation.selected]?.state;
   if (state !== previousState) {
     previousState = state;

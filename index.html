@@ -32,12 +32,12 @@
           <section class="panel-section" aria-labelledby="simulation-title">
             <h2 id="simulation-title">Fire simulation</h2>
             <div class="simulation-actions">
-              <button id="place-ignition" type="button" aria-pressed="false" aria-keyshortcuts="I">Place ignition <kbd aria-hidden="true">I</kbd></button>
+              <button id="place-ignition" type="button" aria-pressed="false" aria-keyshortcuts="I"><span id="ignition-label">Place ignition</span> <kbd aria-hidden="true">I</kbd></button>
               <button id="start-fire" type="button" disabled>Start fire</button>
               <button id="reset-simulation" type="button">Reset simulation</button>
             </div>
             <p id="fire-status" role="status" aria-live="polite"></p>
-            <p class="note">Reset preserves the camera. <kbd>R</kbd> resets the view only.</p>
+            <p class="note">Reset preserves the camera. <kbd>R</kbd> resets the view only. Flames on the button mean placement is on or ignition was used this run.</p>
           </section>
           <section class="panel-section" aria-labelledby="counts-title">
             <h2 id="counts-title">Evacuation <span class="section-detail">20 agents</span></h2>

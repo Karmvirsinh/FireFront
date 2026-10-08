@@ -10,7 +10,7 @@ The intended stack is JavaScript, Three.js, Vite/npm, and HTML/CSS. FireFront is
 
 ## Dashboard exploration — Increment 8 (user-validated)
 
-Work is on `feature/dashboard-layout`, created from the clean, validated Increment 7 checkpoint `0e42f8c`. `main` remains at that checkpoint with the original overlay layout for comparison. Increment 8 is completed with user-reported manual validation on this branch; no merge, push or deployment.
+The validated dashboard is preserved at `19858c3` on `feature/dashboard-layout` and has been fast-forward adopted on main, followed by adoption-documentation commit `3fcf20c`. Annotated tags preserve `layout-original` (`0e42f8c`) and `layout-dashboard-baseline` (`19858c3`). The forest styling increment on `feature/forest-ui` is completed with user-reported manual validation; main retains the adopted dashboard.
 
 The dark HTML/CSS workspace puts one dedicated simulation viewport beside a scrollable panel for ignition/reset, selection status, five evacuation counts and map/fire legends. Compact camera hints sit below the canvas. At widths up to 800 px the panel stacks below a usable viewport and the page scrolls. Short desktop windows also allow page scrolling instead of shrinking the scene indefinitely. Fonts use the local system stack; no frameworks, assets or dependencies added. The scene background/assets, purple marker, map, fire/agent rules and pacing are unchanged.
 
@@ -29,7 +29,7 @@ Repeat-check checklist:
 
 ### Compare layouts safely after Increment 8 is committed
 
-Do not switch branches with uncommitted changes. With the validated Increment 8 checkpoint saved, stop the project servers, confirm `git status --short` is empty, and use `git switch main` to inspect the preserved overlay layout. Start development normally. To return, stop that server and use `git switch feature/dashboard-layout`, again only with a clean working tree. Rebuild with `npm.cmd run build` on each branch before starting production preview: ignored `dist/` output is not changed by switching Git branches. Do not merge or discard files to compare layouts. Both layouts use this same project folder and dependencies.
+Do not switch with uncommitted work. After forest UI validation and its separate commit, stop project servers and confirm `git status --short` is empty. Use `git switch --detach layout-original` for the overlay layout or `git switch --detach layout-dashboard-baseline` for the dark dashboard. Return using `git switch feature/forest-ui`, stopping servers/checking clean before each switch. Rebuild before previewing each version: ignored dist output does not switch with Git. Main now contains the adopted dashboard. Do not edit comparison snapshots or discard changes to compare; no comparison switches were performed here.
 
 Pacing tuning and performance validation follow this layout exploration; no tuning is included here. Purple-marker redesign, richer assets/effects and abrupt road-width presentation remain deferred. Actual automated/browser results are recorded in `docs/progress.md`; Increment 8 manual checklist completion is user-reported. Full MVP performance remains unmeasured.
 
@@ -119,7 +119,7 @@ Orbit angles remain limited to 15–75 degrees from vertical. For the 32×32 map
 
 ## Ignition, neighboring spread, and lifecycle
 
-Toggle **Place ignition** on with its button or **I** for a crosshair cursor. An unmodified stationary left mouse click on grass, brush or forest ground selects one fuel cell, shown with a purple ring. Clicking another eligible cell moves that ring before starting. Fuel-free roads/ground are rejected without changing the cell or existing selection. Turning placement off retains the selection but disables picking. Panel interactions and left drags do not place ignition.
+Toggle **Place ignition** on with its button or **I** for a torch cursor with a consistent 4,4 pixel tip hotspot. A prohibition badge identifies nonignitable ground. Leaving the canvas, camera gestures, placement off and Start fire restore the normal cursor. An unmodified stationary left mouse click on grass, brush or forest ground selects one fuel cell, shown with a purple ring. Clicking another eligible cell moves that ring before starting. Fuel-free roads/ground are rejected without changing the cell or existing selection. Turning placement off retains the selection but disables picking. Panel interactions and left drags do not place ignition.
 
 **Start fire** is enabled only after a valid selection. It ignites that cell, turns placement off, and locks selection until **Reset simulation**. Orange indicates burning, red burned-hot, and dark gray burned-cool; raised indicators and recolored ground distinguish every affected cell. Exhausted decorative fuel is hidden and restored on reset. The status text describes the original selected cell; neighbors can still burn after that cell has cooled.
 
@@ -176,7 +176,7 @@ The user reported all four Increment 7 manual checklist items passed: initial co
 
 Repeat-check checklist: confirm Waiting = 20 / Lost = 0; ignite (32,32), watch ordinary evacuation and counts totaling 20 with Lost staying zero; reset during movement and after completion, checking restoration and preserved camera; check R, navigation, resizing and console. Observing crimson losses manually is limited by the current nonburnable road layout; no hidden damage or lethal-area expansion was added.
 
-Planned work after loss handling: explore a dedicated simulation viewport with surrounding controls/statistics on a future `feature/dashboard-layout` branch, preserving the current layout for comparison. Follow with coordinated spread/burn/cooling/agent-speed pacing tuning and performance validation, keeping meaningful rerouting/trapping scenarios. No branch, redesign or tuning is included here. Existing purple-marker, richer-assets/effects and road-width presentation feedback remains deferred.
+The validated dashboard has been adopted and comparison snapshots retained. Planned follow-up: coordinated spread/burn/cooling/agent-speed pacing tuning and performance validation, keeping meaningful rerouting/trapping scenarios. No pacing tuning is included in the forest styling increment. Existing purple-marker, richer-assets/effects and road-width presentation feedback remains deferred.
 
 ## Earlier manual validation records
 
@@ -241,3 +241,20 @@ The current application uses `src/main.js`, `src/styles.css`, `src/rendering/`, 
 | `docs/` | Requirements and progress |
 
 Read [requirements](docs/requirements.md), [progress](docs/progress.md), and [working rules](AGENTS.md) before implementation.
+
+## Forest UI and ignition feedback (user-validated)
+
+Forest framing, parchment panels, moss raised/stepped buttons and warm accents theme the existing dashboard. Original CSS/SVG pine, keycaps, contained border flames and native torch cursors use no downloaded assets or new dependencies. Layout, viewport sizing, scene assets and simulation rules remain unchanged.
+
+Place ignition and I share the existing guarded toggle. Placement on makes the button orange with flames; toggling off clears it. Start fire disables it as **Ignition locked**, retaining decoration until simulation reset, even after cooling. Decoration means placement is on or ignition was used this run, not that cells remain burning. Reduced motion keeps the flame pattern static. Start fire remains separate; simulation reset preserves camera and R remains camera-only. Torch feedback reuses existing picking/eligibility, never intercepts input, and refreshes after camera changes. Crosshair/not-allowed fallbacks remain available.
+
+Verification: 50/50 tests and production build passed. Development/preview checks covered toggle, (32,32) selection, road rejection, run lock, reset/count restoration, wheel/R, panel isolation and clear consoles. Narrow/short layouts passed. The browser has reduced motion enabled: static flames were verified; ordinary animation and physical mouse/cursor checks were subsequently reported passed by the user, separately from agent-browser checks. Full MVP performance remains unmeasured.
+
+User-reported validation: all four final manual checklist items passed. The flame effect is acceptable for now but visually limited; improved animation is deferred, with no redesign in this closeout. Repeat-check checklist:
+
+1. Inspect contrast, viewport space and controls/legends at desktop, narrow and short sizes; scroll panels/page.
+2. Toggle button/I and check flames on/off and keyboard guards. Aim the torch at fuel after zoom/pan/orbit/scroll; roads show blocked feedback and reject selection. Panel interactions stay isolated.
+3. Ignite (32,32): check Ignition locked, inactive I and normal cursor; observe evacuation/fire. Reset during/after activity restores state while preserving camera. R resets only the view.
+4. Repeat on preview; inspect console, physical right/middle drags, flame containment and reduced-motion static versus ordinary animated treatment.
+
+Pending future work: terrain thickness, scene-readability improvements, purple-marker refinement, richer assets/effects, road-width presentation and coordinated pacing/performance validation. None is implemented here.
