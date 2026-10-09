@@ -32,6 +32,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null) {
   });
   const mapView = createMapView(map);
   scene.add(mapView.group);
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
   const agentView = agents ? createAgentView(map, agents) : null;
   if (agentView) scene.add(agentView.mesh);
 
@@ -46,6 +47,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null) {
   renderer.setAnimationLoop((time) => {
     navigation.update();
     onFrame(time);
+    mapView.animate(time / 1000, motionPreference.matches);
     renderer.render(scene, camera);
   });
 

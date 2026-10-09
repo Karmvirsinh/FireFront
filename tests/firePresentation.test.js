@@ -27,7 +27,9 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
     .map((id) => [id, element()]));
   const ui = createIgnitionControls(canvas, { querySelector: (id) => elements[id.slice(1)] },
     simulation, () => null, () => {}, new EventTarget());
-  const [marker, indicator] = view.group.children.slice(-2);
+  const marker = view.group.getObjectByName('ignition-selection');
+  const flames = view.group.getObjectByName('fire-flames');
+  const embers = view.group.getObjectByName('fire-embers');
   const camera = new PerspectiveCamera(45, 1280 / 720, 0.1, 500);
   camera.position.set(0, 40, 30);
   camera.lookAt(0, 0, 1);
@@ -37,7 +39,7 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
   const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
   const matrix = new Matrix4();
   const color = new Color();
-  const originalDecorations = view.group.children.filter((child) => child.name)
+  const originalDecorations = view.group.children.filter((child) => child.userData.fuelDecoration)
     .map((mesh) => ({ mesh, matrices: mesh.instanceMatrix.array.slice() }));
   try {
     for (const [x, z, fuelType, fuel, walkable, worldX, worldZ] of [
@@ -58,7 +60,7 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
       const screen = center.clone().project(camera);
       assert.equal(picker((screen.x + 1) * 640, (1 - screen.y) * 360), index);
       // Sparse fuel models appear only on even X and Z; these odd-Z cells have no model.
-      for (const mesh of view.group.children.filter((child) => child.name)) {
+      for (const mesh of view.group.children.filter((child) => child.userData.fuelDecoration)) {
         for (let i = 0; i < mesh.count; i += 1) {
           mesh.getMatrixAt(i, matrix);
           const position = new Vector3().setFromMatrixPosition(matrix);
@@ -69,11 +71,11 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
       simulation.select(index);
       view.syncFire(simulation);
       assert.equal(marker.visible, true);
-      assert.deepEqual(marker.position.toArray(), [worldX, 0.55, worldZ]);
+      assert.deepEqual(marker.position.toArray(), [worldX, 0.025, worldZ]);
       simulation.start();
       for (const [state, seconds, hex, hazardous, legend, swatch] of [
-        ['burning', 0, 0xff8a20, true, 'Burning · hazardous', 'burning'],
-        ['burned-hot', fuel / FIRE_CONFIG.fuelPerSecond, 0xd33138, true, 'Burned-hot · hazardous', 'hot'],
+        ['burning', 0, 0x67482f, true, 'Burning · hazardous', 'burning'],
+        ['burned-hot', fuel / FIRE_CONFIG.fuelPerSecond, 0x332a29, true, 'Burned-hot · hazardous', 'hot'],
         ['burned-cool', FIRE_CONFIG.coolingSeconds, 0x4e5663, false, 'Burned-cool · no direct hazard', 'cool'],
       ]) {
         for (let step = 0; step < seconds * 20; step += 1) simulation.advance(0.05);
@@ -84,17 +86,20 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
         assert.equal(isHazardous(cell), hazardous);
         assert.equal(cell.walkable && !isHazardous(cell), state === 'burned-cool' && walkable);
         assert.equal(elements['fire-status'].textContent, `Cell (${x}, ${z}): ${state}.`);
-        assert.equal(indicator.visible, true);
         assert.equal(marker.visible, false);
-        indicator.getMatrixAt(index, matrix);
-        assert.ok(new Vector3().setFromMatrixPosition(matrix)
-          .distanceTo(new Vector3(worldX, 0.325, worldZ)) < 1e-6);
-        indicator.getColorAt(index, color);
-        assert.equal(color.getHex(), hex);
+        for (const [mesh, visible] of [[flames, state === 'burning'], [embers, state === 'burned-hot']]) {
+          mesh.getMatrixAt(index, matrix);
+          assert.equal(new Vector3().setFromMatrixScale(matrix).length() > 0, visible);
+          if (visible) assert.deepEqual(new Vector3().setFromMatrixPosition(matrix).toArray(), [worldX, 0, worldZ]);
+          if (mesh === flames && visible) {
+            assert.equal(new Vector3().setFromMatrixScale(matrix).y, 1,
+              'grass/brush and undecorated forest-floor cells keep low flames');
+          }
+        }
         view.group.children[0].getColorAt(index, color);
         assert.equal(color.getHex(), hex);
         assert.ok(html.includes(legend));
-        assert.ok(css.includes(`.swatch.${swatch} { background: #${hex.toString(16)}; }`));
+        assert.ok(css.includes(`.swatch.${swatch}`));
       }
       assert.equal(simulation.cells[index].fuel, 0);
       assert.equal(simulation.cells[index].hotRemaining, 0);
@@ -102,15 +107,17 @@ test('grass, brush and forest: picking, lifecycle presentation, reset and hazard
       const affected = simulation.cells.flatMap((cell, i) => cell.state !== 'unburned' ? [i] : []);
       assert.ok(affected.length > 1);
       for (const i of affected) {
-        indicator.getColorAt(i, color);
-        assert.equal(color.getHex(), { burning: 0xff8a20, 'burned-hot': 0xd33138,
+        view.group.children[0].getColorAt(i, color);
+        assert.equal(color.getHex(), { burning: 0x67482f, 'burned-hot': 0x332a29,
           'burned-cool': 0x4e5663 }[simulation.cells[i].state]);
       }
       simulation.reset();
       view.syncFire(simulation);
       for (const i of affected) {
-        indicator.getMatrixAt(i, matrix);
-        assert.equal(new Vector3().setFromMatrixScale(matrix).length(), 0);
+        for (const mesh of [flames, embers]) {
+          mesh.getMatrixAt(i, matrix);
+          assert.equal(new Vector3().setFromMatrixScale(matrix).length(), 0);
+        }
         view.group.children[0].getColorAt(i, color);
         assert.equal(color.getHex(), { brush: 0x527648, grass: 0x91aa59, forest: 0x345b44 }[map.cells[i].fuelType]);
       }

@@ -1,10 +1,11 @@
 import * as THREE from 'three';
+import { createFireView } from './createFireView.js';
 
 const COLORS = {
   obstacle: 0x8c9698, vegetation: 0x527648, route: 0xe0c58e,
   start: 0x478ecb, safe: 0x55b69b,
 };
-const FIRE_COLORS = { burning: 0xff8a20, 'burned-hot': 0xd33138, 'burned-cool': 0x4e5663 };
+const FIRE_COLORS = { burning: 0x67482f, 'burned-hot': 0x332a29, 'burned-cool': 0x4e5663 };
 const FUEL_COLORS = { brush: 0x527648, grass: 0x91aa59, forest: 0x345b44 };
 
 // Full-cell ground coverage follows fuel data independently of terrain.
@@ -39,6 +40,16 @@ export function createMapView(map) {
   tileGeometry.rotateX(-Math.PI / 2);
   const tiles = instances(tileGeometry, new THREE.MeshStandardMaterial(),
     map.cells.map((_, i) => positionFor(i % map.width, Math.floor(i / map.width))));
+  // Visual base ends below y=0; the authoritative playable plane stays unchanged.
+  for (const [height, y, hex] of [[0.18, -0.10, 0x735338], [0.50, -0.44, 0x4b5145]]) {
+    const geometry = new THREE.BoxGeometry(map.width * map.cellSize, height, map.height * map.cellSize);
+    const material = new THREE.MeshStandardMaterial({ color: hex });
+    const base = new THREE.Mesh(geometry, material);
+    base.name = 'terrain-base';
+    base.position.y = y;
+    group.add(base);
+    resources.push(geometry, material);
+  }
   const brush = [];
   const grass = [];
   const forest = [];
@@ -84,9 +95,11 @@ export function createMapView(map) {
   for (const [mesh, cells, name] of [[brushMesh, brushCells, 'brush'], [grassMesh, grassCells, 'grass'],
     [trunks, forestCells, 'forest-trunks'], [crowns, forestCells, 'forest-crowns']]) {
     mesh.name = name;
+    mesh.userData.fuelDecoration = true;
     cells.forEach((cellIndex, instanceIndex) => {
       const matrix = new THREE.Matrix4();
       mesh.getMatrixAt(instanceIndex, matrix);
+      mesh.setColorAt(instanceIndex, color.setHex(0xffffff));
       if (!decorationByCell.has(cellIndex)) decorationByCell.set(cellIndex, []);
       decorationByCell.get(cellIndex).push({ mesh, instanceIndex, matrix });
     });
@@ -99,49 +112,61 @@ export function createMapView(map) {
     canvas.width = 512;
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#233c2c';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#233529';
-    ctx.font = 'bold 76px system-ui';
+    ctx.fillStyle = '#f4e5bd';
+    ctx.font = 'bold 88px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, 256, 64);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
-    const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+    const material = new THREE.SpriteMaterial({ map: texture, depthTest: false, depthWrite: false });
     const sprite = new THREE.Sprite(material);
-    sprite.position.set(...positionFor(x, z, 0.7));
+    sprite.position.set(...positionFor(x, z, 0.35));
     sprite.scale.set(width, width / 4, 1);
     sprite.renderOrder = 1;
     group.add(sprite);
     resources.push(texture, material);
   }
   // Keep endpoint text below the areas rather than obscuring the agents.
-  label('START', map.start.x, map.zones.start.z1 + 2, 5.5);
-  label('SAFE', map.safeZone.x, map.zones.safe.z1 + 2, 5.5);
-  label('ROUTE A', 21, 23, 6);
-  label('ROUTE B', 21, 43, 6);
+  label('START', map.start.x, map.zones.start.z1 + 2, 2.7);
+  label('SAFE', map.safeZone.x, map.zones.safe.z1 + 2, 2.7);
+  label('ROUTE A', 21, 20, 3.2);
+  label('ROUTE B', 21, 46, 3.2);
 
-  const markerGeometry = new THREE.RingGeometry(map.cellSize * 0.52, map.cellSize * 0.85, 24);
-  markerGeometry.rotateX(-Math.PI / 2);
-  const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xb349df, side: THREE.DoubleSide });
-  const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+  // Hollow square marks the exact logical cell, unlike the tapered active flames.
+  function outline(size, thickness, hex) {
+    const shape = new THREE.Shape();
+    const half = size / 2;
+    shape.moveTo(-half, -half); shape.lineTo(half, -half);
+    shape.lineTo(half, half); shape.lineTo(-half, half); shape.closePath();
+    const hole = new THREE.Path();
+    const inner = half - thickness;
+    hole.moveTo(-inner, -inner); hole.lineTo(-inner, inner);
+    hole.lineTo(inner, inner); hole.lineTo(inner, -inner); hole.closePath();
+    shape.holes.push(hole);
+    const geometry = new THREE.ShapeGeometry(shape);
+    geometry.rotateX(-Math.PI / 2);
+    const material = new THREE.MeshBasicMaterial({ color: hex, side: THREE.DoubleSide,
+      depthTest: false, depthWrite: false });
+    resources.push(geometry, material);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.renderOrder = 2;
+    return mesh;
+  }
+  const marker = outline(map.cellSize, 0.045, 0x302619);
+  marker.name = 'ignition-selection';
+  const amber = outline(map.cellSize - 0.02, 0.04, 0xffbf54);
+  amber.position.y = 0.002;
+  marker.add(amber);
   marker.visible = false;
   group.add(marker);
-  const indicatorGeometry = new THREE.BoxGeometry(map.cellSize * 0.8, 0.65, map.cellSize * 0.8);
-  const indicatorMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  // One shared batch for every fuel cell; zero-scale instances are initially hidden.
-  const indicator = new THREE.InstancedMesh(indicatorGeometry, indicatorMaterial, map.cells.length);
-  const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
-  for (let index = 0; index < map.cells.length; index += 1) {
-    indicator.setMatrixAt(index, hidden);
-    indicator.setColorAt(index, color.setHex(0xffffff));
-  }
-  // Active instance positions change after construction; avoid stale cached bounds.
-  indicator.frustumCulled = false;
-  indicator.visible = false;
-  group.add(indicator);
-  resources.push(markerGeometry, markerMaterial, indicatorGeometry, indicatorMaterial);
+  crownGeometry.computeBoundingBox();
+  const fireView = createFireView(map, {
+    treeCells: new Set(forestCells), treeHeight: crownGeometry.boundingBox.max.y,
+  });
+  group.add(fireView.group);
 
   function syncFire(simulation) {
     for (const index of simulation.takeChanges()) {
@@ -149,37 +174,42 @@ export function createMapView(map) {
       tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index])));
       tiles.instanceColor.addUpdateRange(index * 3, 3);
       tiles.instanceColor.needsUpdate = true;
-      const x = index % map.width;
-      const z = Math.floor(index / map.width);
-      const active = cell.state !== 'unburned';
-      indicator.setMatrixAt(index, active
-        ? new THREE.Matrix4().makeTranslation(...positionFor(x, z, 0.325)) : hidden);
-      indicator.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? 0xffffff));
-      indicator.instanceMatrix.addUpdateRange(index * 16, 16);
-      indicator.instanceMatrix.needsUpdate = true;
-      indicator.instanceColor.addUpdateRange(index * 3, 3);
-      indicator.instanceColor.needsUpdate = true;
+      fireView.sync(index, cell.state);
       for (const decoration of decorationByCell.get(index) ?? []) {
         const matrix = decoration.matrix.clone();
-        if (cell.fuel === 0) matrix.scale(new THREE.Vector3(0, 0, 0));
+        const tree = decoration.mesh.name.startsWith('forest-');
+        const exhausted = cell.state === 'burned-hot' || cell.state === 'burned-cool';
+        // Standing trees darken during burning; exhaustion alone reveals the stump.
+        if (tree && exhausted) {
+          matrix.scale(decoration.mesh.name === 'forest-trunks'
+            ? new THREE.Vector3(0.8, 0.35, 0.8) : new THREE.Vector3(0, 0, 0));
+        } else if (!tree) {
+          if (cell.fuel === 0) matrix.scale(new THREE.Vector3(0, 0, 0));
+          else if (cell.state === 'burning') matrix.scale(new THREE.Vector3(0.65, 0.45, 0.65));
+        }
+        decoration.mesh.setColorAt(decoration.instanceIndex,
+          color.setHex(tree && exhausted ? 0x302b29 : cell.state === 'burning' ? 0x89613f : 0xffffff));
+        decoration.mesh.instanceColor.addUpdateRange(decoration.instanceIndex * 3, 3);
+        decoration.mesh.instanceColor.needsUpdate = true;
         decoration.mesh.setMatrixAt(decoration.instanceIndex, matrix);
         decoration.mesh.instanceMatrix.addUpdateRange(decoration.instanceIndex * 16, 16);
         decoration.mesh.instanceMatrix.needsUpdate = true;
       }
     }
     marker.visible = simulation.selected !== null && !simulation.started;
-    indicator.visible = simulation.selected !== null && simulation.started;
     if (simulation.selected !== null) {
       const x = simulation.selected % map.width;
       const z = Math.floor(simulation.selected / map.width);
-      marker.position.set(...positionFor(x, z, 0.55));
+      marker.position.set(...positionFor(x, z, 0.025));
     }
   }
 
   return {
     group,
     syncFire,
+    animate: fireView.animate,
     dispose() {
+      fireView.dispose();
       group.children.forEach((child) => { if (child.isInstancedMesh) child.dispose(); });
       resources.forEach((resource) => resource.dispose());
     },

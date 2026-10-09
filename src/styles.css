@@ -57,9 +57,9 @@ button:disabled { color: #5d624b; background: #d3d0ac; border-color: #b2b58d #97
 .swatch.grass { background: #91aa59; }
 .swatch.forest { background: #345b44; }
 .swatch.obstacle { background: #8c9698; }
-.swatch.selected { background: #b349df; }
-.swatch.burning { background: #ff8a20; }
-.swatch.hot { background: #d33138; }
+.swatch.selected { background: transparent; border: 2px solid #b77519; border-radius: 0; }
+.swatch.burning { background: #ff8a20; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.swatch.hot { background: #332a29; border-top: 3px solid #d33138; }
 .swatch.cool { background: #4e5663; }
 @media (max-width: 800px) {
   #app { height: auto; min-height: 100svh; padding: 0 12px 12px; }
