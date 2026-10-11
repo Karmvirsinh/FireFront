@@ -7,6 +7,7 @@ function git(...args) {
 }
 
 export default defineConfig(({ command }) => ({
+  base: '/FireFront/',
   define: { __BUILD_INFO__: JSON.stringify({ commit: git('rev-parse', 'HEAD'),
     branch: git('branch', '--show-current'), uncommitted: git('status', '--short'),
     builtAt: new Date().toISOString(), productionBuild: command === 'build' }) },

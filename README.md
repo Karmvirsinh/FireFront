@@ -28,7 +28,7 @@ Development:
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Open **http://127.0.0.1:5173/**.
+Open **http://127.0.0.1:5173/FireFront/**.
 
 Production build and local preview:
 
@@ -37,7 +37,7 @@ npm run build
 npm run preview -- --host 127.0.0.1 --port 4173 --strictPort
 ```
 
-Open **http://127.0.0.1:4173/**. Preview serves the existing `dist/`; rebuild after source edits. Stop each server with Ctrl+C. These URLs are local to your computer, not a deployed submission site. If a port is occupied, stop the existing project server or choose another port.
+Open **http://127.0.0.1:4173/FireFront/**. Preview serves the existing `dist/`; rebuild after source edits. Stop each server with Ctrl+C. These URLs are local to your computer, not a deployed submission site. If a port is occupied, stop the existing project server or choose another port.
 
 On Windows PowerShell, replace `npm` with `npm.cmd` if execution policy blocks the npm PowerShell launcher. Restart the terminal after installing Node or changing PATH. No machine-specific installation path is required.
 
@@ -107,7 +107,7 @@ Two automated, visible production-preview measurements recorded approximately **
 
 See [performance methodology, environment, limitations and reproduction](docs/performance.md) and [raw two-run evidence](docs/performance-results.json). Optional manual benchmark reproduction was **not performed**, not passed. The compact FPS counter updates roughly once per second; hidden time is excluded and sampling restarts on return.
 
-For the existing opt-in capture, open `http://127.0.0.1:4173/?benchmark=1&animation=normal`. This enables a small JSON download and explicitly uses normal animation even with reduced motion enabled. Ordinary URLs retain reduced motion. Follow the performance document for warm-up, baseline sizing, (32,32), 60-second capture and reset/repeat; there is no separate benchmark dashboard or stress mode.
+For the existing opt-in capture, open `http://127.0.0.1:4173/FireFront/?benchmark=1&animation=normal`. This enables a small JSON download and explicitly uses normal animation even with reduced motion enabled. Ordinary URLs retain reduced motion. Follow the performance document for warm-up, baseline sizing, (32,32), 60-second capture and reset/repeat; there is no separate benchmark dashboard or stress mode.
 
 ## Known limitations
 
