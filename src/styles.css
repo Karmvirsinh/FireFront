@@ -15,7 +15,9 @@ h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
 .workspace-header p span { color: #b5c49a; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; flex: 1; min-height: 0; }
 .scene-column { display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid #718052; border-radius: 6px; overflow: hidden; background: #263f2b; }
-.viewport-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
+.viewport-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 12px 14px; }
+#fps-readout { white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 62px; }
+.benchmark-report { font-size: 11px; color: #f3e8c9; }
 h2 { margin: 0; font-size: 13px; font-weight: 650; }
 .viewport-heading > span { color: #c9d3b0; font-size: 12px; }
 #simulation-viewport { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #dce8ef; }
@@ -90,3 +92,9 @@ h1::before { content: ""; width: 16px; height: 21px; background: #d3ac57;
 @media (prefers-reduced-motion: reduce) {
   #place-ignition.ignition-active::before, #place-ignition.ignition-active::after { animation: none; transform: none; opacity: 1; }
 }
+/* Explicit opt-in benchmark workload; normal pages retain accessibility preferences. */
+.benchmark-normal-animation #place-ignition.ignition-active::before,
+.benchmark-normal-animation #place-ignition.ignition-active::after {
+  animation: ember-edge 0.9s steps(3, end) infinite alternate;
+}
+.benchmark-normal-animation #place-ignition.ignition-active::after { animation-delay: -0.4s; }

@@ -1,0 +1,808 @@
+{
+  "blockers": [],
+  "environment": {
+    "automationHint": false,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "browserType": "unknown; operator must record physical/automated/headless status",
+    "build": {
+      "branch": "feature/performance-validation",
+      "builtAt": "2026-10-11T17:38:32.578Z",
+      "commit": "387f42eb5ee8b059d329e5b3edbcf6f179b601d7",
+      "productionBuild": true,
+      "uncommitted": "M index.html\n M src/main.js\n M src/rendering/createScene.js\n M src/styles.css\n?? src/performance/\n?? tests/performance.test.js\n?? vite.config.js"
+    },
+    "cameraDefault": true,
+    "canvas": {
+      "bufferHeight": 555,
+      "bufferWidth": 922,
+      "cssHeight": 555,
+      "cssWidth": 922
+    },
+    "cpu": "unknown",
+    "devicePixelRatio": 1,
+    "focused": true,
+    "gpu": "see WebGL renderer",
+    "graphics": {
+      "hardwareAcceleration": "unknown; renderer string alone is not proof",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU (0x000028A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (NVIDIA)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "grid": {
+      "height": 64,
+      "width": 64
+    },
+    "normalAnimationOverride": true,
+    "os": "Win32",
+    "population": 20,
+    "ram": "unknown",
+    "reducedMotion": false,
+    "systemReducedMotion": true,
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visible": true
+  },
+  "methodology": "60 foreground wall-clock seconds from ignition; repeat after reset; wait for evacuation.",
+  "runs": [
+    {
+      "completionSimulationSeconds": 60.79999999999868,
+      "completionWallSeconds": 60.7995,
+      "countsAt60Seconds": {
+        "evacuated": 17,
+        "evacuating": 3,
+        "lost": 0,
+        "trapped": 0,
+        "waiting": 0
+      },
+      "environment": {
+        "automationHint": false,
+        "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "browserType": "unknown; operator must record physical/automated/headless status",
+        "build": {
+          "branch": "feature/performance-validation",
+          "builtAt": "2026-10-11T17:38:32.578Z",
+          "commit": "387f42eb5ee8b059d329e5b3edbcf6f179b601d7",
+          "productionBuild": true,
+          "uncommitted": "M index.html\n M src/main.js\n M src/rendering/createScene.js\n M src/styles.css\n?? src/performance/\n?? tests/performance.test.js\n?? vite.config.js"
+        },
+        "cameraDefault": true,
+        "canvas": {
+          "bufferHeight": 555,
+          "bufferWidth": 922,
+          "cssHeight": 555,
+          "cssWidth": 922
+        },
+        "cpu": "unknown",
+        "devicePixelRatio": 1,
+        "focused": true,
+        "gpu": "see WebGL renderer",
+        "graphics": {
+          "hardwareAcceleration": "unknown; renderer string alone is not proof",
+          "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU (0x000028A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "vendor": "Google Inc. (NVIDIA)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "grid": {
+          "height": 64,
+          "width": 64
+        },
+        "normalAnimationOverride": true,
+        "os": "Win32",
+        "population": 20,
+        "ram": "unknown",
+        "reducedMotion": false,
+        "systemReducedMotion": true,
+        "viewport": {
+          "height": 720,
+          "width": 1280
+        },
+        "visible": true
+      },
+      "finalCounts": {
+        "evacuated": 20,
+        "evacuating": 0,
+        "lost": 0,
+        "trapped": 0,
+        "waiting": 0
+      },
+      "ignition": [
+        32,
+        32
+      ],
+      "issues": [],
+      "metrics": {
+        "averageFps": 143.98117361573267,
+        "durationSeconds": 60.00089999999851,
+        "lowestOneSecondFps": 142.02006157507904,
+        "p95FrameTimeMs": 7.5,
+        "renderedFrames": 8639,
+        "trailingPartialWindow": {
+          "frames": 111,
+          "seconds": 0.7712999999988824
+        },
+        "windows": [
+          {
+            "fps": 145.5487987240098,
+            "frames": 146,
+            "seconds": 1.0030999999996275
+          },
+          {
+            "fps": 144.09221902033295,
+            "frames": 145,
+            "seconds": 1.0062999999988824
+          },
+          {
+            "fps": 144.0206595151894,
+            "frames": 145,
+            "seconds": 1.006800000000745
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.98560143990966,
+            "frames": 144,
+            "seconds": 1.0000999999996274
+          },
+          {
+            "fps": 143.01320885882086,
+            "frames": 144,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.97775791882995,
+            "frames": 145,
+            "seconds": 1.0070999999996275
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.97775791882995,
+            "frames": 145,
+            "seconds": 1.0070999999996275
+          },
+          {
+            "fps": 143.98560143990966,
+            "frames": 144,
+            "seconds": 1.0000999999996274
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.09221902006624,
+            "frames": 145,
+            "seconds": 1.0063000000007452
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.96346306603184,
+            "frames": 145,
+            "seconds": 1.007199999999255
+          },
+          {
+            "fps": 144.049274786463,
+            "frames": 145,
+            "seconds": 1.0065999999996276
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 142.02006157507904,
+            "frames": 143,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 143.97775791882995,
+            "frames": 145,
+            "seconds": 1.0070999999996275
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.04927478619646,
+            "frames": 145,
+            "seconds": 1.00660000000149
+          },
+          {
+            "fps": 143.98560143990966,
+            "frames": 144,
+            "seconds": 1.0000999999996274
+          },
+          {
+            "fps": 143.9348818740782,
+            "frames": 145,
+            "seconds": 1.0074000000003724
+          },
+          {
+            "fps": 144.10653945548336,
+            "frames": 145,
+            "seconds": 1.006199999999255
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.99205561072492,
+            "frames": 145,
+            "seconds": 1.007
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144.02065951545586,
+            "frames": 145,
+            "seconds": 1.0067999999988824
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.97775791856367,
+            "frames": 145,
+            "seconds": 1.00710000000149
+          },
+          {
+            "fps": 144.0349657297182,
+            "frames": 145,
+            "seconds": 1.006699999999255
+          },
+          {
+            "fps": 143.94917105121883,
+            "frames": 145,
+            "seconds": 1.007300000000745
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.88489208649162,
+            "frames": 144,
+            "seconds": 1.0007999999988824
+          },
+          {
+            "fps": 144.1925218775395,
+            "frames": 145,
+            "seconds": 1.0055999999996277
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144.0206595151894,
+            "frames": 145,
+            "seconds": 1.006800000000745
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144.00635614282908,
+            "frames": 145,
+            "seconds": 1.00689999999851
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.97120575868738,
+            "frames": 144,
+            "seconds": 1.0002000000011175
+          },
+          {
+            "fps": 144.0349657297182,
+            "frames": 145,
+            "seconds": 1.006699999999255
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 143.96346306603184,
+            "frames": 145,
+            "seconds": 1.007199999999255
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.97120575868738,
+            "frames": 144,
+            "seconds": 1.0002000000011175
+          },
+          {
+            "fps": 144.10653945548336,
+            "frames": 145,
+            "seconds": 1.006199999999255
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 143.95681295600593,
+            "frames": 144,
+            "seconds": 1.0003000000007451
+          },
+          {
+            "fps": 144.049274786463,
+            "frames": 145,
+            "seconds": 1.0065999999996276
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.99205561072492,
+            "frames": 145,
+            "seconds": 1.007
+          }
+        ],
+        "windowsBelow30": 0
+      },
+      "run": 1,
+      "simulationSecondsAt60": 59.99999999999873,
+      "valid": true
+    },
+    {
+      "completionSimulationSeconds": 60.79999999999868,
+      "completionWallSeconds": 60.805800000000744,
+      "countsAt60Seconds": {
+        "evacuated": 17,
+        "evacuating": 3,
+        "lost": 0,
+        "trapped": 0,
+        "waiting": 0
+      },
+      "environment": {
+        "automationHint": false,
+        "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "browserType": "unknown; operator must record physical/automated/headless status",
+        "build": {
+          "branch": "feature/performance-validation",
+          "builtAt": "2026-10-11T17:38:32.578Z",
+          "commit": "387f42eb5ee8b059d329e5b3edbcf6f179b601d7",
+          "productionBuild": true,
+          "uncommitted": "M index.html\n M src/main.js\n M src/rendering/createScene.js\n M src/styles.css\n?? src/performance/\n?? tests/performance.test.js\n?? vite.config.js"
+        },
+        "cameraDefault": true,
+        "canvas": {
+          "bufferHeight": 555,
+          "bufferWidth": 922,
+          "cssHeight": 555,
+          "cssWidth": 922
+        },
+        "cpu": "unknown",
+        "devicePixelRatio": 1,
+        "focused": true,
+        "gpu": "see WebGL renderer",
+        "graphics": {
+          "hardwareAcceleration": "unknown; renderer string alone is not proof",
+          "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU (0x000028A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "vendor": "Google Inc. (NVIDIA)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "grid": {
+          "height": 64,
+          "width": 64
+        },
+        "normalAnimationOverride": true,
+        "os": "Win32",
+        "population": 20,
+        "ram": "unknown",
+        "reducedMotion": false,
+        "systemReducedMotion": true,
+        "viewport": {
+          "height": 720,
+          "width": 1280
+        },
+        "visible": true
+      },
+      "finalCounts": {
+        "evacuated": 20,
+        "evacuating": 0,
+        "lost": 0,
+        "trapped": 0,
+        "waiting": 0
+      },
+      "ignition": [
+        32,
+        32
+      ],
+      "issues": [],
+      "metrics": {
+        "averageFps": 144.00010665440053,
+        "durationSeconds": 60.00690000000037,
+        "lowestOneSecondFps": 143,
+        "p95FrameTimeMs": 7.5,
+        "renderedFrames": 8641,
+        "trailingPartialWindow": {
+          "frames": 115,
+          "seconds": 0.7976999999992549
+        },
+        "windows": [
+          {
+            "fps": 144.60955420348895,
+            "frames": 145,
+            "seconds": 1.0027000000011177
+          },
+          {
+            "fps": 144.07790143105595,
+            "frames": 145,
+            "seconds": 1.0063999999985098
+          },
+          {
+            "fps": 143.98560143964147,
+            "frames": 144,
+            "seconds": 1.00010000000149
+          },
+          {
+            "fps": 144.07790143105595,
+            "frames": 145,
+            "seconds": 1.0063999999985098
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.0349657294517,
+            "frames": 145,
+            "seconds": 1.0067000000011177
+          },
+          {
+            "fps": 143.98560143990966,
+            "frames": 144,
+            "seconds": 1.0000999999996274
+          },
+          {
+            "fps": 144.0206595151894,
+            "frames": 145,
+            "seconds": 1.006800000000745
+          },
+          {
+            "fps": 143,
+            "frames": 143,
+            "seconds": 1
+          },
+          {
+            "fps": 143.99205561072492,
+            "frames": 145,
+            "seconds": 1.007
+          },
+          {
+            "fps": 144.02065951545586,
+            "frames": 145,
+            "seconds": 1.0067999999988824
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.92059553349876,
+            "frames": 145,
+            "seconds": 1.0075
+          },
+          {
+            "fps": 143.97120575895548,
+            "frames": 144,
+            "seconds": 1.000199999999255
+          },
+          {
+            "fps": 143.98560143964147,
+            "frames": 144,
+            "seconds": 1.00010000000149
+          },
+          {
+            "fps": 143.6552274543237,
+            "frames": 144,
+            "seconds": 1.0023999999985098
+          },
+          {
+            "fps": 144.49427005480817,
+            "frames": 145,
+            "seconds": 1.0035
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.98560143964147,
+            "frames": 144,
+            "seconds": 1.00010000000149
+          },
+          {
+            "fps": 144.049274786463,
+            "frames": 145,
+            "seconds": 1.0065999999996276
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.98560143990966,
+            "frames": 144,
+            "seconds": 1.0000999999996274
+          },
+          {
+            "fps": 144.0206595151894,
+            "frames": 145,
+            "seconds": 1.006800000000745
+          },
+          {
+            "fps": 143.97120575895548,
+            "frames": 144,
+            "seconds": 1.000199999999255
+          },
+          {
+            "fps": 144.0349657297182,
+            "frames": 145,
+            "seconds": 1.006699999999255
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144.0206595151894,
+            "frames": 145,
+            "seconds": 1.006800000000745
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.9348818740782,
+            "frames": 145,
+            "seconds": 1.0074000000003724
+          },
+          {
+            "fps": 143.98560143990966,
+            "frames": 144,
+            "seconds": 1.0000999999996274
+          },
+          {
+            "fps": 144.10653945548336,
+            "frames": 145,
+            "seconds": 1.006199999999255
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 143.99205561072492,
+            "frames": 145,
+            "seconds": 1.007
+          },
+          {
+            "fps": 144.0206595151894,
+            "frames": 145,
+            "seconds": 1.006800000000745
+          },
+          {
+            "fps": 143.98560143990966,
+            "frames": 144,
+            "seconds": 1.0000999999996274
+          },
+          {
+            "fps": 144.02065951545586,
+            "frames": 145,
+            "seconds": 1.0067999999988824
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 143.9348818740782,
+            "frames": 145,
+            "seconds": 1.0074000000003724
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.07790143078927,
+            "frames": 145,
+            "seconds": 1.0064000000003726
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 144.00635614282908,
+            "frames": 145,
+            "seconds": 1.00689999999851
+          },
+          {
+            "fps": 143.98560143964147,
+            "frames": 144,
+            "seconds": 1.00010000000149
+          },
+          {
+            "fps": 144.00635614282908,
+            "frames": 145,
+            "seconds": 1.00689999999851
+          },
+          {
+            "fps": 144.00635614256268,
+            "frames": 145,
+            "seconds": 1.0069000000003725
+          },
+          {
+            "fps": 144.0206595151894,
+            "frames": 145,
+            "seconds": 1.006800000000745
+          },
+          {
+            "fps": 143.956812956274,
+            "frames": 144,
+            "seconds": 1.0002999999988824
+          },
+          {
+            "fps": 144.06358668653752,
+            "frames": 145,
+            "seconds": 1.0065
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.98560143964147,
+            "frames": 144,
+            "seconds": 1.00010000000149
+          },
+          {
+            "fps": 143.93488187434434,
+            "frames": 145,
+            "seconds": 1.00739999999851
+          },
+          {
+            "fps": 144,
+            "frames": 144,
+            "seconds": 1
+          },
+          {
+            "fps": 143.98560143964147,
+            "frames": 144,
+            "seconds": 1.00010000000149
+          },
+          {
+            "fps": 143.928035982009,
+            "frames": 144,
+            "seconds": 1.0005
+          }
+        ],
+        "windowsBelow30": 0
+      },
+      "run": 2,
+      "simulationSecondsAt60": 59.99999999999873,
+      "valid": true
+    }
+  ]
+}

@@ -71,10 +71,10 @@ Keep navigation synchronized with changing fire hazards.
 - State counts always sum to the initial population.
 - Reset reproduces the initial scenario.
 
-## Performance target — not yet achieved
+## Performance target — local automated measurements recorded
 
 At least 30 FPS at 1280x720 with 20 agents and an initial 64x64 fire grid.
-Measure a repeatable 60-second scenario after loading; record the test computer's CPU, GPU, RAM, and browser version. No performance measurement has been performed yet.
+Measure a repeatable 60-second scenario after loading; record the test computer's CPU, GPU, RAM, and browser version. Two completed local automated production measurements are recorded in docs/performance.md. The requested baseline uses a 1280×720 browser viewport; the smaller embedded canvas and buffer dimensions are reported explicitly. Results apply to that local setup; full-canvas, other-hardware and physical-browser validation are not inferred. Optional manual benchmark reproduction was not performed. User-reported functional validation is recorded separately in progress. The original target and acceptance scenarios remain unchanged.
 
 ## Broader semester scope — excluded from this MVP
 

@@ -5,7 +5,8 @@ import { createGroundPicker } from './createGroundPicker.js';
 import { createAgentView } from './createAgentView.js';
 import { createViewportResize } from './createViewportResize.js';
 
-export function createScene(canvas, map, onFrame = () => {}, agents = null) {
+export function createScene(canvas, map, onFrame = () => {}, agents = null, onRendered = () => {},
+  { normalAnimation = false } = {}) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xdce8ef);
 
@@ -47,11 +48,30 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null) {
   renderer.setAnimationLoop((time) => {
     navigation.update();
     onFrame(time);
-    mapView.animate(time / 1000, motionPreference.matches);
+    mapView.animate(time / 1000, motionPreference.matches && !normalAnimation);
     renderer.render(scene, camera);
+    onRendered(performance.now());
   });
 
   return {
+    performanceInfo() {
+      const gl = renderer.getContext();
+      const debug = gl.getExtension('WEBGL_debug_renderer_info');
+      const rect = canvas.getBoundingClientRect();
+      return {
+        canvas: { cssWidth: rect.width, cssHeight: rect.height,
+          bufferWidth: canvas.width, bufferHeight: canvas.height },
+        cameraDefault: camera.position.distanceTo(navigation.controls.position0) < 1e-7
+          && navigation.controls.target.distanceTo(navigation.controls.target0) < 1e-7
+          && camera.zoom === navigation.controls.zoom0,
+        reducedMotion: motionPreference.matches && !normalAnimation,
+        systemReducedMotion: motionPreference.matches, normalAnimationOverride: normalAnimation,
+        graphics: { version: gl.getParameter(gl.VERSION),
+          vendor: gl.getParameter(debug ? debug.UNMASKED_VENDOR_WEBGL : gl.VENDOR),
+          renderer: gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER),
+          hardwareAcceleration: 'unknown; renderer string alone is not proof' },
+      };
+    },
     pickCell: createGroundPicker(camera, canvas, map),
     syncFire: mapView.syncFire,
     syncAgents: () => agentView?.sync(),
