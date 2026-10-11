@@ -17,3 +17,17 @@ logs/
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Local npm configuration (may contain registry credentials)
+.npmrc
+.npmrc.local
+
+# Local editor state; retain useful shared project configuration
+/.vscode/settings.json
+/.vscode/*.local.json
+/.idea/workspace.xml
+/.idea/tasks.xml
+/.idea/dataSources.local.xml
+/.idea/shelf/
+/.vs/
+*.local.code-workspace

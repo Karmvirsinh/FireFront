@@ -6,7 +6,7 @@ Two fresh, complete production-preview runs met the 30 FPS criterion on this loc
 
 The requested baseline is a **1280×720 browser viewport**, containing a **922×555 CSS-pixel canvas**, with a **922×555 drawing buffer** at device pixel ratio **1** (existing cap remains 2). Project requirements do not specify a separate canvas interpretation. This measurement does not establish performance with a full 1280×720 drawing surface.
 
-Built production code: commit `387f42eb5ee8b059d329e5b3edbcf6f179b601d7` on `feature/performance-validation`, built at `2026-10-11T17:38:32.578Z`. Instrumentation was uncommitted: index.html, src/main.js, src/rendering/createScene.js, src/styles.css, src/performance/, tests/performance.test.js and vite.config.js. Documentation/results were added afterward without runtime changes. Main remains at the adopted scene-readability checkpoint `387f42e`; branches and comparison tags are retained.
+Built production code: commit `387f42eb5ee8b059d329e5b3edbcf6f179b601d7` on `feature/performance-validation`, built at `2026-10-11T17:38:32.578Z`. Instrumentation was uncommitted: index.html, src/main.js, src/rendering/createScene.js, src/styles.css, src/performance/, tests/performance.test.js and vite.config.js. Documentation/results were added afterward without runtime changes. At measurement time main was at the adopted scene-readability checkpoint `387f42e`. The validated instrumentation was subsequently committed as `34c9ddd` and fast-forward adopted on main; branches and comparison tags are retained. These historical measurements retain their original build metadata.
 
 | Environment | Recorded value |
 | --- | --- |
