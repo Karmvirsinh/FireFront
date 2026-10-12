@@ -2,6 +2,8 @@
 
 FireFront is an educational 3D wildfire and evacuation simulator for a university project. It explores how changing fire hazards affect navigation through two routes. It uses JavaScript, Three.js, Vite/npm and HTML/CSS, with no runtime AI service or external assets.
 
+**Live demo:** [FireFront on GitHub Pages](https://karmvirsinh.github.io/FireFront/)
+
 ## Current fixed-map MVP
 
 The validated application is on `main` at `34c9ddd`. It contains one authored, flat **64×64 logical grid**, a vegetation patch, START and SAFE areas, two roads and **20 agents**. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
@@ -118,7 +120,7 @@ For the existing opt-in capture, open `http://127.0.0.1:4173/FireFront/?benchmar
 - Small labels may require zoom on very narrow overviews. Richer assets, road-width presentation and improved ignition-button flame animation remain deferred.
 - Source archives without `.git` build successfully, but the optional build-metadata probe prints Git diagnostics and records unknown commit/branch metadata. A Git checkout supplies those values.
 - Production build reports the accepted >500 kB chunk warning. Warning thresholds are unchanged; no code/quality tuning was performed to silence it.
-- Assignment 3 deployment, public repository, video and PDF deliverables are separate work; this source preparation does not claim those are completed.
+- FireFront source and the GitHub Pages demo are published. Assignment 3 video and PDF deliverables remain separate work and are not claimed complete.
 
 ## AI assistance and human validation
 
