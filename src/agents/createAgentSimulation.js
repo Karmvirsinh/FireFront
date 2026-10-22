@@ -3,7 +3,7 @@ import { findPath, findBufferExit } from './findPath.js';
 
 export function createAgentSimulation(map, config = AGENT_CONFIG) {
   const goal = map.safeZone.z * map.width + map.safeZone.x;
-  const spawns = config.spawnCells ?? Array.from({ length: config.population }, (_, i) =>
+  const spawns = config.spawnCells ?? map.spawnCells ?? Array.from({ length: config.population }, (_, i) =>
     (map.start.z - 2 + Math.floor(i / 5)) * map.width + map.start.x - 2 + i % 5);
   if (spawns.length !== config.population || spawns.some((index) => !map.cells[index]?.walkable)) {
     throw new Error('Agent spawns must match the population and be walkable.');

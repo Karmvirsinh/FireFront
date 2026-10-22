@@ -5,7 +5,7 @@ import { createAgentSimulation } from '../agents/createAgentSimulation.js';
 import { AGENT_CONFIG } from '../agents/agentConfig.js';
 
 // One clock for fire and movement: fire -> hazards -> agents on every fixed step.
-export function createEvacuationSimulation(map, agentConfig = AGENT_CONFIG) {
+export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG, population: map.spawnCells?.length ?? AGENT_CONFIG.population }) {
   const fire = createFireSimulation(map);
   const agents = createAgentSimulation(map, agentConfig);
   let accumulator = 0;

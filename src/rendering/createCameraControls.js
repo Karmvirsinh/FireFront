@@ -16,9 +16,11 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
   const correction = new Vector3();
   function boundTarget() {
     correction.set(
-      MathUtils.clamp(controls.target.x, -panLimit, panLimit) - controls.target.x,
+      MathUtils.clamp(controls.target.x, Math.min(-panLimit, controls.target0.x),
+        Math.max(panLimit, controls.target0.x)) - controls.target.x,
       -controls.target.y,
-      MathUtils.clamp(controls.target.z, -panLimit, panLimit) - controls.target.z,
+      MathUtils.clamp(controls.target.z, Math.min(-panLimit, controls.target0.z),
+        Math.max(panLimit, controls.target0.z)) - controls.target.z,
     );
     // Translate both equally: clamping must not change distance or orbit angle.
     controls.target.add(correction);
@@ -44,6 +46,36 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
 
   keyboardTarget.addEventListener('keydown', resetView);
 
+  // OrbitControls owns drags begun on the canvas, even outside its rectangle.
+  // Its pointerup/cancel handlers handle normal completion; focus/capture loss
+  // also needs to retire the gesture before a subsequent panel interaction.
+  const doc = canvas.ownerDocument;
+  const pointers = new Set();
+  function begin(event) { if (controls.enabled) pointers.add(event.pointerId); }
+  function finish(event) { pointers.delete(event.pointerId); }
+  function cancelDrag() {
+    if (!pointers.size) return;
+    const captured = [...pointers];
+    pointers.clear();
+    // Public disconnect/connect clears the installed control's gesture state
+    // and document handlers, while preserving camera/target/reset settings.
+    controls.disconnect();
+    for (const id of captured) {
+      if (canvas.hasPointerCapture?.(id)) canvas.releasePointerCapture(id);
+    }
+    controls.connect(canvas);
+    controls.dispatchEvent({ type: 'end' });
+  }
+  function visibility() { if (doc.hidden) cancelDrag(); }
+  function noButtons(event) {
+    if (event.pointerType === 'mouse' && event.buttons === 0) cancelDrag();
+  }
+  const gestureListeners = [[canvas, 'pointerdown', begin], [doc, 'pointerup', finish],
+    [canvas, 'pointercancel', finish], [canvas, 'lostpointercapture', cancelDrag],
+    [keyboardTarget, 'blur', cancelDrag], [doc, 'visibilitychange', visibility],
+    [doc, 'pointermove', noButtons]];
+  gestureListeners.forEach(([target, type, handler]) => target.addEventListener(type, handler));
+
   return {
     controls,
     frameMap(aspect) {
@@ -58,7 +90,7 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
       controls.maxDistance = fullMapDistance * 1.5;
       const framing = mapBounds.framing;
       const frameRadius = framing ? Math.hypot(framing.width, framing.depth) / 2 : radius;
-      const distance = frameRadius / Math.sin(limitingAngle) * 1.08;
+      const distance = Math.max(controls.minDistance, frameRadius / Math.sin(limitingAngle) * 1.08);
       // Fit the useful area's bounding sphere to both viewport axes. Save the responsive
       // reset view without disturbing an already navigated camera on resize.
       controls.target0.set(framing?.centerX ?? 0, 0, framing?.centerZ ?? 0);
@@ -71,6 +103,8 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
       boundTarget();
     },
     dispose() {
+      cancelDrag();
+      gestureListeners.forEach(([target, type, handler]) => target.removeEventListener(type, handler));
       keyboardTarget.removeEventListener('keydown', resetView);
       controls.removeEventListener('change', boundTarget);
       // OrbitControls also removes its canvas context-menu and pointer listeners.

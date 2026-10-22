@@ -3,6 +3,8 @@
 FireFront is an educational wildfire/evacuation simulator. Mentor: Danrui Li.
 The priority is simulation behavior supported by clear, stylized low-poly / voxel-inspired 3D. This is not a validated wildfire prediction tool.
 
+> Status note (2026-10-22): increment-specific statements below are historical. Later approvals/closeouts supersede earlier "unimplemented" and timing statements; the deployed fixed-map baseline is 27893e2. Assignment 4 currently authorizes only the map-foundation increment at the end of this document.
+
 ## Midterm MVP
 
 - One small fixed 3D scene with a vegetation patch, one agent starting area, one safe zone, and two possible routes.
@@ -110,3 +112,12 @@ Adopt the validated forest UI on main and tune on feature/simulation-pacing. Coo
 ## Subsequently approved scene-readability increment
 
 Adopt validated pacing on main at fe9329a, then work on feature/scene-readability. Reduce and recolor START/SAFE/route labels; replace the purple ring with a compact amber ground cell outline; use low orange/yellow flames, flat hot embers and cool ash with vegetation charring/burnout; add a shallow boundary-aligned visual soil/rock base below unchanged ground. Preserve all logical map data, timing, agents/hazards/loss, camera, dashboard, ignition workflow, dependencies and reset semantics. Rendering animation is deterministic and separate from simulation, with static reduced-motion treatment. Ground-only picking excludes decorations/base. Button-flame animation remains deferred. This is presentation work, not a redefinition of MVP acceptance scenarios or a performance result.
+
+
+## Assignment 4 — approved map foundation (2026-10-22)
+
+On feature/procedural-foundation from deployed 27893e2, define a shared plain-data map contract and clean replacement lifecycle. Preserve createFixedMap(), all cells/connectivity/fuel/walkability, original 20-agent spawns, fire/agent timing, hazards/loss and fixed benchmark scenarios. An adapter supplies explicit spawn cells and presentation metadata. Derive labels, decoration bounds and camera framing from map metadata/actual relevant cells; a vegetation rectangle is not required. Replacement disposes prior rendering/UI/FPS/resize/camera bindings and resources before constructing a new session. Reset still replays the current map while preserving the camera; R remains camera-only.
+
+A second small synthetic map with different dimensions/endpoints/spawns and repeated-replacement checks are verification fixtures, not new user-facing controls. This supersedes old fixed-coordinate rendering assumptions, not the simulation rules or historical acceptance scenarios. No generation, elevation, new screens/controls/dependencies, pacing changes or theme redesign in this increment. Five technical pillars and three interaction stages remain distinct. Future generation parameters, seed policy and map-quality guarantees still require separate agreement; named procedural libraries remain uninstalled plans.
+
+Foundation follow-up: retain the direct-active-fire-only loss rule; navigation safety buffers remain nonlethal. Road widths for generated maps are undecided. A rendering-only distant-ground correction and drag ownership/cancellation checks do not approve generation or change fixed-map/simulation scope.

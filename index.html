@@ -10,13 +10,13 @@
     <main id="app" aria-label="FireFront simulation workspace">
       <header class="workspace-header">
         <h1>FireFront</h1>
-        <p>Wildfire &amp; evacuation <span>· Fixed MVP map · 64×64 grid</span></p>
+        <p>Wildfire &amp; evacuation <span id="map-summary">· Fixed MVP map · 64×64 grid</span></p>
       </header>
       <div class="workspace">
         <section class="scene-column" aria-labelledby="viewport-title">
           <div class="viewport-heading">
             <h2 id="viewport-title">Simulation viewport</h2>
-            <span>20 agents · Two routes · One ignition</span>
+            <span id="population-summary">20 agents · Two routes · One ignition</span>
             <span id="fps-readout" aria-label="Rendered frames per second">FPS: …</span>
           </div>
           <div id="simulation-viewport">
@@ -41,7 +41,7 @@
             <p class="note">Reset preserves the camera. <kbd>R</kbd> resets the view only. Flames on the button mean placement is on or ignition was used this run.</p>
           </section>
           <section class="panel-section" aria-labelledby="counts-title">
-            <h2 id="counts-title">Evacuation <span class="section-detail">20 agents</span></h2>
+            <h2 id="counts-title">Evacuation <span id="population-detail" class="section-detail">20 agents</span></h2>
             <dl class="agent-counts" aria-label="Evacuation counts">
               <div><dt>Waiting</dt><dd id="count-waiting">20</dd></div>
               <div><dt>Evacuating</dt><dd id="count-evacuating">0</dd></div>

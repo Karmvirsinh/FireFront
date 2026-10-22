@@ -35,7 +35,7 @@ function fixture(mapBounds = null) {
     emit(document, 'pointerup', properties);
     navigation.update();
   }
-  return { canvas, keyboard, camera, navigation, controls, drag };
+  return { canvas, document, keyboard, camera, navigation, controls, drag };
 }
 
 function closeVector(actual, expected) {
@@ -165,4 +165,50 @@ test('map framing fits both axes, adapts reset on resize, and scales navigation 
     f.navigation.frameMap(1280 / 720);
     assert.ok(f.camera.position.length() < narrowView.length());
   } finally { f.navigation.dispose(); }
+});
+
+test('canvas owns outside drags; release/cancel/focus loss retire them; panel cannot initiate', () => {
+  for (const [button, buttons] of [[2, 2], [1, 4]]) {
+    const f = fixture();
+    const panel = new EventTarget();
+    const pointer = { pointerId: 7, pointerType: 'mouse', button, buttons,
+      clientX: 500, clientY: 300 };
+    const move = (heldButtons = buttons) => emit(f.document, 'pointermove',
+      { ...pointer, buttons: heldButtons, clientX: 1400, clientY: 800 }); // Outside canvas.
+    try {
+      emit(panel, 'pointerdown', pointer);
+      const initial = f.camera.position.clone();
+      move();
+      closeVector(f.camera.position, initial);
+      emit(f.canvas, 'pointerdown', pointer);
+      move();
+      assert.ok(f.camera.position.distanceTo(initial) > 0.1, 'held canvas drag continues outside');
+      emit(f.document, 'pointerup', { ...pointer, buttons: 0 });
+      const released = f.camera.position.clone();
+      move();
+      closeVector(f.camera.position, released);
+
+      for (const cancel of [
+        () => emit(f.canvas, 'pointercancel', pointer),
+        () => emit(f.canvas, 'lostpointercapture', pointer),
+        () => emit(f.keyboard, 'blur'),
+        () => { f.document.hidden = true; emit(f.document, 'visibilitychange'); f.document.hidden = false; },
+        () => move(0), // Release outside browser: next mouse move reports no held button.
+      ]) {
+        emit(f.keyboard, 'keydown', { key: 'r' });
+        emit(f.canvas, 'pointerdown', pointer);
+        cancel();
+        const stopped = f.camera.position.clone();
+        emit(panel, 'pointerdown', pointer);
+        move();
+        closeVector(f.camera.position, stopped);
+        f.drag(1, 50, 40);
+        assert.ok(f.camera.position.distanceTo(stopped) > 0.1, 'fresh orbit still works after cancellation');
+      }
+    } finally { f.navigation.dispose(); }
+    const disposed = f.camera.position.clone();
+    emit(f.keyboard, 'blur'); emit(f.canvas, 'lostpointercapture', pointer);
+    f.drag(2, 50, 40);
+    closeVector(f.camera.position, disposed);
+  }
 });

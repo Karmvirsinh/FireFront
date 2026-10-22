@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createFireView } from './createFireView.js';
+import { getMapRendering } from '../world/mapContract.js';
 
 const COLORS = {
   obstacle: 0x8c9698, vegetation: 0x527648, route: 0xe0c58e,
@@ -15,6 +16,7 @@ function groundColor(cell) {
 }
 
 export function createMapView(map) {
+  const { labels, decorationBounds } = getMapRendering(map);
   const group = new THREE.Group();
   const resources = [];
   const transform = new THREE.Object3D();
@@ -43,6 +45,18 @@ export function createMapView(map) {
   // Visual base ends below y=0; the authoritative playable plane stays unchanged.
   for (const [height, y, hex] of [[0.18, -0.10, 0x735338], [0.50, -0.44, 0x4b5145]]) {
     const geometry = new THREE.BoxGeometry(map.width * map.cellSize, height, map.height * map.cellSize);
+    // The ground tiles already cover the base. Hidden upper caps only compete
+    // with them in the depth buffer at distant views (soil is just 0.01 below).
+    // Retain the sides/bottom, without changing ground height or camera limits.
+    const normals = geometry.getAttribute('normal');
+    const indices = [];
+    for (let i = 0; i < geometry.index.count; i += 3) {
+      const a = geometry.index.getX(i);
+      if (normals.getY(a) > 0.5) continue;
+      indices.push(a, geometry.index.getX(i + 1), geometry.index.getX(i + 2));
+    }
+    geometry.setIndex(indices);
+    geometry.clearGroups(); // One material for the retained faces.
     const material = new THREE.MeshStandardMaterial({ color: hex });
     const base = new THREE.Mesh(geometry, material);
     base.name = 'terrain-base';
@@ -76,7 +90,8 @@ export function createMapView(map) {
       forestCells.push(index);
     }
     // Sparse visual rocks; all gray cells are blocked, even between rock meshes.
-    if (cell.terrain === 'obstacle' && x >= 6 && x <= 57 && z >= 18 && z <= 49
+    if (cell.terrain === 'obstacle' && x >= decorationBounds.x0 && x <= decorationBounds.x1
+      && z >= decorationBounds.z0 && z <= decorationBounds.z1
       && x % 4 === 0 && z % 4 === 0) rocks.push(positionFor(x, z, 0.12));
   });
   tiles.instanceColor.needsUpdate = true;
@@ -123,17 +138,15 @@ export function createMapView(map) {
     texture.colorSpace = THREE.SRGBColorSpace;
     const material = new THREE.SpriteMaterial({ map: texture, depthTest: false, depthWrite: false });
     const sprite = new THREE.Sprite(material);
+    sprite.name = 'map-label';
+    sprite.userData.text = text;
     sprite.position.set(...positionFor(x, z, 0.35));
     sprite.scale.set(width, width / 4, 1);
     sprite.renderOrder = 1;
     group.add(sprite);
     resources.push(texture, material);
   }
-  // Keep endpoint text below the areas rather than obscuring the agents.
-  label('START', map.start.x, map.zones.start.z1 + 2, 2.7);
-  label('SAFE', map.safeZone.x, map.zones.safe.z1 + 2, 2.7);
-  label('ROUTE A', 21, 20, 3.2);
-  label('ROUTE B', 21, 46, 3.2);
+  for (const item of labels) label(item.text, item.x, item.z, item.width);
 
   // Hollow square marks the exact logical cell, unlike the tapered active flames.
   function outline(size, thickness, hex) {

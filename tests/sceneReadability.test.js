@@ -118,6 +118,15 @@ test('render-only flicker, vegetation charring and reset leave map/fire state un
       assert.equal(base.geometry.parameters.width, map.width * map.cellSize);
       assert.equal(base.geometry.parameters.depth, map.height * map.cellSize);
       assert.ok(base.position.y + base.geometry.parameters.height / 2 < 0);
+      const normals = base.geometry.getAttribute('normal');
+      const index = base.geometry.index;
+      assert.equal(index.count, 30, 'four side faces and bottom remain; hidden top removed');
+      for (let i = 0; i < index.count; i += 1) {
+        assert.ok(normals.getY(index.getX(i)) <= 0,
+          'no upward base cap can depth-fight with the playable tiles at any orbit/zoom');
+      }
+      assert.equal(base.material.depthTest, true);
+      assert.equal(base.material.depthWrite, true);
     }
     const labels = view.group.children.filter((child) => child.isSprite);
     assert.equal(labels.length, 4);

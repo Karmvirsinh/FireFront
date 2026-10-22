@@ -6,7 +6,7 @@ FireFront is an educational 3D wildfire and evacuation simulator for a universit
 
 ## Current fixed-map MVP
 
-The validated application is on `main` at `34c9ddd`. It contains one authored, flat **64×64 logical grid**, a vegetation patch, START and SAFE areas, two roads and **20 agents**. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
+The published baseline is on `main` at `27893e2`. The validated Assignment 4 map-foundation increment is on `feature/procedural-foundation`; it preserves the fixed-map simulation and adds no generation or new controls. It contains one authored, flat **64×64 logical grid**, a vegetation patch, START and SAFE areas, two roads and **20 agents**. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
 
 This is the Assignment 3 fixed-map MVP, not the complete semester feature set or a validated wildfire prediction tool. The requirements and historical development/validation record are preserved in [docs/requirements.md](docs/requirements.md) and [docs/progress.md](docs/progress.md).
 
@@ -103,7 +103,7 @@ node scripts/measurePacing.js
 npm run build
 ```
 
-The current **60-test** suite covers fire spread/lifecycle, snapshot ordering, fixed-step replay, map connectivity, hazards, pathfinding, agent loss/count conservation/reset, camera/ignition guards, rendering lifecycle, viewport picking/resizing and FPS capture. The pacing helper reproduces both scenario timelines; it is not an FPS benchmark.
+The current **68-test** suite covers fire spread/lifecycle, snapshot ordering, fixed-step replay, map connectivity, hazards, pathfinding, agent loss/count conservation/reset, camera/ignition guards, rendering lifecycle, viewport picking/resizing, FPS capture, map contracts and repeated map replacement. The pacing helper reproduces both scenario timelines; it is not an FPS benchmark.
 
 Two automated, visible production-preview measurements recorded approximately **144 FPS average**, lowest complete one-second windows **142.02 / 143.00 FPS**, p95 intervals **7.5 ms**, and **zero complete windows below 30 FPS**. Both captured 60 seconds and completed evacuation. Baseline was a **1280×720 browser viewport**, with a smaller **922×555 embedded canvas/drawing buffer**, DPR 1, on the documented local NVIDIA RTX 4060 setup. This is a local result, not a full-size-canvas or other-hardware guarantee; independent browser acceleration-setting confirmation was unavailable.
 
@@ -132,7 +132,8 @@ FireFront has human-reported validation for the map/camera, ignition/fire lifecy
 
 | Path | Responsibility |
 | --- | --- |
-| `src/world/` | Plain logical map data and BFS connectivity checks |
+| `src/world/` | Plain map contract, unchanged fixed fixture/adapter and BFS connectivity checks |
+| `src/app/` | One active map session and complete replacement/disposal ownership |
 | `src/simulation/` | Fire state, hazards, configuration and shared clock |
 | `src/agents/` | A*, continuous movement and agent state machine |
 | `src/rendering/` | Three.js map/fire/agent visuals, camera, resize and picking |
@@ -142,3 +143,14 @@ FireFront has human-reported validation for the map/camera, ignition/fire lifecy
 | `docs/` | Requirements, historical progress and performance evidence |
 
 Read [AGENTS.md](AGENTS.md), [requirements](docs/requirements.md) and [progress](docs/progress.md) before development. Existing experiment branches and annotated layout snapshots are retained locally. Compare versions only with a clean working tree; rebuild preview after switching because ignored dist output does not switch with Git.
+
+
+## Assignment 4 map foundation (validated)
+
+The existing renderer/simulation now accepts normalized plain map data with explicit spawn cells and metadata for labels, decoration bounds and overview framing. See [map contract and lifecycle](docs/map-contract.md). The default app still loads the authored 64×64 fixture with 20 agents; no seed selection, generation, elevation or start/results screens are implemented. Historical notes declaring those features deferred still apply; fixed rendering-coordinate assumptions are superseded by the contract/adapter.
+
+The overview includes actual relevant cells/zones and label footprints, with no camera dependency on a rectangular vegetationPatch. Existing map labels, fuel/roads, visual theme, controls and timings are preserved. Replacement is an internal application API that releases the old loop, handlers, observer, renderer and visual resources before constructing a new session. Simulation reset preserves the current camera; R remains camera-only. The synthetic maps are automated fixtures, not new selectable UI content.
+
+Current automated checks cover a 12×8 map with three explicit spawns, an off-center 40×16 fixture and repeated replacement/failure recovery. Fixed-map event traces and default spawns match the original exactly. User-reported foundation feedback generally passed labels/framing, physical camera controls, selection/road rejection, evacuation and reset. A maximum-zoom-out ground artifact required a follow-up before closeout. Hidden soil/rock top caps have now been removed to prevent depth fighting with ground tiles, while sides, ground height, camera limits and depth testing remain unchanged. Canvas drags continue outside while held and now cancel on focus/capture loss. The user reports all three final recheck items passed: maximum zoom-out/orbit without brown fragments; drag continuation, release/focus cancellation and panel isolation; and fuel selection, road rejection, simulation reset and R. These user-reported checks complete foundation validation alongside the earlier feedback; automated/browser evidence remains separately recorded in progress. The original two automated performance captures remain historical evidence, not a new benchmark of this branch.
+
+Current review servers: development http://127.0.0.1:5175/FireFront/ and production preview http://127.0.0.1:4175/FireFront/. Restart with `npm run dev -- --host 127.0.0.1 --port 5175 --strictPort`; preview with `npm run build` then `npm run preview -- --host 127.0.0.1 --port 4175 --strictPort`. The standard commands above remain valid with their original ports when free.
