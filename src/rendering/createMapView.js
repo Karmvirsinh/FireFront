@@ -4,19 +4,19 @@ import { getMapRendering } from '../world/mapContract.js';
 
 const COLORS = {
   obstacle: 0x8c9698, vegetation: 0x527648, route: 0xe0c58e,
-  start: 0x478ecb, safe: 0x55b69b,
+  start: 0x478ecb, safe: 0x55b69b, clearing: 0xc5bd8b,
 };
 const FIRE_COLORS = { burning: 0x67482f, 'burned-hot': 0x332a29, 'burned-cool': 0x4e5663 };
 const FUEL_COLORS = { brush: 0x527648, grass: 0x91aa59, forest: 0x345b44 };
 
-// Full-cell ground coverage follows fuel data independently of terrain.
-// Sparse decorative models do not define the ignitable area.
-function groundColor(cell) {
-  return FUEL_COLORS[cell.fuelType] ?? COLORS[cell.terrain];
-}
-
 export function createMapView(map) {
-  const { labels, decorationBounds } = getMapRendering(map);
+  const { labels, decorationBounds, terrainColors = {}, compactEndpoints = false } = getMapRendering(map);
+  function groundColor(cell, index) {
+    // Spawn capacity is logical data; only one generated origin cell is colored.
+    const terrain = compactEndpoints && cell.terrain === 'start'
+      && index !== map.start.z * map.width + map.start.x ? 'route' : cell.terrain;
+    return FUEL_COLORS[cell.fuelType] ?? terrainColors[terrain] ?? COLORS[terrain];
+  }
   const group = new THREE.Group();
   const resources = [];
   const transform = new THREE.Object3D();
@@ -42,6 +42,7 @@ export function createMapView(map) {
   tileGeometry.rotateX(-Math.PI / 2);
   const tiles = instances(tileGeometry, new THREE.MeshStandardMaterial(),
     map.cells.map((_, i) => positionFor(i % map.width, Math.floor(i / map.width))));
+  tiles.name = 'ground-tiles';
   // Visual base ends below y=0; the authoritative playable plane stays unchanged.
   for (const [height, y, hex] of [[0.18, -0.10, 0x735338], [0.50, -0.44, 0x4b5145]]) {
     const geometry = new THREE.BoxGeometry(map.width * map.cellSize, height, map.height * map.cellSize);
@@ -75,7 +76,7 @@ export function createMapView(map) {
   map.cells.forEach((cell, index) => {
     const x = index % map.width;
     const z = Math.floor(index / map.width);
-    color.setHex(groundColor(cell));
+    color.setHex(groundColor(cell, index));
     tiles.setColorAt(index, color);
     if (cell.fuelType === 'brush' && x % 2 === 0 && z % 2 === 0) {
       brush.push(positionFor(x, z, 0.16));
@@ -184,7 +185,7 @@ export function createMapView(map) {
   function syncFire(simulation) {
     for (const index of simulation.takeChanges()) {
       const cell = simulation.cells[index];
-      tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index])));
+      tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index], index)));
       tiles.instanceColor.addUpdateRange(index * 3, 3);
       tiles.instanceColor.needsUpdate = true;
       fireView.sync(index, cell.state);

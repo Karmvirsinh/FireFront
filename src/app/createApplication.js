@@ -7,7 +7,7 @@ import { createPerformanceReadout } from '../performance/createPerformanceReadou
 
 // Own exactly one map session. Replacement is an internal API, not a new UI control.
 export function createApplication({ canvas, panel, fpsElement, initialMap, buildInfo,
-  benchmark = false, normalAnimation = false, host = window, doc = document },
+  benchmark = false, normalAnimation = false, host = window, doc = document, onStateChange = () => {} },
 { sceneFactory = createScene } = {}) {
   let current = null;
   let disposed = false;
@@ -58,17 +58,23 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
         view.syncFire(simulation.fire);
         view.syncAgents();
         refreshCounts();
+        onStateChange(current);
       }, host);
       const text = (selector, value) => {
         const node = doc.querySelector(selector);
         if (node) node.textContent = value;
       };
       const count = map.spawnCells.length;
-      const routeHint = map.routes?.length === 2 ? 'Two routes · '
+      const routeHint = map.navigation?.mode === 'path-first' ? 'Path-first · '
+        : map.routes?.length === 2 ? 'Two routes · '
         : map.routes?.length ? `${map.routes.length} routes · ` : '';
       text('#map-summary', `· ${map.name ?? 'Map'} · ${map.width}×${map.height} grid`);
       text('#population-summary', `${count} agents · ${routeHint}One ignition`);
       text('#population-detail', `${count} agents`);
+      doc.documentElement.classList.toggle('generated-environment', Boolean(map.generation));
+      text('#navigation-note', map.navigation?.mode === 'path-first'
+        ? 'Ground color shows fuel coverage. Grass/clearings may be walkable; Path-first agents stay on paths and endpoint areas.'
+        : 'Ground color shows fuel coverage. Models do not mark fuel boundaries. Off-path vegetation is blocked.');
       canvas.setAttribute('aria-label', `${map.name ?? 'Map'} with a start area, safe zone, vegetation and blocked ground`);
       return { map, simulation, view, dispose };
     } catch (error) { dispose(); throw error; }
@@ -81,6 +87,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
     current?.dispose();
     current = null;
     current = createSession(map);
+    onStateChange(current);
     return current;
   }
   function dispose() {
@@ -89,6 +96,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
     current?.dispose();
     current = null;
     doc.documentElement.classList.remove('benchmark-normal-animation');
+    doc.documentElement.classList.remove('generated-environment');
   }
   try { replaceMap(initialMap); } catch (error) { dispose(); throw error; }
   return { replaceMap, dispose, get current() { return current; } };

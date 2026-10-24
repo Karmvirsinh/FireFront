@@ -1,14 +1,16 @@
+import { isNavigable } from '../world/navigationPolicy.js';
+
 export function neighbors(map, index) {
   const x = index % map.width;
   return [index - map.width, x < map.width - 1 ? index + 1 : -1,
     index + map.width, x > 0 ? index - 1 : -1]
-    .filter((next) => next >= 0 && next < map.cells.length && map.cells[next].walkable);
+    .filter((next) => next >= 0 && next < map.cells.length && isNavigable(map, next));
 }
 
 // Four-neighbor A*: Manhattan distance and stable f/h/index tie-breaking.
 // Normal planning never permits an unsafe start, destination or intermediate cell.
 export function findPath(map, start, goal, unsafe) {
-  if (!map.cells[start]?.walkable || !map.cells[goal]?.walkable || unsafe[start] || unsafe[goal]) return null;
+  if (!isNavigable(map, start) || !isNavigable(map, goal) || unsafe[start] || unsafe[goal]) return null;
   const heuristic = (index) => Math.abs(index % map.width - goal % map.width)
     + Math.abs(Math.floor(index / map.width) - Math.floor(goal / map.width));
   const open = new Set([start]);
@@ -44,7 +46,7 @@ export function findPath(map, start, goal, unsafe) {
 // safe cell through walkable buffer cells, never burning/hot cells. This is not
 // permission for normal evacuation paths to enter buffers from safe ground.
 export function findBufferExit(map, start, unsafe, direct) {
-  if (!map.cells[start]?.walkable || direct[start]) return null;
+  if (!isNavigable(map, start) || direct[start]) return null;
   const queue = [start];
   const parent = new Map([[start, null]]);
   for (let head = 0; head < queue.length; head += 1) {

@@ -10,17 +10,17 @@
     <main id="app" aria-label="FireFront simulation workspace">
       <header class="workspace-header">
         <h1>FireFront</h1>
-        <p>Wildfire &amp; evacuation <span id="map-summary">· Fixed MVP map · 64×64 grid</span></p>
+        <p>Wildfire &amp; evacuation <span id="map-summary">· 64×64 grid</span></p>
       </header>
       <div class="workspace">
         <section class="scene-column" aria-labelledby="viewport-title">
           <div class="viewport-heading">
             <h2 id="viewport-title">Simulation viewport</h2>
-            <span id="population-summary">20 agents · Two routes · One ignition</span>
+            <span id="population-summary">20 agents · One ignition</span>
             <span id="fps-readout" aria-label="Rendered frames per second">FPS: …</span>
           </div>
           <div id="simulation-viewport">
-            <canvas id="scene" aria-label="Fixed map with a start area, safe zone, two routes, vegetation, and blocked ground"></canvas>
+            <canvas id="scene" aria-label="FireFront environment"></canvas>
           </div>
           <div class="camera-hints" aria-label="Camera controls">
             <span><strong>Zoom</strong> Mouse wheel</span>
@@ -30,6 +30,16 @@
           </div>
         </section>
         <aside id="simulation-panel" aria-label="Simulation controls and statistics">
+          <form id="generation-form" class="panel-section" aria-labelledby="environment-title" novalidate>
+            <h2 id="environment-title">Environment</h2>
+            <div class="generation-actions">
+              <label for="seed-input">Seed <input id="seed-input" type="text" inputmode="numeric" value="42" autocomplete="off" aria-describedby="seed-help generation-status" /></label>
+              <button id="generate-map" type="submit">Generate</button>
+            </div>
+            <p id="active-seed" class="note"></p>
+            <p id="seed-help" class="note">Whole number 0–4294967295. Reset before generating during a run.</p>
+            <p id="generation-status" class="note" role="status" aria-live="polite"></p>
+          </form>
           <section class="panel-section" aria-labelledby="simulation-title">
             <h2 id="simulation-title">Fire simulation</h2>
             <div class="simulation-actions">
@@ -56,13 +66,14 @@
             <ul class="map-legend" aria-label="Map legend">
               <li><span class="swatch start"></span>Start area</li>
               <li><span class="swatch safe"></span>Safe zone</li>
-              <li><span class="swatch route"></span>Road · no fuel</li>
+              <li><span class="swatch route"></span>Path / road · no fuel</li>
+              <li><span class="swatch clearing"></span>Clearing · no fuel</li>
               <li><span class="swatch obstacle"></span>Blocked / rocks</li>
               <li><span class="swatch grass"></span>Grass fuel</li>
               <li><span class="swatch vegetation"></span>Brush fuel</li>
               <li><span class="swatch forest"></span>Forest-floor fuel</li>
             </ul>
-            <p class="note">Ground color shows fuel coverage. Models do not mark fuel boundaries. Off-path vegetation is blocked.</p>
+            <p id="navigation-note" class="note">Ground color shows fuel coverage. Models do not mark fuel boundaries. Off-path vegetation is blocked.</p>
           </section>
           <section class="panel-section" aria-labelledby="fire-legend-title">
             <h2 id="fire-legend-title">Fire states</h2>

@@ -3,7 +3,7 @@
 FireFront is an educational wildfire/evacuation simulator. Mentor: Danrui Li.
 The priority is simulation behavior supported by clear, stylized low-poly / voxel-inspired 3D. This is not a validated wildfire prediction tool.
 
-> Status note (2026-10-22): increment-specific statements below are historical. Later approvals/closeouts supersede earlier "unimplemented" and timing statements; the deployed fixed-map baseline is 27893e2. Assignment 4 currently authorizes only the map-foundation increment at the end of this document.
+> Status note (2026-10-22): increment-specific statements below are historical. Later approvals/closeouts supersede earlier "unimplemented" and timing statements; the deployed fixed-map baseline is 27893e2. Assignment 4 approvals at the end supersede earlier fixed-only/deferred-generation statements without changing historical MVP scenarios.
 
 ## Midterm MVP
 
@@ -113,7 +113,6 @@ Adopt the validated forest UI on main and tune on feature/simulation-pacing. Coo
 
 Adopt validated pacing on main at fe9329a, then work on feature/scene-readability. Reduce and recolor START/SAFE/route labels; replace the purple ring with a compact amber ground cell outline; use low orange/yellow flames, flat hot embers and cool ash with vegetation charring/burnout; add a shallow boundary-aligned visual soil/rock base below unchanged ground. Preserve all logical map data, timing, agents/hazards/loss, camera, dashboard, ignition workflow, dependencies and reset semantics. Rendering animation is deterministic and separate from simulation, with static reduced-motion treatment. Ground-only picking excludes decorations/base. Button-flame animation remains deferred. This is presentation work, not a redefinition of MVP acceptance scenarios or a performance result.
 
-
 ## Assignment 4 — approved map foundation (2026-10-22)
 
 On feature/procedural-foundation from deployed 27893e2, define a shared plain-data map contract and clean replacement lifecycle. Preserve createFixedMap(), all cells/connectivity/fuel/walkability, original 20-agent spawns, fire/agent timing, hazards/loss and fixed benchmark scenarios. An adapter supplies explicit spawn cells and presentation metadata. Derive labels, decoration bounds and camera framing from map metadata/actual relevant cells; a vegetation rectangle is not required. Replacement disposes prior rendering/UI/FPS/resize/camera bindings and resources before constructing a new session. Reset still replays the current map while preserving the camera; R remains camera-only.
@@ -121,3 +120,37 @@ On feature/procedural-foundation from deployed 27893e2, define a shared plain-da
 A second small synthetic map with different dimensions/endpoints/spawns and repeated-replacement checks are verification fixtures, not new user-facing controls. This supersedes old fixed-coordinate rendering assumptions, not the simulation rules or historical acceptance scenarios. No generation, elevation, new screens/controls/dependencies, pacing changes or theme redesign in this increment. Five technical pillars and three interaction stages remain distinct. Future generation parameters, seed policy and map-quality guarantees still require separate agreement; named procedural libraries remain uninstalled plans.
 
 Foundation follow-up: retain the direct-active-fire-only loss rule; navigation safety buffers remain nonlethal. Road widths for generated maps are undecided. A rendering-only distant-ground correction and drag ownership/cancellation checks do not approve generation or change fixed-map/simulation scope.
+
+## Assignment 4 — approved first seeded environment (2026-10-22)
+
+Adopt the validated foundation on main at 6e39804 and work uncommitted on feature/seeded-environment. Flat 64×64, cellSize 0.5, 20 agents, one seed-varying origin and one safe destination; decimal seed input and Generate with fixed density defaults. Alea and simplex-noise are the only approved added dependencies. One coordinator combines independent seeded endpoint/path/vegetation/rock streams, constructs connectivity deliberately and validates before replacement with bounded deterministic retries. Preserve the original fixed fixture, timings and benchmark entry point.
+
+Initial path-width decision: a consistent three-cell swept band, including bends, with optional branches/junctions/loops; no mandatory two-route rectangle, maze, artificial pinches or fuel-bearing roads. Endpoint clearings are 7×7 with 20 distinct spawn cells and separated endpoints. Every spawn initially reaches safety through paths/endpoints. Grass and clearings may be physically walkable; dense brush/forest and rocks are blocked. A separate Path-first navigation mask constrains A* and emergency buffer exits to the network/endpoints without falsifying physical walkability. Flexible movement is deferred. Existing fixed data/policies remain unchanged.
+
+Record seed/settings/version forest-paths-v1. Accept decimal integers 0–4294967295, trim whitespace and canonicalize leading zeros; reject invalid/overflow inputs without substituting another seed. Show active seed/version separately. Generate restores setup; reset replays the installed map and preserves camera. Disable generation during a started run until reset, including after completion. Failure retains the usable map; validate complete logical data before retirement and recover the previous map on renderer-construction failure when possible. Use existing theme/models/depth correction/drag guards with derived metadata, never invented Route A/B identities. No generation FPS claim from old fixed-map captures.
+
+Keep fire exposure/fuel/burn/cooling, fixed steps, agent speed, hazards and direct-active-fire-only loss unchanged. Buffers stay nonlethal. Three-cell paths retain protected centerlines with the existing buffer, so generated maps need not exhibit full closures, rerouting/trapping or losses; fixed authored acceptance scenarios remain intact. No elevation, water/bridges, weather, multi-endpoint UI, density slider, new movement algorithm, start/results screens or asset redesign in this increment.
+
+Future direction remains multiple origins up to 4 and safe zones up to 3; minimum counts and destination-choice rules are undecided. Sen's algorithm-comparison suggestion remains later exploration. These are not current implementation tasks. Generator details/check evidence and pending human validation: docs/seeded-environment.md and progress.
+
+## 2026-10-24 — Seeded alpha trail/ground correction (supersedes initial width decision)
+
+The user requested one-cell-wide fuel-free trails for this alpha, replacing the initial three-cell sweep above. Keep clean edge-connected bends/junctions and seed-varying winding routes, branches and optional loops; do not force a rectangle, two alternatives, trapping or casualties. Remove redundant raster overlaps without disconnecting the network. Compact genuine junction footprints may remain; broad cleared bands must not.
+
+Use a minimal 5×4 origin footprint for the same 20 distinct spawns and verify each initial path; show only a compact blue origin indicator. Safety is one green destination cell with unchanged destination semantics. Bare trails use muted earth-brown, nonfuel clearings neutral gray and ignitable grass green. Physical walkability remains separate from Path-first policy. Vegetation noise/appearance, fire/agent timings, nonlethal navigation buffers and direct-active-fire-only loss remain unchanged.
+
+Current identity is forest-trails-v2; record forest-paths-v1 as its stable random-stream namespace to retain established endpoint/vegetation choices. Adjacent burning vegetation may now close a one-cell trail under the existing mask; verify an example without guaranteeing any outcome for every seed. Fixed authored layout and timing fixtures remain unchanged. Seeded increment remains unaccepted pending this correction's human recheck; preserve earlier feedback accurately. Vite advisory stays a separate focused assessment, with no dependency upgrade here.
+
+## 2026-10-24 — Seeded design refinement (supersedes gray clearing palette and v2 connection rules)
+
+User confirms the three prior targeted rechecks passed; record these as user-reported functional validation, not final acceptance of the evolving design. Change only clearing color to muted sandy beige, distinct from earth-brown trails and green ignitable grass, with matching legend. Keep its existing nonfuel/physical-walkability/Path-first classifications.
+
+Review optional path connections generally: avoid unnecessary long detours and sustained closely parallel routes. Use local adjacent waypoint attachments and quality checks rather than special-casing seed 2026, banning loops or adding endpoints. Preserve winding/seed variation and initial reachability. Current logical version is forest-trails-v3 with the existing forest-paths-v1 random-stream namespace, preserving vegetation generation where practical. Keep one-cell trails, 20 agents, one origin/safety, all fixed-map fixtures and simulation timings/rules. New design feedback is pending; no push/deployment or dependency upgrade.
+
+## 2026-10-24 - Approved network-first forest trails (supersedes corridor-first v1-v3)
+
+Within the same uncommitted seeded increment, replace the START-to-SAFE-first spine with a connected branching network of 6-9 seeded, well-spaced ordinary forest nodes. Use nearby tree connections, occasional useful loop connections, then attach START and SAFE. Additional nodes are ordinary trail locations/junctions, never extra spawns or safe destinations. Keep winding one-cell trails and compact junctions, without large node clearings, forced rectangles/loops, repetitive branch counts, excessive detours or sustained close-parallel trails. Initial settings are documented tuning choices pending human design feedback.
+
+Keep one origin, one safe destination, 20 distinct spawns, initial reachability, existing ground palette, vegetation noise and independent random streams. Carve only trails/endpoints. Path-only candidate retries must leave endpoint and underlying vegetation/rock patterns fixed. Record new identity forest-network-v4 and remeasure examples rather than assuming old closures survive. Preserve the fixed authored map and exact timing fixtures, all simulation rules/timings, controls/reset behavior and dependency versions. Earlier user manual passes remain historical functional feedback, not acceptance of this network design.
+
+V4 validation follow-up: the user reports all three manual checklist items passed and accepts the path-network appearance. Two START connections, if later approved, mean two distinct trails from the same existing START area, not extra origins. Second-trail geometry and a local fire-awareness policy remain investigation/proposals only; current global hazard knowledge, navigation, loss and simulation rules are unchanged.

@@ -32,6 +32,12 @@ kbd { display: inline-block; padding: 0 5px; border: 2px solid #8e8054; border-b
 .panel-section h2 { margin-bottom: 10px; }
 .section-detail { float: right; font-weight: 400; color: #5e664a; font-size: 12px; }
 .simulation-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.generation-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+.generation-actions label { display: grid; gap: 4px; font-size: 12px; }
+#seed-input { width: 100%; min-width: 0; height: 36px; padding: 6px; font: inherit; color: #2b3524; background: #fff7df; border: 2px solid #8e8054; border-radius: 1px; }
+#seed-input[aria-invalid="true"] { border-color: #a2303e; }
+#seed-input:disabled { color: #5d624b; background: #d3d0ac; }
+#generation-status { min-height: 18px; }
 #reset-simulation { grid-column: 1 / -1; }
 button { position: relative; height: 42px; padding: 6px 7px; border: 3px solid; border-color: #8b9d5c #334727 #283b22 #70884c; border-radius: 1px; font: inherit; font-size: 12px; font-weight: 600; color: #f3e8c9; background: #526e38; box-shadow: inset 0 2px 0 #c7d28c55, 0 3px 0 #283b22; cursor: pointer; }
 button:hover:not(:disabled) { background: #637e43; border-color: #9eae70 #40582f #334727 #819a56; }
@@ -55,6 +61,7 @@ button:disabled { color: #5d624b; background: #d3d0ac; border-color: #b2b58d #97
 .swatch.start { background: #478ecb; }
 .swatch.safe { background: #55b69b; }
 .swatch.route { background: #e0c58e; }
+.swatch.clearing { background: #c5bd8b; }
 .swatch.vegetation { background: #527648; }
 .swatch.grass { background: #91aa59; }
 .swatch.forest { background: #345b44; }
@@ -98,3 +105,7 @@ h1::before { content: ""; width: 16px; height: 21px; background: #d3ac57;
   animation: ember-edge 0.9s steps(3, end) infinite alternate;
 }
 .benchmark-normal-animation #place-ignition.ignition-active::after { animation-delay: -0.4s; }
+
+/* Generated trails use earth, while the authored road fixture retains yellow. */
+.generated-environment .swatch.route { background: #806247; }
+.generated-environment .swatch.clearing { background: #c4b38b; }

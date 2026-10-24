@@ -1,5 +1,5 @@
 // Plain-data boundary shared by world factories, simulation and rendering.
-const TERRAINS = ['obstacle', 'vegetation', 'route', 'start', 'safe'];
+const TERRAINS = ['obstacle', 'vegetation', 'clearing', 'route', 'start', 'safe'];
 const FUELS = ['none', 'grass', 'brush', 'forest'];
 
 export function getMapRendering(map) {
@@ -45,6 +45,15 @@ export function normalizeMap(input) {
   }
   require(Array.isArray(map.spawnCells) && map.spawnCells.length > 0
     && Array.from(map.spawnCells).every(validIndex), 'explicit walkable spawnCells required');
+  if (map.navigation) {
+    require(map.navigation.mode === 'path-first' && Array.isArray(map.navigation.allowedCells)
+      && map.navigation.allowedCells.length === map.cells.length
+      && Array.from(map.navigation.allowedCells).every((allowed, i) => typeof allowed === 'boolean'
+        && (!allowed || map.cells[i].walkable)), 'invalid Path-first navigation mask');
+    require([...map.spawnCells, map.start.z * map.width + map.start.x,
+      map.safeZone.z * map.width + map.safeZone.x].every((i) => map.navigation.allowedCells[i]),
+    'endpoints/spawns must be allowed by navigation policy');
+  }
   for (const zone of Object.values(map.zones ?? {})) {
     require(zone && [zone.x0, zone.x1, zone.z0, zone.z1].every(Number.isInteger)
       && zone.x0 >= 0 && zone.z0 >= 0 && zone.x0 <= zone.x1 && zone.z0 <= zone.z1

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Vector3 } from 'three';
+import { Color, Matrix4, Vector3 } from 'three';
 import { createFixedMap } from '../src/world/createFixedMap.js';
 import { createFixedMapDefinition } from '../src/world/createFixedMapDefinition.js';
 import { normalizeMap, getCameraBounds } from '../src/world/mapContract.js';
@@ -8,6 +8,8 @@ import { createEvacuationSimulation } from '../src/simulation/createEvacuationSi
 import { createScene } from '../src/rendering/createScene.js';
 import { createApplication } from '../src/app/createApplication.js';
 import { measureScenario } from '../scripts/measurePacing.js';
+import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
+import { createGenerationControls } from '../src/ui/createGenerationControls.js';
 
 function smallMap() {
   const map = { name: 'Synthetic test map', width: 12, height: 8, cellSize: 0.5,
@@ -47,7 +49,7 @@ class Element extends EventTarget {
   releasePointerCapture() {}
   remove() { this.removed = true; }
 }
-function fixture(benchmark = false) {
+function fixture(benchmark = false, onStateChange = () => {}) {
   const saved = { window: globalThis.window, document: globalThis.document, ResizeObserver: globalThis.ResizeObserver };
   const doc = new Element(); const host = new Element(); const canvas = new Element();
   const viewport = { clientWidth: 920, clientHeight: 555 };
@@ -104,7 +106,7 @@ function fixture(benchmark = false) {
   }
   let failNext = false;
   const app = createApplication({ canvas, panel, fpsElement: fps, initialMap: createFixedMapDefinition(),
-    buildInfo: { productionBuild: false }, benchmark, doc, host }, {
+    buildInfo: { productionBuild: false }, benchmark, doc, host, onStateChange }, {
     sceneFactory(...args) {
       if (failNext) { failNext = false; throw new Error('controlled renderer failure'); }
       args[5] = { ...args[5], createRenderer: rendererFactory };
@@ -300,4 +302,77 @@ test('off-center relevant regions remain valid default/reset targets within navi
     assert.ok(renderer.camera.position.distanceTo(overview) < 1e-9);
     assert.equal(f.app.current.view.performanceInfo().cameraDefault, true);
   } finally { f.close(); }
+});
+
+test('generation form validates/retains failures, locks active runs, and repeatedly replaces/reset sessions without stale bindings', () => {
+  let ui;
+  const f = fixture(false, () => ui?.refresh());
+  const form = new Element();
+  const nodes = Object.fromEntries(['seed-input','generate-map','active-seed','generation-status'].map(id=>[id,new Element()]));
+  form.querySelector = id=>nodes[id.slice(1)];
+  let fail = false;
+  ui = createGenerationControls(form, f.app, { generator(seed) {
+    if(fail) throw new Error('controlled generation failure');
+    return createGeneratedMap(seed);
+  }});
+  function submit(value) { nodes['seed-input'].value=value;emit(form,'submit');f.tick(); }
+  try {
+    const original=f.app.current;
+    submit('1e3');assert.equal(f.app.current,original);assert.match(nodes['generation-status'].textContent,/Seed must/);
+    fail=true;submit('7');assert.equal(f.app.current,original);assert.match(nodes['generation-status'].textContent,/retained/);fail=false;
+    const keys=f.host.listeners.get('keydown').size;
+    for(const seed of [0,7,42,2026,1,4294967295]) {
+      submit(` 00${seed} `);
+      assert.equal(nodes['seed-input'].value,String(seed));
+      assert.equal(f.app.current.map.generation.seed,seed);assert.match(nodes['active-seed'].textContent,new RegExp(`Active seed ${seed}`));
+      assert.equal(f.app.current.simulation.selected,null);assert.equal(f.nodes['count-waiting'].textContent,'20');
+      assert.equal(f.loops.size,1);assert.equal(f.observers.size,1);assert.equal(f.host.listeners.get('keydown').size,keys);
+      const current=f.app.current, camera=f.renderers.at(-1).camera;
+      const foliage=f.renderers.at(-1).scene.children[0].children.filter(mesh=>mesh.userData.fuelDecoration
+        || (mesh.isInstancedMesh && mesh.material.color.getHex()===0x687276));
+      // Existing rendering must not decorate the generated bare network.
+      for(const mesh of foliage) for(let slot=0;slot<mesh.count;slot++) {
+        const position=new Vector3().setFromMatrixPosition(new Matrix4().fromArray(mesh.instanceMatrix.array,slot*16));
+        const index=Math.floor(position.z/.5+32)*64+Math.floor(position.x/.5+32);
+        assert.equal(current.map.navigation.allowedCells[index],false);
+      }
+      const tiles=f.renderers.at(-1).scene.getObjectByName('ground-tiles'), color=new Color();
+      let blue=0,green=0;
+      current.map.cells.forEach((cell,index)=>{
+        tiles.getColorAt(index,color);const hex=color.getHex();
+        if(hex===0x478ecb) blue++;if(hex===0x55b69b) green++;
+        if(cell.terrain==='route') assert.equal(hex,0x806247);
+        if(cell.terrain==='clearing') assert.equal(hex,0xc4b38b);
+        if(cell.fuelType==='grass') assert.equal(hex,0x91aa59);
+        if(['route','clearing','start','safe'].includes(cell.terrain)) assert.equal(current.simulation.eligible(index),false);
+      });
+      assert.equal(blue,1,'compact origin indicator, not a twenty-cell blue pad');assert.equal(green,1);
+      const ignition=current.map.cells.findIndex(c=>c.fuelType!=='none');
+      assert.equal(current.simulation.select(ignition),true);emit(f.nodes['start-fire'],'click');f.tick();
+      assert.equal(nodes['generate-map'].disabled,true);assert.equal(nodes['seed-input'].disabled,true);
+      submit('123');assert.equal(f.app.current,current,'active run cannot regenerate even through form submission');
+      const view=camera.position.clone();emit(f.nodes['reset-simulation'],'click');f.tick();
+      assert.equal(nodes['generate-map'].disabled,false);assert.equal(current.simulation.selected,null);
+      assert.equal(current.simulation.agents.counts().waiting,20);assert.equal(current.simulation.time,0);
+      assert.ok(camera.position.distanceTo(view)<1e-9);assert.equal(f.app.current.map.generation.seed,seed);
+    }
+    const oldMap=structuredClone(f.app.current.map);
+    f.fail();submit('17');assert.deepEqual(f.app.current.map,oldMap,'restore previous usable map after renderer construction failure');
+    assert.match(nodes['generation-status'].textContent,/retained/);assert.equal(f.loops.size,1);assert.equal(f.observers.size,1);
+    ui.dispose();assert.equal(form.listenerCount(),0);f.app.dispose();
+    assert.equal(f.canvas.listenerCount(),0);assert.equal(f.doc.listenerCount(),0);assert.equal(f.host.listenerCount(),0);
+    assert.equal(f.loops.size,0);assert.equal(f.observers.size,0);
+  } finally { ui.dispose();f.close(); }
+});
+
+test('fixed benchmark workload disables generation independently of input and submit events', () => {
+  const f=fixture(), form=new Element();
+  const nodes=Object.fromEntries(['seed-input','generate-map','active-seed','generation-status'].map(id=>[id,new Element()]));
+  form.querySelector=id=>nodes[id.slice(1)];
+  const ui=createGenerationControls(form,f.app,{lockedToFixture:true,generator(){assert.fail('benchmark must stay fixed');}});
+  try {
+    nodes['seed-input'].value='7';const current=f.app.current;emit(form,'submit');
+    assert.equal(f.app.current,current);assert.equal(nodes['generate-map'].disabled,true);
+    assert.match(nodes['generation-status'].textContent,/fixed benchmark/);
+  } finally {ui.dispose();f.close();}
 });

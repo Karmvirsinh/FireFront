@@ -1,3 +1,4 @@
+import { isNavigable } from '../world/navigationPolicy.js';
 import { AGENT_CONFIG } from './agentConfig.js';
 import { findPath, findBufferExit } from './findPath.js';
 
@@ -5,7 +6,7 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
   const goal = map.safeZone.z * map.width + map.safeZone.x;
   const spawns = config.spawnCells ?? map.spawnCells ?? Array.from({ length: config.population }, (_, i) =>
     (map.start.z - 2 + Math.floor(i / 5)) * map.width + map.start.x - 2 + i % 5);
-  if (spawns.length !== config.population || spawns.some((index) => !map.cells[index]?.walkable)) {
+  if (spawns.length !== config.population || spawns.some((index) => !isNavigable(map, index))) {
     throw new Error('Agent spawns must match the population and be walkable.');
   }
   const simulation = { agents: [], started: false, plans: 0 };

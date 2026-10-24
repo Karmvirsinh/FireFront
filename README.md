@@ -1,14 +1,14 @@
 # FireFront
 
-FireFront is an educational 3D wildfire and evacuation simulator for a university project. It explores how changing fire hazards affect navigation through two routes. It uses JavaScript, Three.js, Vite/npm and HTML/CSS, with no runtime AI service or external assets.
+FireFront is an educational 3D wildfire and evacuation simulator for a university project. It explores how changing fire hazards affect navigation through forest paths, with an authored two-route regression scenario. It uses JavaScript, Three.js, Vite/npm and HTML/CSS, with no runtime AI service or external assets.
 
 **Live demo:** [FireFront on GitHub Pages](https://karmvirsinh.github.io/FireFront/)
 
-## Current fixed-map MVP
+## Current scope
 
-The published baseline is on `main` at `27893e2`. The validated Assignment 4 map-foundation increment is on `feature/procedural-foundation`; it preserves the fixed-map simulation and adds no generation or new controls. It contains one authored, flat **64×64 logical grid**, a vegetation patch, START and SAFE areas, two roads and **20 agents**. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
+The deployed Assignment 3 baseline remains `27893e2`. Local `main` has adopted the validated foundation at `6e39804`; the uncommitted first seeded-environment increment is on `feature/seeded-environment`. The default page generates a flat **64×64 logical grid** from seed **42**, with one varying START, one SAFE destination, forest paths, vegetation/clearings/rocks and **20 agents**. The unchanged authored two-route map remains available through `?map=fixed` and the benchmark entry point. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
 
-This is the Assignment 3 fixed-map MVP, not the complete semester feature set or a validated wildfire prediction tool. The requirements and historical development/validation record are preserved in [docs/requirements.md](docs/requirements.md) and [docs/progress.md](docs/progress.md).
+The deployed site is the Assignment 3 fixed-map MVP; this local Assignment 4 increment adds flat seeded environments. Neither implements the complete semester feature set or predicts physical wildfires. The requirements and historical development/validation record are preserved in [docs/requirements.md](docs/requirements.md) and [docs/progress.md](docs/progress.md).
 
 ## Prerequisites and installation
 
@@ -22,7 +22,7 @@ Open a terminal in the project folder containing `package.json` and run:
 npm ci
 ```
 
-This installs the exact lockfile versions: Three.js **0.186.1** and Vite **8.3.2**, plus their dependencies. Do not omit development dependencies: Vite is needed for both development and production builds.
+This installs the exact lockfile versions: Three.js **0.186.1**, Vite **8.3.2**, Alea **1.0.1** and simplex-noise **4.0.3**, plus their dependencies. Do not omit development dependencies: Vite is needed for both development and production builds.
 
 Development:
 
@@ -45,10 +45,11 @@ On Windows PowerShell, replace `npm` with `npm.cmd` if execution policy blocks t
 
 ## Controls and interaction workflow
 
-The three interaction stages are **inspect the fixed environment**, **select one ignition**, and **start/observe the simulation, then reset for another run**. They are user actions, separate from the five technical pillars listed below.
+The three interaction stages are **generate/inspect the environment**, **select one ignition**, and **start/observe the simulation, then reset for another run**. They are user actions, separate from the five technical pillars listed below.
 
 | Action | Control |
 | --- | --- |
+| Generate environment | Enter a decimal seed and press **Generate**; disabled during a run until reset |
 | Toggle placement | **Place ignition** button or **I** |
 | Select ignition | Stationary left-click on grass, brush or forest fuel while placement is enabled |
 | Start simulation | **Start fire**, enabled after a valid selection |
@@ -63,6 +64,8 @@ The torch cursor shows blocked feedback over nonignitable ground. The amber holl
 Ground treatment defines fuel coverage, including gaps between decorative trees. Full-cell scorched/ash ground and flame/ember geometry distinguish burning, hot and cool states. Burning trees remain standing until exhaustion; charred stumps remain afterward. Placement-button flames indicate placement/ignition usage, independently of whether cells are still burning. Ordinary pages respect reduced-motion preferences.
 
 ## Demonstration scenarios
+
+The timings below belong to the **fixed regression fixture**. Open `http://127.0.0.1:4173/FireFront/?map=fixed` (or the development port) to reproduce them. The ordinary page generates a seeded map; these coordinates/timings are not a guarantee for generated maps.
 
 Coordinates are zero-based **(x,z)**. Toggle placement and click vegetation, using the selection status to find the exact coordinate. Press Start fire and keep the tab active. Times below are deterministic **simulation times from Start fire**, measured by the scenario helper; background suspension and long frame gaps can extend wall time.
 
@@ -84,14 +87,14 @@ Both ordinary scenarios finish with **20 evacuated / 0 lost**. They show route h
 | Pillar | Implemented MVP / deferred scope |
 | --- | --- |
 | **Physics & Dynamics** | Illustrative deterministic neighbor-exposure fire, fuel consumption, burnout/cooling; calibrated wildfire physics and weather deferred |
-| **Procedural Generation** | Deferred; current layout is fixed and authored, not seeded/procedural |
+| **Procedural Generation** | Seeded flat endpoints, connected winding paths and coherent fuel/clearing/rock regions; elevation, buildings and broader generation remain deferred |
 | **Pathfinding & Navigation** | Four-neighbor Manhattan A*, changing hazard checks, rerouting and recovery |
 | **NPC AI / Behavior Trees** | Implemented agent **state machine**: waiting, evacuating, trapped, evacuated, lost; no behavior tree implementation |
 | **Rendering** | Three.js instanced map/agents/fire, compact labels, shallow visual terrain base, responsive dashboard and camera navigation |
 
 Only edge-sharing burning neighbors contribute exposure; new ignitions are applied together after evaluation so they cannot cascade further within that same step. One burning neighbor takes 2 simulated seconds to ignite adjacent fuel. Grass/brush/forest burn for 12/18/30 seconds respectively, followed by 8 seconds cooling. Agents move at 1.5 cells/second. A shared 50 ms fixed step keeps simulation independent of ordinary rendering rates; excess elapsed time beyond a 250 ms frame cap is discarded rather than fast-forwarding after long gaps.
 
-Fuel and base walkability are independent. Burning/hot cells are navigation hazards; burning additionally creates a one-cell eight-neighbor safety buffer. Nonfuel roads can be unsafe near fire but cannot ignite. Cooling does not make blocked off-path terrain walkable.
+Fuel and base walkability are independent. Burning/hot cells are navigation hazards; burning additionally creates a one-cell eight-neighbor safety buffer. Nonfuel roads can be unsafe near fire but cannot ignite. Cooling does not change base walkability or navigation policy. Generated grass/clearings can be physically walkable while Path-first agents follow a separate mask of paths and endpoint areas; dense brush/forest and rocks remain physically blocked. Fixed-map walkability is unchanged.
 
 An agent becomes **lost only when its occupied logical cell is actively burning**, checked after fire/hazard updates and before movement. Occupancy is the cell containing its continuous rendered position, including between cell centers. Nearby buffers, hot ground and trapping alone do not cause loss. Evacuated/lost states are terminal until reset. Counts always total the initial 20 agents.
 
@@ -103,7 +106,7 @@ node scripts/measurePacing.js
 npm run build
 ```
 
-The current **68-test** suite covers fire spread/lifecycle, snapshot ordering, fixed-step replay, map connectivity, hazards, pathfinding, agent loss/count conservation/reset, camera/ignition guards, rendering lifecycle, viewport picking/resizing, FPS capture, map contracts and repeated map replacement. The pacing helper reproduces both scenario timelines; it is not an FPS benchmark.
+The current **82-test** suite covers fire spread/lifecycle, snapshot ordering, fixed-step replay, map connectivity, hazards, pathfinding, agent loss/count conservation/reset, camera/ignition guards, rendering lifecycle, viewport picking/resizing, FPS capture, map contracts, repeated map replacement and seeded-map/form/navigation invariants across 1,029 seeds. The pacing helper reproduces both scenario timelines; it is not an FPS benchmark.
 
 Two automated, visible production-preview measurements recorded approximately **144 FPS average**, lowest complete one-second windows **142.02 / 143.00 FPS**, p95 intervals **7.5 ms**, and **zero complete windows below 30 FPS**. Both captured 60 seconds and completed evacuation. Baseline was a **1280×720 browser viewport**, with a smaller **922×555 embedded canvas/drawing buffer**, DPR 1, on the documented local NVIDIA RTX 4060 setup. This is a local result, not a full-size-canvas or other-hardware guarantee; independent browser acceleration-setting confirmation was unavailable.
 
@@ -116,7 +119,7 @@ For the existing opt-in capture, open `http://127.0.0.1:4173/FireFront/?benchmar
 - Fire settings are demonstration values, not calibrated wildfire physics. No wind, moisture, slope, diagonal fire spread, smoke or predictive accuracy claim.
 - Agents may overlap. No crowd avoidance, off-path escape, health/exposure accumulation or random mortality.
 - Direct-active-fire loss is verified through **controlled automated fixtures**, not a visible loss demonstration on the current nonfuel-road scenarios.
-- Procedural generation, configurable/multiple ignitions, buildings/interiors, water/bridges, weather controls and semester-wide movement comparisons are deferred.
+- Flat seeded generation is implemented locally; elevation, configurable/multiple ignitions, buildings/interiors, water/bridges, weather controls and alternative movement/algorithm comparisons remain deferred.
 - Small labels may require zoom on very narrow overviews. Richer assets, road-width presentation and improved ignition-button flame animation remain deferred.
 - Source archives without `.git` build successfully, but the optional build-metadata probe prints Git diagnostics and records unknown commit/branch metadata. A Git checkout supplies those values.
 - Production build reports the accepted >500 kB chunk warning. Warning thresholds are unchanged; no code/quality tuning was performed to silence it.
@@ -132,7 +135,7 @@ FireFront has human-reported validation for the map/camera, ignition/fire lifecy
 
 | Path | Responsibility |
 | --- | --- |
-| `src/world/` | Plain map contract, unchanged fixed fixture/adapter and BFS connectivity checks |
+| `src/world/` | Plain map contract, fixed fixture/adapter, seeded components, navigation policy and BFS validation |
 | `src/app/` | One active map session and complete replacement/disposal ownership |
 | `src/simulation/` | Fire state, hazards, configuration and shared clock |
 | `src/agents/` | A*, continuous movement and agent state machine |
@@ -144,13 +147,26 @@ FireFront has human-reported validation for the map/camera, ignition/fire lifecy
 
 Read [AGENTS.md](AGENTS.md), [requirements](docs/requirements.md) and [progress](docs/progress.md) before development. Existing experiment branches and annotated layout snapshots are retained locally. Compare versions only with a clean working tree; rebuild preview after switching because ignored dist output does not switch with Git.
 
-
 ## Assignment 4 map foundation (validated)
 
-The existing renderer/simulation now accepts normalized plain map data with explicit spawn cells and metadata for labels, decoration bounds and overview framing. See [map contract and lifecycle](docs/map-contract.md). The default app still loads the authored 64×64 fixture with 20 agents; no seed selection, generation, elevation or start/results screens are implemented. Historical notes declaring those features deferred still apply; fixed rendering-coordinate assumptions are superseded by the contract/adapter.
+The existing renderer/simulation now accepts normalized plain map data with explicit spawn cells and metadata for labels, decoration bounds and overview framing. See [map contract and lifecycle](docs/map-contract.md). At this foundation checkpoint the default app loaded the authored 64×64 fixture with 20 agents. Seed selection/generation is subsequently added below; elevation and start/results screens remain unimplemented. Historical deferrals for elevation/screens still apply; the seeded scope below supersedes fixed-only defaults, while the contract/adapter supersedes fixed rendering-coordinate assumptions.
 
 The overview includes actual relevant cells/zones and label footprints, with no camera dependency on a rectangular vegetationPatch. Existing map labels, fuel/roads, visual theme, controls and timings are preserved. Replacement is an internal application API that releases the old loop, handlers, observer, renderer and visual resources before constructing a new session. Simulation reset preserves the current camera; R remains camera-only. The synthetic maps are automated fixtures, not new selectable UI content.
 
 Current automated checks cover a 12×8 map with three explicit spawns, an off-center 40×16 fixture and repeated replacement/failure recovery. Fixed-map event traces and default spawns match the original exactly. User-reported foundation feedback generally passed labels/framing, physical camera controls, selection/road rejection, evacuation and reset. A maximum-zoom-out ground artifact required a follow-up before closeout. Hidden soil/rock top caps have now been removed to prevent depth fighting with ground tiles, while sides, ground height, camera limits and depth testing remain unchanged. Canvas drags continue outside while held and now cancel on focus/capture loss. The user reports all three final recheck items passed: maximum zoom-out/orbit without brown fragments; drag continuation, release/focus cancellation and panel isolation; and fuel selection, road rejection, simulation reset and R. These user-reported checks complete foundation validation alongside the earlier feedback; automated/browser evidence remains separately recorded in progress. The original two automated performance captures remain historical evidence, not a new benchmark of this branch.
 
 Current review servers: development http://127.0.0.1:5175/FireFront/ and production preview http://127.0.0.1:4175/FireFront/. Restart with `npm run dev -- --host 127.0.0.1 --port 5175 --strictPort`; preview with `npm run build` then `npm run preview -- --host 127.0.0.1 --port 4175 --strictPort`. The standard commands above remain valid with their original ports when free.
+
+## Assignment 4 seeded environment (network appearance accepted; uncommitted)
+
+Enter a whole decimal seed **0-4294967295** and click **Generate**. Whitespace/leading zeros normalize; negatives, fractions, exponent/hex notation and overflow are rejected while retaining the installed map. The active seed/version is separate from edited input. Same seed + settings + **forest-network-v4** reproduces the map. Independent random streams retain the `forest-paths-v1` namespace. Up to four path candidates are tried; retries now leave endpoint positions and underlying vegetation/rocks unchanged.
+
+The generator places **6-9 well-spaced ordinary forest nodes**, connects them with nearby branching tree edges, and attempts up to two useful extra connections. START and SAFE attach afterward to this existing network. Gentle curved edges become one-cell trails, with compact junctions rather than large node clearings. Node count, branch placement and loops vary; no rectangular template or guaranteed loop. The same compact origin supports 20 distinct spawns; safety remains one destination cell. Every initial spawn-to-safe path is validated.
+
+Brown ground marks bare nonignitable trails; sandy beige marks nonfuel clearings; green grass contains fuel. Existing vegetation noise/models/colors are unchanged except where trails/endpoints are carved. Physical walkability and the separate Path-first mask remain distinct. No extra origins/destinations, new controls, Flexible movement, simulation-rule changes or timing changes.
+
+Compare seeds **0**, **7** and **2026**; seed **5** also illustrates two optional loop connections. For a current closure example, use **seed 7, brush ignition (40,34)** beside trail **(40,33)**. Both builds show 20 initially trapped/zero lost; automated simulation first shows local buffer-escape movement at **21.25 s**, resumes ordinary SAFE-directed evacuation at **42.25 s**, and reaches 20 evacuated/zero lost at **88.9 simulation seconds**. Normal A* waits for a currently safe complete route; the early motion is not proof that this route reopened. Adjacent bare trails never burn: the existing nonlethal navigation buffer closes them. Old v2/v3 coordinates/timings are historical and must not be assumed valid. Current alternatives and methodology: [seeded environment](docs/seeded-environment.md).
+
+**Reset simulation** replays the installed map, restores agents/fuel and preserves the camera; **R** remains camera-only. Generation stays locked after Start fire until reset, even after completion. Generate installs a fresh setup with a freshly framed camera. `/FireFront/?map=fixed` keeps the original authored fixture; benchmark URLs always force/lock that fixture. Its scenario timings and original performance evidence remain unchanged. No generated-map FPS benchmark or universal evacuation/trapping/pacing guarantee.
+
+The user reports all three v4 manual rechecks passed and accepts the path-network appearance. All seeded work remains uncommitted. Prolonged-waiting diagnosis and possible future local-awareness/second-trail choices are recorded in progress; neither behavior change has been implemented. The reported Vite advisory remains for separate assessment; no dependency upgrade was made in these corrections.
