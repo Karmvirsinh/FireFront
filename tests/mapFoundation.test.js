@@ -55,7 +55,7 @@ function fixture(benchmark = false, onStateChange = () => {}) {
   const viewport = { clientWidth: 920, clientHeight: 555 };
   const nodes = Object.fromEntries(['place-ignition', 'start-fire', 'reset-simulation', 'fire-status', 'ignition-label',
     'count-waiting', 'count-evacuating', 'count-trapped', 'count-evacuated', 'count-lost',
-    'map-summary', 'population-summary', 'population-detail'].map((name) => [name, new Element()]));
+    'map-summary', 'population-summary', 'population-detail', 'awareness-mode', 'awareness-note'].map((name) => [name, new Element()]));
   const panel = { querySelector: (id) => nodes[id.slice(1)] };
   const exports = [];
   const fps = Object.assign(new Element(), { parentElement: { append: (...items) => exports.push(...items) } });
@@ -375,4 +375,40 @@ test('fixed benchmark workload disables generation independently of input and su
     assert.equal(f.app.current,current);assert.equal(nodes['generate-map'].disabled,true);
     assert.match(nodes['generation-status'].textContent,/fixed benchmark/);
   } finally {ui.dispose();f.close();}
+});
+
+
+test('awareness setup preserves installed map/seed/camera/fire selection, locks in-run, resets memory and cleans listeners',()=>{
+  const f=fixture();
+  try {
+    f.app.replaceMap(createGeneratedMap(7));f.tick();
+    const current=f.app.current, map=current.map, renderer=f.renderers.at(-1), camera=renderer.camera;
+    assert.equal(current.simulation.agents.awareness,'local');assert.equal(f.nodes['awareness-mode'].disabled,false);
+    current.simulation.select(34*64+40);const selected=current.simulation.selected;
+    camera.position.multiplyScalar(.9);const position=camera.position.clone();
+    f.nodes['awareness-mode'].value='global';emit(f.nodes['awareness-mode'],'change');
+    assert.equal(current.simulation.agents.awareness,'global');assert.equal(f.app.current,current);assert.equal(current.map,map);
+    assert.equal(f.renderers.at(-1),renderer);assert.ok(camera.position.distanceTo(position)<1e-9);assert.equal(current.simulation.selected,selected);
+    emit(f.nodes['start-fire'],'click');assert.equal(f.nodes['awareness-mode'].disabled,true);
+    f.nodes['awareness-mode'].value='local';emit(f.nodes['awareness-mode'],'change');assert.equal(current.simulation.agents.awareness,'global');
+    emit(f.nodes['reset-simulation'],'click');assert.equal(f.nodes['awareness-mode'].disabled,false);
+    f.nodes['awareness-mode'].value='local';emit(f.nodes['awareness-mode'],'change');
+    current.simulation.select(selected);emit(f.nodes['start-fire'],'click');f.tick();f.tick();
+    assert.ok(current.simulation.agents.agents.some(a=>a.observed.some(Boolean)));
+    emit(f.nodes['reset-simulation'],'click');assert.ok(current.simulation.agents.agents.every(a=>a.observed.every(v=>!v)));
+    assert.equal(current.simulation.agents.awareness,'local');assert.equal(current.map.generation.seed,7);
+    assert.ok(camera.position.distanceTo(position)<1e-9);
+    f.app.replaceMap(createGeneratedMap(2026));assert.equal(f.app.current.simulation.agents.awareness,'local');
+    assert.equal(f.nodes['awareness-mode'].listeners.get('change').size,1);
+    f.app.replaceMap(createFixedMapDefinition());assert.equal(f.app.current.simulation.agents.awareness,'global');assert.equal(f.nodes['awareness-mode'].disabled,true);
+    f.app.dispose();assert.equal(f.nodes['awareness-mode'].listenerCount(),0);
+  } finally {f.close();}
+});
+
+test('benchmark forces explicit Global Awareness even if given a generated session',()=>{
+  const f=fixture(true);
+  try {f.app.replaceMap(createGeneratedMap(7));assert.equal(f.app.current.simulation.agents.awareness,'global');
+    assert.equal(f.nodes['awareness-mode'].disabled,true);f.nodes['awareness-mode'].value='local';emit(f.nodes['awareness-mode'],'change');
+    assert.equal(f.app.current.simulation.agents.awareness,'global');}
+  finally{f.close();}
 });

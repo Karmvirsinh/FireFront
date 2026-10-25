@@ -109,3 +109,7 @@ h1::before { content: ""; width: 16px; height: 21px; background: #d3ac57;
 /* Generated trails use earth, while the authored road fixture retains yellow. */
 .generated-environment .swatch.route { background: #806247; }
 .generated-environment .swatch.clearing { background: #c4b38b; }
+
+.awareness-setting { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; font-size: 12px; }
+#awareness-mode { min-width: 100px; height: 32px; padding: 3px 6px; border: 2px solid #8e8054; color: #2b3524; background: #fff7df; font: inherit; }
+#awareness-mode:disabled { color: #5d624b; background: #d3d0ac; }

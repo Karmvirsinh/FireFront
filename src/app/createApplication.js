@@ -2,6 +2,8 @@ import { normalizeMap } from '../world/mapContract.js';
 import { createScene } from '../rendering/createScene.js';
 import { createEvacuationSimulation } from '../simulation/createEvacuationSimulation.js';
 import { createIgnitionControls } from '../ui/createIgnitionControls.js';
+import { AGENT_CONFIG } from '../agents/agentConfig.js';
+import { createAwarenessControls } from '../ui/createAwarenessControls.js';
 import { createAgentCounts } from '../ui/createAgentCounts.js';
 import { createPerformanceReadout } from '../performance/createPerformanceReadout.js';
 
@@ -11,13 +13,17 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
 { sceneFactory = createScene } = {}) {
   let current = null;
   let disposed = false;
+  let generatedAwareness = 'local';
   doc.documentElement.classList.toggle('benchmark-normal-animation', normalAnimation);
 
   function createSession(map) {
-    const simulation = createEvacuationSimulation(map);
+    const lockedToGlobal=benchmark||!map.generation;
+    const simulation = createEvacuationSimulation(map,{...AGENT_CONFIG,population:map.spawnCells.length,
+      awareness:lockedToGlobal?'global':generatedAwareness});
     const refreshCounts = createAgentCounts(panel, simulation.agents);
     let view = null;
     let ignition = null;
+    let awarenessControls = null;
     let readout = null;
     let closed = false;
     let previousTime = null;
@@ -26,6 +32,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
       if (closed) return;
       closed = true;
       ignition?.dispose();
+      awarenessControls?.dispose();
       readout?.dispose();
       view?.dispose();
     }
@@ -49,17 +56,24 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
           os: host.navigator.platform, automationHint: host.navigator.webdriver,
           cpu: 'unknown', gpu: 'see WebGL renderer', ram: 'unknown',
           browserType: 'unknown; operator must record physical/automated/headless status',
+          awareness: simulation.agents.awareness, detectionRadius: simulation.agents.detectionRadius,
           grid: { width: map.width, height: map.height }, population: map.spawnCells.length,
         }),
       });
-      ignition = createIgnitionControls(canvas, panel, simulation, view.pickCell, () => {
+      function changed() {
         readout.changed();
         previousTime = null;
         view.syncFire(simulation.fire);
         view.syncAgents();
         refreshCounts();
+        awarenessControls?.refresh();
         onStateChange(current);
-      }, host);
+      }
+      ignition = createIgnitionControls(canvas, panel, simulation, view.pickCell, changed, host);
+      awarenessControls=createAwarenessControls(panel,simulation,()=>{
+        generatedAwareness=simulation.agents.awareness;
+        changed();
+      },{lockedToGlobal});
       const text = (selector, value) => {
         const node = doc.querySelector(selector);
         if (node) node.textContent = value;

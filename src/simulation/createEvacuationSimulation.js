@@ -19,6 +19,7 @@ export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG,
     get started() { return fire.started; },
     get time() { return time; },
     get hazards() { return hazards; },
+    setAwareness(model) { return !fire.started && agents.setAwareness(model); },
     select: fire.select,
     eligible: fire.eligible,
     start() {

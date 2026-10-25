@@ -1,6 +1,6 @@
 # Seeded environment - forest-network-v4
 
-Current network-first implementation remains uncommitted on feature/seeded-environment at foundation 6e39804. The user now reports all three v4 manual rechecks passed and accepts the path-network appearance. Prior v2 passes remain historical; no additional timing/performance checks are inferred. v1-v3 corridor-first construction and example timings below are superseded history. Flat 64x64, cellSize 0.5, one origin, one safe destination, 20 agents; fixed-map data, simulation, palette and dependencies remain unchanged.
+Validated network-first generator checkpoint: **1949f12** on feature/seeded-environment, based on foundation 6e39804. It is preserved unchanged on feature/local-awareness. The Global examples here describe the generator checkpoint; ordinary generated-map pages now default to Local, whose separate uncommitted results are in [Awareness models](awareness.md). The user now reports all three v4 manual rechecks passed and accepts the path-network appearance. Prior v2 passes remain historical; no additional timing/performance checks are inferred. v1-v3 corridor-first construction and example timings below are superseded history. Flat 64x64, cellSize 0.5, one origin, one safe destination, 20 agents; fixed-map data, simulation, palette and dependencies remain unchanged.
 
 ## Construction and tuning choices
 
