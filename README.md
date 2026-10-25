@@ -6,7 +6,7 @@ FireFront is an educational 3D wildfire and evacuation simulator for a universit
 
 ## Current scope
 
-The deployed Assignment 3 baseline remains `27893e2`. Local `main` has adopted the validated foundation at `6e39804`; the validated seeded-environment checkpoint is `1949f12` on `feature/seeded-environment`, with the validated Local Awareness increment on `feature/local-awareness`. The default page generates a flat **64×64 logical grid** from seed **42**, with one varying START, one SAFE destination, forest paths, vegetation/clearings/rocks and **20 agents**. The unchanged authored two-route map remains available through `?map=fixed` and the benchmark entry point. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
+The deployed Assignment 3 baseline remains `27893e2`. Local `main` has adopted the validated foundation at `6e39804`; generator checkpoint `1949f12` and Local Awareness checkpoint `74db471` remain on their earlier branches. The validated `feature/alpha-lifecycle` increment adds an entry screen, optional tour and run results. Ordinary pages choose a fresh numeric seed at each reload and generate a flat **64×64 logical grid**, with one varying START, one SAFE destination, forest paths, vegetation/clearings/rocks and **20 agents**. Entering the same seed still reproduces the same environment. The unchanged authored two-route map remains available through `?map=fixed` and the benchmark entry point. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
 
 The deployed site is the Assignment 3 fixed-map MVP; this local Assignment 4 increment adds flat seeded environments. Neither implements the complete semester feature set or predicts physical wildfires. The requirements and historical development/validation record are preserved in [docs/requirements.md](docs/requirements.md) and [docs/progress.md](docs/progress.md).
 
@@ -49,6 +49,8 @@ The three interaction stages are **generate/inspect the environment**, **select 
 
 | Action | Control |
 | --- | --- |
+| Enter workspace | **Begin simulation**, then optional tour with Back / Next / Skip / Finish |
+| Reopen guide | **Help / Tour** during setup only |
 | Generate environment | Enter a decimal seed and press **Generate**; disabled during a run until reset |
 | Toggle placement | **Place ignition** button or **I** |
 | Select ignition | Stationary left-click on grass, brush or forest fuel while placement is enabled |
@@ -58,6 +60,7 @@ The three interaction stages are **generate/inspect the environment**, **select 
 | Pan | Right-button drag over the scene |
 | Orbit | Middle-button drag over the scene |
 | Reset camera only | **R** |
+| Inspect outcome | **Inspect scene**, then **View results** to reopen; **Replay same map** resets; **New scenario** generates a fresh seed |
 
 The torch cursor shows blocked feedback over nonignitable ground. The amber hollow cell outline identifies the selection. Selecting another eligible cell before starting moves the single marker; bare roads and terrain sides reject ignition. Starting locks placement until simulation reset. I never selects a cell or starts fire. Left drag does not move the camera; camera gestures and panel interactions do not place ignition. Keyboard shortcuts ignore editable fields and Ctrl/Alt/Meta combinations; I also ignores held-key repeats.
 
@@ -106,7 +109,7 @@ node scripts/measurePacing.js
 npm run build
 ```
 
-The current **100-test** suite covers fire spread/lifecycle, snapshot ordering, fixed-step replay, map connectivity, hazards, pathfinding, agent loss/count conservation/reset, camera/ignition guards, rendering lifecycle, viewport picking/resizing, FPS capture, map contracts, repeated map replacement and seeded-map/form/navigation invariants across 1,029 seeds. The pacing helper reproduces both scenario timelines; it is not an FPS benchmark.
+The regression suite covers fire spread/lifecycle, snapshot ordering, fixed-step replay, map connectivity, hazards, pathfinding, agent loss/count conservation/reset, camera/ignition guards, rendering lifecycle, viewport picking/resizing, FPS capture, map contracts, repeated map replacement, seeded-map/form/navigation invariants across 1,029 seeds, and entry/tour/results ownership and completion semantics. The pacing helper reproduces both scenario timelines; it is not an FPS benchmark.
 
 Two automated, visible **Global Awareness / fixed-map** production-preview measurements recorded approximately **144 FPS average**, lowest complete one-second windows **142.02 / 143.00 FPS**, p95 intervals **7.5 ms**, and **zero complete windows below 30 FPS**. Both captured 60 seconds and completed evacuation. Baseline was a **1280×720 browser viewport**, with a smaller **922×555 embedded canvas/drawing buffer**, DPR 1, on the documented local NVIDIA RTX 4060 setup. This is a local result, not a full-size-canvas or other-hardware guarantee; independent browser acceleration-setting confirmation was unavailable.
 
@@ -149,13 +152,13 @@ Read [AGENTS.md](AGENTS.md), [requirements](docs/requirements.md) and [progress]
 
 ## Assignment 4 map foundation (validated)
 
-The existing renderer/simulation now accepts normalized plain map data with explicit spawn cells and metadata for labels, decoration bounds and overview framing. See [map contract and lifecycle](docs/map-contract.md). At this foundation checkpoint the default app loaded the authored 64×64 fixture with 20 agents. Seed selection/generation is subsequently added below; elevation and start/results screens remain unimplemented. Historical deferrals for elevation/screens still apply; the seeded scope below supersedes fixed-only defaults, while the contract/adapter supersedes fixed rendering-coordinate assumptions.
+The existing renderer/simulation now accepts normalized plain map data with explicit spawn cells and metadata for labels, decoration bounds and overview framing. See [map contract and lifecycle](docs/map-contract.md). At this foundation checkpoint the default app loaded the authored 64×64 fixture with 20 agents. Seed selection/generation and entry/results screens were deferred at that historical checkpoint; subsequent approvals below supersede those deferrals. Elevation remains unimplemented. The contract/adapter supersedes fixed rendering-coordinate assumptions.
 
 The overview includes actual relevant cells/zones and label footprints, with no camera dependency on a rectangular vegetationPatch. Existing map labels, fuel/roads, visual theme, controls and timings are preserved. Replacement is an internal application API that releases the old loop, handlers, observer, renderer and visual resources before constructing a new session. Simulation reset preserves the current camera; R remains camera-only. The synthetic maps are automated fixtures, not new selectable UI content.
 
 Current automated checks cover a 12×8 map with three explicit spawns, an off-center 40×16 fixture and repeated replacement/failure recovery. Fixed-map event traces and default spawns match the original exactly. User-reported foundation feedback generally passed labels/framing, physical camera controls, selection/road rejection, evacuation and reset. A maximum-zoom-out ground artifact required a follow-up before closeout. Hidden soil/rock top caps have now been removed to prevent depth fighting with ground tiles, while sides, ground height, camera limits and depth testing remain unchanged. Canvas drags continue outside while held and now cancel on focus/capture loss. The user reports all three final recheck items passed: maximum zoom-out/orbit without brown fragments; drag continuation, release/focus cancellation and panel isolation; and fuel selection, road rejection, simulation reset and R. These user-reported checks complete foundation validation alongside the earlier feedback; automated/browser evidence remains separately recorded in progress. The original two automated performance captures remain historical evidence, not a new benchmark of this branch.
 
-Current review servers: development http://127.0.0.1:5175/FireFront/ and production preview http://127.0.0.1:4175/FireFront/. Restart with `npm run dev -- --host 127.0.0.1 --port 5175 --strictPort`; preview with `npm run build` then `npm run preview -- --host 127.0.0.1 --port 4175 --strictPort`. The standard commands above remain valid with their original ports when free.
+Local review URLs (servers stopped at session closeout): development http://127.0.0.1:5175/FireFront/ and production preview http://127.0.0.1:4175/FireFront/. Restart with `npm run dev -- --host 127.0.0.1 --port 5175 --strictPort`; preview with `npm run build` then `npm run preview -- --host 127.0.0.1 --port 4175 --strictPort`. The standard commands above remain valid with their original ports when free.
 
 ## Assignment 4 seeded environment (validated generator checkpoint 1949f12)
 
@@ -169,7 +172,7 @@ Compare seeds **0**, **7** and **2026**; seed **5** also illustrates two optiona
 
 **Reset simulation** replays the installed map, restores agents/fuel and preserves the camera; **R** remains camera-only. Generation stays locked after Start fire until reset, even after completion. Generate installs a fresh setup with a freshly framed camera. `/FireFront/?map=fixed` keeps the original authored fixture; benchmark URLs always force/lock that fixture. Its scenario timings and original performance evidence remain unchanged. No generated-map FPS benchmark or universal evacuation/trapping/pacing guarantee.
 
-The user reports all three v4 manual rechecks passed and accepts the path-network appearance. The generator is committed at `1949f12`; its Global waiting behavior is expected. Local Awareness below is a separate uncommitted increment. A second trail from the same START remains unimplemented. The reported Vite advisory remains for separate assessment; no dependency upgrade was made in these corrections.
+The user reports all three v4 manual rechecks passed and accepts the path-network appearance. The generator is committed at `1949f12`; its Global waiting behavior is expected. Local Awareness below is separately validated at `74db471`. A second trail from the same START remains unimplemented. The reported Vite advisory remains for separate assessment; no dependency upgrade was made in these corrections.
 
 ## Local Awareness with cautious retry (user validation recorded)
 
@@ -180,3 +183,11 @@ Both models use existing A* and Path-first traversal. Local knows terrain/SAFE, 
 All current sampled runs finish within the **300 simulation-second bound** with 20 evacuated/zero lost: seed **0 / (44,10): 114.65 s**, seed **2026 / (38,37): 142.75 s**, seed **7 / (40,34): 63.65 s**. All start moving at 0.05 s; first cautious retry activations are about 30.9 / 32.55 / 17.6 s respectively. Global remains 190.25 / 255.45 / 88.9 s for those cases. These are deterministic functional timings, not wall-clock/FPS measurements or guarantees on every map. Re-probing can still cause stopping/backtracking near persistent danger.
 
 Reproduce comparisons with `node scripts/compareAwareness.js`; inspect any remaining trapped agents with `node scripts/inspectAwarenessRecovery.js`. [Awareness models](docs/awareness.md) documents current semantics/results/checklist. The [earlier recovery investigation](docs/awareness-recovery.md) preserves the pre-retry stalls and boundary fix as history, not current expected outcomes. The user reports retreat, reassessment and successful evacuation, plus reset restoring 20 waiting agents, preserving camera/model and unlocking selectors. Optional scenarios and exact timings are not claimed as human-checked. The validated increment is checkpointed on feature/local-awareness.
+
+## Alpha lifecycle (validated)
+
+The user reports all four lifecycle manual checklist items passed and accepts the replacement results icons for now. More colorful, lively icons are deferred feedback, not implemented work. No extra scenario timings or performance measurements are inferred.
+
+Entry and the optional guide lead into the existing setup dashboard. Results auto-open once when all agents are terminal, or when fire/hot ground has finished and no remaining agent has an actual Path-first route to SAFE. Temporary trapping and stale Local memory do not end a run. Actual connectivity is used only to classify outcomes; agents receive no extra hazard knowledge. Reachable-but-stalled agents remain in the run for reassessment and are reported in the status area rather than hidden by a timeout.
+
+Results freeze counts, seed/model and elapsed simulation time while remaining fire/cooling continues. Inspect scene restores camera/dashboard interaction; View results reopens the snapshot. Replay same map uses reset (same map/model/camera); New scenario chooses a fresh seed, keeps awareness and frames the replacement map. Neither reopens entry. The fixed benchmark bypasses onboarding and retains explicit Global/fixed defaults. No new generated-alpha performance measurement is claimed. See [lifecycle behavior, classification and manual checklist](docs/lifecycle.md).

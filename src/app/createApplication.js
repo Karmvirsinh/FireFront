@@ -9,7 +9,7 @@ import { createPerformanceReadout } from '../performance/createPerformanceReadou
 
 // Own exactly one map session. Replacement is an internal API, not a new UI control.
 export function createApplication({ canvas, panel, fpsElement, initialMap, buildInfo,
-  benchmark = false, normalAnimation = false, host = window, doc = document, onStateChange = () => {} },
+  benchmark = false, normalAnimation = false, host = window, doc = document, onStateChange = () => {}, onFrame = () => {} },
 { sceneFactory = createScene } = {}) {
   let current = null;
   let disposed = false;
@@ -48,6 +48,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
         ignition.updateCursor();
         const state = simulation.cells[simulation.selected]?.state;
         if (state !== previousState) { previousState = state; ignition.refresh(); }
+        onFrame(current);
       }, simulation.agents, (now) => readout?.frame(now), { normalAnimation });
       readout = createPerformanceReadout({ element: fpsElement, canvas, simulation, benchmark, doc, host,
         environment: () => ({ ...view.performanceInfo(), build: buildInfo,
@@ -94,10 +95,11 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
     } catch (error) { dispose(); throw error; }
   }
 
-  function replaceMap(input) {
+  function replaceMap(input, { awareness } = {}) {
     if (disposed) throw new Error('Application is disposed.');
     // Validation can fail without interrupting the active session.
     const map = normalizeMap(input);
+    if (['local', 'global'].includes(awareness)) generatedAwareness = awareness;
     current?.dispose();
     current = null;
     current = createSession(map);

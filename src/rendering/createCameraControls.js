@@ -32,7 +32,7 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
   controls.saveState();
 
   function resetView(event) {
-    if (event.key?.toLowerCase() !== 'r' || event.ctrlKey || event.altKey || event.metaKey
+    if (!controls.enabled || event.key?.toLowerCase() !== 'r' || event.ctrlKey || event.altKey || event.metaKey
       || event.isComposing || event.defaultPrevented) return;
 
     // composedPath also covers editable fields inside a shadow root.
@@ -78,6 +78,10 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
 
   return {
     controls,
+    setEnabled(enabled) {
+      if (!enabled) cancelDrag();
+      controls.enabled = enabled;
+    },
     frameMap(aspect) {
       if (!mapBounds) return;
       const atInitialView = camera.position.distanceTo(controls.position0) < 1e-7

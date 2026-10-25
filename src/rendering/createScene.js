@@ -42,6 +42,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
   });
 
   return {
+    setInteractionEnabled: navigation.setEnabled,
     performanceInfo() {
       const gl = renderer.getContext();
       const debug = gl.getExtension('WEBGL_debug_renderer_info');

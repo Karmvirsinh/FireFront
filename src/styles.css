@@ -8,6 +8,38 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; }
+[hidden] { display: none !important; }
+.workspace-tools { display: flex; gap: 8px; margin-left: auto; }
+.workspace-tools button { height: 32px; white-space: nowrap; }
+.lifecycle-dialog { width: min(460px, calc(100vw - 24px)); max-height: calc(100svh - 24px); overflow: auto;
+  padding: 24px; color: #2b3524; background: #efe4c7; border: 3px solid #8b8b5c;
+  box-shadow: inset 0 0 0 2px #fff7df, 0 6px 0 #091c14; }
+.lifecycle-dialog::backdrop { background: #081c1466; }
+.lifecycle-dialog h2 { font-size: 21px; margin-bottom: 12px; }
+.lifecycle-dialog p { line-height: 1.5; }
+.lifecycle-dialog .eyebrow { margin-top: 0; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.dialog-actions button { flex: 1 1 auto; }
+.lifecycle-dialog[data-screen="tour"] { position: fixed; margin: 0; width: min(360px, calc(100vw - 24px));
+  max-height: max(140px, calc(100svh - 180px)); padding: 18px; }
+.camera-hints, .generation-actions, .awareness-setting, .simulation-actions, .agent-counts, #reset-simulation { scroll-margin-block: 20px; }
+.lifecycle-dialog[data-screen="tour"]::backdrop { background: transparent; }
+.tour-highlight { position: fixed; z-index: 1000; pointer-events: none; border: 2px solid #edb65d;
+  border-radius: 4px; box-shadow: 0 0 0 200vmax #081c14b8; }
+.result-stats { display: grid; gap: 8px; margin: 16px 0; }
+.result-stats div { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.result-stats dt { display: flex; align-items: center; gap: 6px; }
+.result-stats dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+.result-stats svg { flex: 0 0 20px; width: 20px; height: 20px; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 750px) {
+  .workspace-header { flex-wrap: wrap; gap: 10px; }
+  .workspace-tools { margin-left: 0; }
+  .lifecycle-dialog { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lifecycle-dialog, .tour-highlight { animation: none; transition: none; scroll-behavior: auto; }
+}
 #app { display: flex; flex-direction: column; height: 100svh; min-height: 540px; padding: 0 16px 16px; }
 .workspace-header { display: flex; align-items: baseline; gap: 18px; padding: 18px 2px; }
 h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }

@@ -11,6 +11,8 @@
       <header class="workspace-header">
         <h1>FireFront</h1>
         <p>Wildfire &amp; evacuation <span id="map-summary">· 64×64 grid</span></p>
+        <div class="workspace-tools"><button id="help-tour" type="button">Help / Tour</button>
+          <button id="view-results" type="button" hidden>View results</button></div>
       </header>
       <div class="workspace">
         <section class="scene-column" aria-labelledby="viewport-title">
@@ -67,6 +69,7 @@
               <div><dt>Lost</dt><dd id="count-lost">0</dd></div>
             </dl>
             <p class="note">Start fire begins evacuation. Agents may overlap. Crimson = direct-fire loss.</p>
+            <p id="lifecycle-status" class="note" role="status"></p>
           </section>
           <section class="panel-section" aria-labelledby="map-legend-title">
             <h2 id="map-legend-title">Map &amp; fuel</h2>

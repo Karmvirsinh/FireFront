@@ -42,6 +42,21 @@ function closeVector(actual, expected) {
   assert.ok(actual.distanceTo(expected) < 1e-9, `${actual.toArray()} != ${expected.toArray()}`);
 }
 
+test('modal interaction suspension cancels an owned drag and blocks camera gestures/R until dismissal', () => {
+  const f = fixture();
+  f.drag(2, 30, 10);
+  emit(f.canvas, 'pointerdown', { pointerId: 42, pointerType: 'mouse', button: 2, clientX: 500, clientY: 300 });
+  f.navigation.setEnabled(false);
+  const position = f.camera.position.clone(), target = f.controls.target.clone();
+  emit(f.document, 'pointermove', { pointerId: 42, pointerType: 'mouse', buttons: 2, clientX: 750, clientY: 400 });
+  f.drag(1, 100, 80); emit(f.keyboard, 'keydown', {key:'r'});
+  closeVector(f.camera.position, position); closeVector(f.controls.target, target);
+  f.navigation.setEnabled(true);
+  f.drag(2, 40, 0); assert.ok(f.camera.position.distanceTo(position) > 0);
+  emit(f.keyboard, 'keydown', {key:'r'}); closeVector(f.camera.position, f.controls.position0);
+  f.navigation.dispose();
+});
+
 test('useful-area framing keeps markers visible, reset identical, and navigation bounds unchanged', () => {
   const f = fixture({ worldWidth: 32, worldDepth: 32,
     framing: { width: 29, depth: 16, centerX: 0, centerZ: 1 } });

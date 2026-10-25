@@ -3,6 +3,7 @@ import { getNavigationHazards } from './getNavigationHazards.js';
 import { FIRE_CONFIG } from './fireConfig.js';
 import { createAgentSimulation } from '../agents/createAgentSimulation.js';
 import { AGENT_CONFIG } from '../agents/agentConfig.js';
+import { createOutcomeTracker } from './createOutcomeTracker.js';
 
 // One clock for fire and movement: fire -> hazards -> agents on every fixed step.
 export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG, population: map.spawnCells?.length ?? AGENT_CONFIG.population }) {
@@ -11,7 +12,8 @@ export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG,
   let accumulator = 0;
   let time = 0;
   let hazards = getNavigationHazards(fire);
-  return {
+  const results = createOutcomeTracker(map);
+  const simulation = {
     fire, agents,
     get width() { return fire.width; },
     get cells() { return fire.cells; },
@@ -19,6 +21,8 @@ export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG,
     get started() { return fire.started; },
     get time() { return time; },
     get hazards() { return hazards; },
+    get outcome() { return results.outcome; },
+    get stalledAfterFire() { return results.stalled; },
     setAwareness(model) { return !fire.started && agents.setAwareness(model); },
     select: fire.select,
     eligible: fire.eligible,
@@ -28,6 +32,7 @@ export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG,
       accumulator = 0;
       hazards = getNavigationHazards(fire);
       agents.advance(0, hazards, fire.cells);
+      results.update(simulation);
       return true;
     },
     reset() {
@@ -35,6 +40,7 @@ export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG,
       agents.reset();
       accumulator = time = 0;
       hazards = getNavigationHazards(fire);
+      results.reset();
     },
     advance(seconds) {
       if (!fire.started || !Number.isFinite(seconds) || seconds <= 0) return;
@@ -44,8 +50,10 @@ export function createEvacuationSimulation(map, agentConfig = { ...AGENT_CONFIG,
         hazards = getNavigationHazards(fire);
         agents.advance(FIRE_CONFIG.stepSeconds, hazards, fire.cells);
         time += FIRE_CONFIG.stepSeconds;
+        results.update(simulation);
         accumulator = Math.max(0, accumulator - FIRE_CONFIG.stepSeconds);
       }
     },
   };
+  return simulation;
 }
