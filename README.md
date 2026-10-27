@@ -22,7 +22,7 @@ Open a terminal in the project folder containing `package.json` and run:
 npm ci
 ```
 
-This installs the exact lockfile versions: Three.js **0.186.1**, Vite **8.3.2**, Alea **1.0.1** and simplex-noise **4.0.3**, plus their dependencies. Do not omit development dependencies: Vite is needed for both development and production builds.
+This installs the exact lockfile versions: Three.js **0.186.1**, Vite **8.3.3**, Alea **1.0.1** and simplex-noise **4.0.3**, plus their dependencies. Do not omit development dependencies: Vite is needed for both development and production builds. Vite's minimal security patch and exposure assessment are recorded in [docs/vite-security.md](docs/vite-security.md).
 
 Development:
 
@@ -172,7 +172,7 @@ Compare seeds **0**, **7** and **2026**; seed **5** also illustrates two optiona
 
 **Reset simulation** replays the installed map, restores agents/fuel and preserves the camera; **R** remains camera-only. Generation stays locked after Start fire until reset, even after completion. Generate installs a fresh setup with a freshly framed camera. `/FireFront/?map=fixed` keeps the original authored fixture; benchmark URLs always force/lock that fixture. Its scenario timings and original performance evidence remain unchanged. No generated-map FPS benchmark or universal evacuation/trapping/pacing guarantee.
 
-The user reports all three v4 manual rechecks passed and accepts the path-network appearance. The generator is committed at `1949f12`; its Global waiting behavior is expected. Local Awareness below is separately validated at `74db471`. A second trail from the same START remains unimplemented. The reported Vite advisory remains for separate assessment; no dependency upgrade was made in these corrections.
+The user reports all three v4 manual rechecks passed and accepts the path-network appearance. The generator is committed at `1949f12`; its Global waiting behavior is expected. Local Awareness below is separately validated at `74db471`. A second trail from the same START remains unimplemented. No dependency upgrade was made in those historical generator corrections; the later release-preparation [Vite assessment](docs/vite-security.md) resolves the recorded advisory with 8.3.3.
 
 ## Local Awareness with cautious retry (user validation recorded)
 
