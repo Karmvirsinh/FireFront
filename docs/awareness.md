@@ -1,5 +1,18 @@
 # Local Awareness with cautious retries
 
+**2026-10-28 generator correction:** awareness rules below are unchanged. Current generator is **forest-network-v5** on the uncommitted trail-bypass fix; the earlier branch/status statements and v4 results are historical. Corrected local thinning can change route availability, so old timings must not be transferred to a changed layout. [Generator correction and evidence](seeded-environment.md#v5-local-reconnection-correction).
+
+Current `node scripts/compareAwareness.js` uses the same **v5** map for each model, 50 ms steps and a 300-second bound. Measured completion (all 20 evacuated, zero lost):
+
+| Seed / ignition | Global | Local | Change from v4 |
+| --- | ---: | ---: | --- |
+| 0 / (44,10) | 56.70 s | 56.70 s | Usable bypass; neither model traps or activates cautious retry |
+| 2026 / (38,37) | 197.50 s | 130.75 s | Corrected carving; Local still observes, traps and retries (first retry 32.55 s) |
+| 7 / (40,34) | **88.90 s** | **63.65 s** | Exact logical map and both presentation timings unchanged; first Local retry 17.60 s |
+| Default v5 34 / (23,35) | 90.90 s | 74.00 s | Earlier valid candidate now accepted; both start immediately |
+
+The original seed-34 candidate is separately reconstructed to verify its northern bypass: Global 66.00 s, Local 74.70 s after observing/replanning, no cautious retry needed. Original v4 seed-0/2026 trail fixtures are retained in tests so their trapped observation/recovery assertions and old timelines remain exercised. These are deterministic functional traces, not browser stopwatch or performance measurements. No sensing/memory, retry, hazard, speed or loss rule changed.
+
 Validated reported workflow on feature/local-awareness; prepared for the requested Local Awareness checkpoint. Generator checkpoint **1949f12** remains unchanged. Main/remote/deployment are unchanged. Four-cell boundary fix is preserved. No new dependencies, terrain, exits, fire/fuel/speed/hazard/loss rules, generator version or UI redesign.
 
 ## Observation and planning
@@ -20,7 +33,7 @@ Local agents know terrain and SAFE, and continuously observe cell centers within
 
 This rate limit bounds forced probes and avoids per-frame identical searches. Dynamic observations can still cause retreat/replanning, and no rule guarantees evacuation or eliminates oscillation on every map. Old records may remain blocked while uncertain for planning; they are marked safe only through actual local observation.
 
-## Current reproducible comparisons
+## Historical v4 reproducible comparisons (before thinning correction)
 
 Run `node scripts/compareAwareness.js`. The script uses the SAME forest-network-v4 map per seed, fixed 50 ms inputs, identical ignition per model, count assertions and a **300 simulated-second bound**. It stops at terminal completion. These are functional traces, not rendered FPS/wall-clock benchmarks. Prior Local comparisons below used indefinite planning blockage and are historical.
 

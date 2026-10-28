@@ -29,9 +29,10 @@ export function validateGeneratedMap(candidate) {
   const radius = (SETTINGS.pathWidth - 1) / 2;
   for (const line of lines) {
     if (!Array.isArray(line) || line.length < 1) fail('invalid path centerline');
-    for (const p of line) {
+    for (const [step, p] of line.entries()) {
       if (!p || !Number.isInteger(p.x) || !Number.isInteger(p.z)
         || p.x < radius || p.z < radius || p.x >= map.width - radius || p.z >= map.height - radius) fail('path bounds');
+      if (step && Math.abs(p.x - line[step - 1].x) + Math.abs(p.z - line[step - 1].z) !== 1) fail('nonadjacent path trace');
       for (let dz = -radius; dz <= radius; dz += 1) for (let dx = -radius; dx <= radius; dx += 1) {
         if (!map.navigation.allowedCells[(p.z + dz) * map.width + p.x + dx]) fail('path width pinch');
       }
@@ -53,7 +54,8 @@ export function validateGeneratedMap(candidate) {
   for(const [i,c] of connections.entries()) {
     if(!['tree','loop','start','safe'].includes(c.kind)||!validPoint(c.from)||!validPoint(c.to)
       ||c.directSteps!==Math.abs(c.from.x-c.to.x)+Math.abs(c.from.z-c.to.z)
-      ||!Number.isInteger(c.rasterSteps)||c.rasterSteps<c.directSteps||c.rasterSteps>c.directSteps*1.8
+      ||!Number.isInteger(c.rasterSteps)||c.rasterSteps!==lines[i].length-1
+      ||c.rasterSteps<c.directSteps||c.rasterSteps>c.directSteps*1.8
       ||!Number.isFinite(c.nearbyFraction)||c.nearbyFraction<0||c.nearbyFraction>(c.kind==='loop'?0.2:0.35)) fail('connection geometry');
     if(JSON.stringify(lines[i][0])!==JSON.stringify(c.from)||JSON.stringify(lines[i].at(-1))!==JSON.stringify(c.to)) fail('connection trace endpoints');
     if(c.kind==='tree'||c.kind==='loop') {
@@ -79,10 +81,20 @@ export function validateGeneratedMap(candidate) {
   const carvedSet = new Set(carved);
   if (map.cells.some((cell, i) => cell.terrain === 'route' && !carvedSet.has(i))) fail('unintended trail widening');
   const degree = i => neighbors(map, i).length;
+  const endpoints = new Set(lines.flatMap(line => [line[0], line.at(-1)])
+    .map(p => p.z * map.width + p.x));
   for (let z = 0; z < map.height - 1; z += 1) for (let x = 0; x < map.width - 1; x += 1) {
     const i = z * map.width + x, square = [i, i + 1, i + map.width, i + map.width + 1];
-    // A compact genuine junction may need four cells to keep all four arms.
-    if (square.every(j => map.cells[j].terrain === 'route') && !square.every(j => degree(j) >= 3)) fail('broad trail overlap');
+    // A protected node at one corner may have degree two while the other three
+    // corners carry junction arms. Removing an arm to erase this compact square
+    // would destroy a bypass. Still prohibit extended 2x3 / 3x2 cleared bands.
+    if (square.every(j => map.cells[j].terrain === 'route')) {
+      if (!square.every(j => degree(j) >= 3 || endpoints.has(j))
+        || square.filter(j => degree(j) >= 3).length < 3) fail('broad trail overlap');
+      const route = (x, z) => map.cells[z * map.width + x]?.terrain === 'route';
+      if ((x + 2 < map.width && route(x + 2, z) && route(x + 2, z + 1))
+        || (z + 2 < map.height && route(x, z + 2) && route(x + 1, z + 2))) fail('broad trail band');
+    }
   }
   // One reverse BFS validates every spawn together (no agent A* during generation).
   if (!isNavigable(map, goal)) fail('destination unavailable');

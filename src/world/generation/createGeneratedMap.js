@@ -4,7 +4,10 @@ import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
 import { validateGeneratedMap } from './validateGeneratedMap.js';
 
-function buildCandidate(seed, attempt) {
+// Explicit candidate construction also lets regressions replay a previously
+// selected attempt when improved validation accepts an earlier one. Install only
+// through createGeneratedMap / validateGeneratedMap.
+export function buildCandidate(seed, attempt) {
   const settings = GENERATOR_SETTINGS;
   const endpoints = placeEndpoints(settings, seedStream(seed, 'endpoints'));
   const network = createPathNetwork(endpoints, settings, seedStream(seed, 'paths', attempt));

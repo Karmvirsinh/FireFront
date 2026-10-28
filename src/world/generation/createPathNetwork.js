@@ -149,8 +149,9 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
   }
   if(cells.size>300) throw new Error('Trail network exceeds the sparse carving budget.');
   // Rounded oversampling and overlapping curves can form redundant 2x2 blocks.
-  // Remove only cells whose deletion leaves the WHOLE network connected. Preserve
-  // the endpoint of every curve (including branch tips), so thinning cannot erase it.
+  // Reconnect every incident arm inside the removed cell's 3x3 neighborhood.
+  // Whole-network connectivity alone can substitute a distant detour and erase
+  // a useful loop. Preserve curve endpoints (including branch tips) as well.
   const protectedCells = new Set(centerlines.flatMap(line => [line[0], line.at(-1)])
     .map(p => p.z * settings.width + p.x));
   const adjacent = (i) => [i - settings.width, i + 1, i + settings.width, i - 1]
@@ -169,13 +170,19 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
     }
     return null;
   }
-  function connectedWithout(i) {
+  function locallyConnectedWithout(i) {
+    const arms = adjacent(i), x = i % settings.width, z = Math.floor(i / settings.width);
     cells.delete(i);
-    const first = cells.values().next().value, queue = [first], seen = new Set(queue);
+    const queue = [arms[0]], seen = new Set(queue);
     for (let head = 0; head < queue.length; head += 1) {
-      for (const j of adjacent(queue[head])) if (!seen.has(j)) { seen.add(j); queue.push(j); }
+      for (const j of adjacent(queue[head])) {
+        if (!seen.has(j) && Math.abs(j % settings.width - x) <= 1
+          && Math.abs(Math.floor(j / settings.width) - z) <= 1) {
+          seen.add(j); queue.push(j);
+        }
+      }
     }
-    const connected = seen.size === cells.size;
+    const connected = arms.every(j => seen.has(j));
     cells.add(i);
     return connected;
   }
@@ -186,7 +193,7 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
       const i = z * settings.width + x;
       const square = [i, i + 1, i + settings.width, i + settings.width + 1];
       if (!square.every(j => cells.has(j))) continue;
-      const removable = square.find(j => !protectedCells.has(j) && connectedWithout(j));
+      const removable = square.find(j => !protectedCells.has(j) && locallyConnectedWithout(j));
       if (removable !== undefined) { cells.delete(removable); changed = true; }
     }
   } while (changed); // Strictly decreasing cell count, bounded by the grid size.
@@ -207,6 +214,9 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
     }
     return simple.map(i => ({ x: i % settings.width, z: Math.floor(i / settings.width) }));
   });
-  return { cells, centerlines: cleanLines, connections, nodes };
+  // Geometry metrics describe the retained traces, not their pre-thinning raster.
+  const cleanConnections = connections.map((connection, i) => ({ ...connection,
+    rasterSteps: cleanLines[i].length - 1 }));
+  return { cells, centerlines: cleanLines, connections: cleanConnections, nodes };
 
 }

@@ -7,6 +7,7 @@ import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.j
 import { createEvacuationSimulation } from '../src/simulation/createEvacuationSimulation.js';
 import { inspectRecovery } from '../scripts/inspectAwarenessRecovery.js';
 import { findPath } from '../src/agents/findPath.js';
+import { createAwarenessV4Fixture } from './fixtures/awarenessV4.js';
 
 function corridor({awareness='local',radius=4,spawns=[16]}={}) {
   const map={width:15,height:3,start:{x:1,z:1},safeZone:{x:13,z:1},spawnCells:spawns,
@@ -103,9 +104,11 @@ test('Local reset/replay is identical across ordinary rendering intervals and do
   assert.deepEqual(run(60),first);assert.deepEqual(m,original);
 });
 
-test('bounded same-map comparisons preserve Global completion and measure cautious Local recovery',()=>{
-  for(const [seed,x,z,globalEnd] of [[7,40,34,88.9],[0,44,10,190.25],[2026,38,37,255.45]]) {
-    const m=createGeneratedMap(seed);
+test('bounded same-map comparisons cover v5 bypass outcomes and preserved v4 awareness recovery',()=>{
+  for(const [seed,x,z,globalEnd,localEnd,historical] of [
+    [7,40,34,88.9,63.65,false],[0,44,10,56.7,56.7,false],[2026,38,37,197.5,130.75,false],
+    [0,44,10,190.25,114.65,true],[2026,38,37,255.45,142.75,true]]) {
+    const m=historical?createAwarenessV4Fixture(seed):createGeneratedMap(seed);
     for(const awareness of ['global','local']) {
       const s=createEvacuationSimulation(m,{...AGENT_CONFIG,awareness});s.select(z*64+x);s.start();
       let first=null,last=s.agents.agents.map(a=>[a.x,a.z]);
@@ -118,7 +121,7 @@ test('bounded same-map comparisons preserve Global completion and measure cautio
       if(awareness==='global'){assert.equal(s.agents.counts().evacuated,20);assert.ok(Math.abs(s.time-globalEnd)<1e-7);}
       else {
         assert.ok(Math.abs(first-.05)<1e-8);
-        const expected={7:63.65,0:114.65,2026:142.75}[seed];
+        const expected=localEnd;
         assert.equal(s.agents.counts().evacuated,20);assert.ok(Math.abs(s.time-expected)<1e-7);
       }
     }
@@ -145,9 +148,9 @@ test('trapped agents clear safe observations at the four-cell floating-point bou
 });
 
 
-test('formerly stalled cases retain complete in-radius observation refresh and recover with cautious retries',()=>{
+test('historical v4 stalled fixtures retain complete in-radius observation refresh and recover with cautious retries',()=>{
   for(const [seed,x,z] of [[0,44,10],[2026,38,37]]) {
-    const report=inspectRecovery(seed,x,z);
+    const report=inspectRecovery(seed,x,z,300,createAwarenessV4Fixture(seed));
     assert.deepEqual(report.audit.failures,[],'every active/trapped in-radius cell matches current hazards');
     assert.ok(report.audit.checks>0);assert.ok(report.audit.trappedSafeRefreshes>0);
     assert.equal(report.counts.evacuated,20);assert.equal(report.counts.lost,0);assert.equal(report.agents.length,0);

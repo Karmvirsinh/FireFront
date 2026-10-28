@@ -7,8 +7,8 @@ import { AGENT_CONFIG } from '../src/agents/agentConfig.js';
 import { findPath } from '../src/agents/findPath.js';
 import { isNavigable } from '../src/world/navigationPolicy.js';
 
-export function inspectRecovery(seed,x,z,duration=300) {
-  const map=createGeneratedMap(seed),s=createEvacuationSimulation(map,{...AGENT_CONFIG,awareness:'local'});
+export function inspectRecovery(seed,x,z,duration=300,map=createGeneratedMap(seed)) {
+  const s=createEvacuationSimulation(map,{...AGENT_CONFIG,awareness:'local'});
   const radius=s.agents.detectionRadius,goal=map.safeZone.z*map.width+map.safeZone.x;
   const lastClear=new Float64Array(map.cells.length).fill(-1);
   const failures=[];let checks=0,safeRefreshes=0,trappedSafeRefreshes=0;

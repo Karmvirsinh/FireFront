@@ -1,6 +1,6 @@
 import alea from 'alea';
 
-export const GENERATOR_VERSION = 'forest-network-v4';
+export const GENERATOR_VERSION = 'forest-network-v5';
 export const GENERATOR_SETTINGS = Object.freeze({ width: 64, height: 64, cellSize: 0.5,
   population: 20, pathWidth: 1, noiseScale: 0.075, randomStreamVersion: 'forest-paths-v1',
   clearingThreshold: -0.45, grassThreshold: -0.05, brushThreshold: 0.35,

@@ -14,7 +14,7 @@ import { createFireSimulation } from '../src/simulation/createFireSimulation.js'
 
 const seeds = [...Array.from({ length: 1024 }, (_, i) => i), 1024, 2026, 65535, 2147483648, 4294967295];
 
-test('forest-network-v4 seed-7 logical baseline stays stable across future rendering changes', () => {
+test('forest-network-v5 preserves the seed-7 v4 logical baseline and presentation scenario', () => {
   const { cells, start, safeZone, spawnCells, navigation, pathNetwork } = createGeneratedMap(7);
   const digest = createHash('sha256').update(JSON.stringify({ cells, start, safeZone, spawnCells, navigation, pathNetwork })).digest('hex');
   assert.equal(digest, '212ccae3584e9b325149c9eece5ed55d20a4568bbbc73038b8a2eda7694e1f31');
@@ -80,8 +80,13 @@ test('1029 documented seeds satisfy complete-map, clear path, spawn capacity and
     const route=(x,z)=>x>=0 && x<64 && z>=0 && z<64 && map.cells[z*64+x].terrain==='route';
     for(let z=0;z<63;z++) for(let x=0;x<63;x++) {
       if(![[0,0],[1,0],[0,1],[1,1]].every(([dx,dz])=>route(x+dx,z+dz))) continue;
-      for(const [dx,dz] of [[0,0],[1,0],[0,1],[1,1]]) assert.ok(
-        [[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>map.navigation.allowedCells[(z+dz+b)*64+x+dx+a]).length>=3);
+      const protectedPoints=new Set(map.pathNetwork.centerlines.flatMap(l=>[l[0],l.at(-1)]).map(p=>p.z*64+p.x));
+      const degrees=[[0,0],[1,0],[0,1],[1,1]].map(([dx,dz])=>{
+        const degree=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>map.navigation.allowedCells[(z+dz+b)*64+x+dx+a]).length;
+        assert.ok(degree>=3 || protectedPoints.has((z+dz)*64+x+dx),'only a protected junction endpoint may have degree two');
+        return degree;
+      });
+      assert.ok(degrees.filter(d=>d>=3).length>=3,'compact junction retains at least three branching corners');
       assert.ok(!route(x+2,z)||!route(x+2,z+1));
       assert.ok(!route(x,z+2)||!route(x+1,z+2));
     }

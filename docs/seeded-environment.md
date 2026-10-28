@@ -1,4 +1,38 @@
-# Seeded environment - forest-network-v4
+# Seeded environment - forest-network-v5
+
+## V5 local-reconnection correction
+
+Uncommitted review on **fix/preserve-trail-bypasses**, from clean deployed **e8ff7bf**. V4 thinning removed a cell whenever the entire network remained connected. Seed 34's selected candidate (attempt 1) consequently lost **(44,36)**: the upper trail ended at (44,35), diagonally beside (45,36), with grass between them excluded by Path-first. The lower trail still connected START/SAFE until ignition **(23,35)** buffered it. A* correctly found no safe alternative; the defect was in carving, not awareness or movement.
+
+V5 removes a redundant square corner only when **all its incident trail arms remain edge-connected inside that cell's 3×3 neighborhood**. Curve endpoints remain protected. A remote circuit cannot justify deleting a local junction. One-cell carving remains; compact 2×2 junctions may retain a protected degree-two endpoint when the other three corners carry branching arms. Extended 2×3/3×2 road bands remain rejected. No seed-specific carve/restoration or new path geometry, vegetation noise, endpoint, fuel, awareness, A*, speed, fire, hazard or loss rule.
+
+Final centerlines remain edge-adjacent and on carved cells; each connection's rasterSteps now equals its retained trace length minus one. Runtime validation rejects diagonal jumps, stale trace lengths, excess detours, broad bands and disconnected network/spawns. The existing nearbyFraction metric describes the construction-time proximity check. The version changes to **forest-network-v5**, while `forest-paths-v1` random streams/settings remain unchanged.
+
+The compact-junction validation now accepts some earlier deterministic candidates. In particular ordinary **seed 34 selects attempt 0**, not the old attempt 1. Its shape therefore differs from the screenshot that exposed the defect. A dedicated regression explicitly constructs and validates attempt 1 as well, proving the actual upper bypass survives rather than relying only on the new default layout.
+
+| Scenario / ignition | Global complete | Local complete | Evidence |
+| --- | ---: | ---: | --- |
+| Default v5 seed 34 / (23,35), attempt 0 | 90.90 s | 74.00 s | All 20 have an actual safe initial route; both models start immediately; 20 evacuated, zero lost |
+| Diagnosed seed-34 attempt 1 / (23,35), corrected thinning | 66.00 s | 74.70 s | Global immediately uses northern loop/right-hand junction; Local initially chooses shorter unseen-blocked route, observes and reroutes; no cautious retry needed |
+| Seed 7 / (40,34) | **88.90 s** | **63.65 s** | Exact v4 logical digest/layout retained; both timings rechecked |
+| Seed 0 / (44,10) | 56.70 s | 56.70 s | Corrected bypass; no trapping in either model |
+| Seed 2026 / (38,37) | 197.50 s | 130.75 s | Changed carving, existing awareness/retry rules; both complete |
+
+All times are automated **50 ms simulation-step traces bounded at 300 seconds**, with 20 evacuated/zero lost and conserved counts. Not human stopwatch checks or performance benchmarks. Old v4 seed-0/2026 trapped/recovery timelines remain checked using compact logical trail fixtures captured from e8ff7bf; no simulation assertions were weakened to hide changed layouts. `node scripts/compareAwareness.js` measures current v5 examples.
+
+Sample: seeds **0–1023**, plus **1024, 2026, 65535, 2147483648, 4294967295** (1,029). All generate successfully and pass network/spawn reachability, four-neighbor traces, narrow carving and metadata checks. Compared with e8ff7bf, **640** maps change cells and **114** select another candidate; endpoints and all spawn cells are identical for every sampled seed. Carving ranges **110–245 cells**, with **0–4 compact 2×2 junctions** per map and no 2×3/3×2 bands. Seed 7 is byte-identical in logical cells/navigation/network metadata; seed 0/2026 change carving without changing their candidate index. Underlying vegetation/rock generators and independent streams are unchanged; retained off-network cells match original vegetation data.
+
+Full suite: **115/115 passed**, including fixed-map **60.80 / 47.35 s** timelines, v4 recovery fixtures, boundary observations, cautious retry/loss safety, reset/replay, camera/picking and lifecycle regressions. Production build passed on Vite 8.3.3. Browser evidence and pending human validation are recorded in the latest progress entry. No new performance capture, dependency update or deployment.
+
+### V5 human recheck (all three user-reported passes)
+
+The user reports all three items below passed. The timing values remain automated reference evidence; the human validation does not establish exact timings or a performance result. The subsequent closeout authorizes checkpoint/adoption/publication; the earlier uncommitted-review description records the implementation stage.
+
+1. Generate **34**, confirm v5 and inspect the new narrow network. With **Global**, ignite **(23,35)**: agents should move immediately rather than all wait near START. Observe completion, then reset.
+2. Repeat on **Local**. Its route choices can differ because distant fire is unknown. Confirm evacuation/counts, reset restores 20 waiting and preserves the model/camera; R still resets only the camera.
+3. Compare **0, 7, 2026** for narrow trails/compact junctions, fuel versus road picking and repeatable regeneration. Seed 7/(40,34) still uses the quoted 88.90/63.65-second Global/Local simulation references. Check physical navigation and console.
+
+## Historical v4 baseline and validation
 
 Validated network-first generator checkpoint: **1949f12** on feature/seeded-environment, based on foundation 6e39804. It is preserved unchanged on feature/local-awareness. The Global examples here describe the generator checkpoint; ordinary generated-map pages now default to Local, whose separate uncommitted results are in [Awareness models](awareness.md). The user now reports all three v4 manual rechecks passed and accepts the path-network appearance. Prior v2 passes remain historical; no additional timing/performance checks are inferred. v1-v3 corridor-first construction and example timings below are superseded history. Flat 64x64, cellSize 0.5, one origin, one safe destination, 20 agents; fixed-map data, simulation, palette and dependencies remain unchanged.
 
