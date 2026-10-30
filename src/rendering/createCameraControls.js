@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 export function createCameraControls(camera, canvas, keyboardTarget = window, mapBounds = null) {
   const controls = new OrbitControls(camera, canvas);
   controls.mouseButtons = { LEFT: null, MIDDLE: MOUSE.ROTATE, RIGHT: MOUSE.PAN };
-  // Pan parallel to the ground, so the target's height stays at zero.
+  // Pan horizontally at the map's framing height.
   controls.screenSpacePanning = false;
   const mapSpan = mapBounds ? Math.max(mapBounds.worldWidth, mapBounds.worldDepth) : 12;
   const panLimit = mapSpan / 4;
@@ -18,7 +18,7 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
     correction.set(
       MathUtils.clamp(controls.target.x, Math.min(-panLimit, controls.target0.x),
         Math.max(panLimit, controls.target0.x)) - controls.target.x,
-      -controls.target.y,
+      (mapBounds?.centerY ?? 0)-controls.target.y,
       MathUtils.clamp(controls.target.z, Math.min(-panLimit, controls.target0.z),
         Math.max(panLimit, controls.target0.z)) - controls.target.z,
     );
@@ -93,11 +93,11 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
       // Navigation limits still use the full map, independently of closer framing.
       controls.maxDistance = fullMapDistance * 1.5;
       const framing = mapBounds.framing;
-      const frameRadius = framing ? Math.hypot(framing.width, framing.depth) / 2 : radius;
+      const frameRadius = framing ? Math.hypot(framing.width, framing.depth, mapBounds.relief ?? 0) / 2 : radius;
       const distance = Math.max(controls.minDistance, frameRadius / Math.sin(limitingAngle) * 1.08);
       // Fit the useful area's bounding sphere to both viewport axes. Save the responsive
       // reset view without disturbing an already navigated camera on resize.
-      controls.target0.set(framing?.centerX ?? 0, 0, framing?.centerZ ?? 0);
+      controls.target0.set(framing?.centerX ?? 0, mapBounds.centerY ?? 0, framing?.centerZ ?? 0);
       controls.position0.set(0, 1, 0.65).normalize().multiplyScalar(distance).add(controls.target0);
       controls.zoom0 = 1;
       if (atInitialView) controls.reset();

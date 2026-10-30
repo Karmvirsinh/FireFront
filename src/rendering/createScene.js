@@ -41,6 +41,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
     onRendered(performance.now());
   });
 
+  const pickCell = createGroundPicker(camera, canvas, map);
   return {
     setInteractionEnabled: navigation.setEnabled,
     performanceInfo() {
@@ -61,7 +62,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
           hardwareAcceleration: 'unknown; renderer string alone is not proof' },
       };
     },
-    pickCell: createGroundPicker(camera, canvas, map),
+    pickCell,
     syncFire: mapView.syncFire,
     syncAgents: () => agentView?.sync(),
     dispose() {
@@ -70,6 +71,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
       stopResizing();
       renderer.setAnimationLoop(null);
       navigation.dispose();
+      pickCell.dispose();
       mapView.dispose();
       agentView?.dispose();
       renderer.dispose();

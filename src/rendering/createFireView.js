@@ -1,3 +1,4 @@
+import { sampleTerrainHeight } from '../world/terrain.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -60,11 +61,34 @@ export function createFireView(map, { treeCells, treeHeight }) {
   });
   const emberGeometry = mergeGeometries(strips);
   strips.forEach((geometry) => geometry.dispose());
-  const embers = batch('fire-embers', emberGeometry, 0xd33138);
+  let embers;
+  let emberTemplate;
+  if (map.elevation) {
+    const expanded=emberGeometry.toNonIndexed();
+    emberTemplate=expanded.getAttribute('position').array.slice(); expanded.dispose(); emberGeometry.dispose();
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(
+      new Float32Array(emberTemplate.length*map.cells.length),3));
+    const material=new THREE.MeshBasicMaterial({color:0xd33138});
+    embers=new THREE.Mesh(geometry,material); embers.name='fire-embers'; embers.frustumCulled=false;
+    group.add(embers);resources.push(geometry,material);
+  } else embers = batch('fire-embers', emberGeometry, 0xd33138);
   function write(mesh, index, active, scale = 1) {
+    if (mesh === embers && emberTemplate) {
+      const vertices=mesh.geometry.getAttribute('position');
+      const gx=index%map.width+.5,gz=Math.floor(index/map.width)+.5;
+      for(let v=0;v<emberTemplate.length/3;v++) {
+        const dx=emberTemplate[v*3],dy=emberTemplate[v*3+1],dz=emberTemplate[v*3+2];
+        vertices.setXYZ(index*emberTemplate.length/3+v,
+          active?(gx-map.width/2)*map.cellSize+dx:0,
+          active?sampleTerrainHeight(map,gx+dx/map.cellSize,gz+dz/map.cellSize)+dy:0,
+          active?(gz-map.height/2)*map.cellSize+dz:0);
+      }
+      vertices.needsUpdate=true;return;
+    }
     const slot = mesh.userData.cells ? treeSlots.get(index) : index;
     if (slot === undefined) return;
-    transform.position.set((index % map.width + 0.5 - map.width / 2) * map.cellSize, 0,
+    transform.position.set((index % map.width + 0.5 - map.width / 2) * map.cellSize, sampleTerrainHeight(map,index % map.width + .5,Math.floor(index/map.width)+.5),
       (Math.floor(index / map.width) + 0.5 - map.height / 2) * map.cellSize);
     transform.scale.set(1, scale, 1);
     transform.updateMatrix();
@@ -95,7 +119,7 @@ export function createFireView(map, { treeCells, treeHeight }) {
       wasReduced = reducedMotion;
     },
     dispose() {
-      group.children.forEach((mesh) => mesh.dispose());
+      group.children.forEach((mesh) => mesh.dispose?.());
       resources.forEach((resource) => resource.dispose());
     },
   };

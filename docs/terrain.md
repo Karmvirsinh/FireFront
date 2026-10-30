@@ -25,3 +25,7 @@ If any triangle exceeds the slope limit, uniformly scale the entire height field
 Visual integration: triangulated ground and boundary sides; terrain-following decorations, agents, labels, markers/fire; actual-surface picking; elevation-aware framing and resource disposal. Preserve flat fixed-map fallback, simulation reset versus R, and the horizontal network. Navigation costs/speed, sensing distance, slope fire effects, water, bridges, buildings and weather remain outside this foundation. No full semester schedule is inferred.
 
 Automated results and manual-validation status are recorded in progress. The unchanged flat display cannot validate hill appearance; no human terrain pass is claimed.
+
+## Visible surface integration — 2026-10-30
+
+The renderer now consumes this contract. Elevated ground uses a batched cell-colored triangle mesh with flat normals, boundary-only sides and surface-only picking. Upright objects and continuous agent positions use the sampler. Selection and ember vertices conform to terrain. Camera target/framing include height; reset retains terrain/camera and R resets only the view. Fixed maps without elevation retain the flat rendering path. No slope simulation effects or generation-setting changes. See progress for actual automated/browser evidence and pending physical visual validation; earlier data-only statements above are historical.

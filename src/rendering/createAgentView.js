@@ -1,3 +1,4 @@
+import { sampleTerrainHeight } from '../world/terrain.js';
 import * as THREE from 'three';
 
 const COLORS = { waiting: 0xffffff, evacuating: 0x2962ff, trapped: 0xb25f00, evacuated: 0x00b8a9, lost: 0xd90040 };
@@ -11,7 +12,7 @@ export function createAgentView(map, simulation) {
   const color = new THREE.Color();
   function sync() {
     for (const agent of simulation.agents) {
-      matrix.makeTranslation((agent.x - map.width / 2) * map.cellSize, 0.21,
+      matrix.makeTranslation((agent.x - map.width / 2) * map.cellSize, 0.21 + sampleTerrainHeight(map,agent.x,agent.z),
         (agent.z - map.height / 2) * map.cellSize);
       mesh.setMatrixAt(agent.id, matrix);
       mesh.setColorAt(agent.id, color.setHex(COLORS[agent.state]));

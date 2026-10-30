@@ -1,3 +1,5 @@
+import { sampleTerrainHeight } from '../world/terrain.js';
+import { createTerrainTiles, createTerrainSkirt } from './terrainGeometry.js';
 import * as THREE from 'three';
 import { createFireView } from './createFireView.js';
 import { getMapRendering } from '../world/mapContract.js';
@@ -22,7 +24,7 @@ export function createMapView(map) {
   const transform = new THREE.Object3D();
   const color = new THREE.Color();
   function positionFor(x, z, y = 0) {
-    return [(x + 0.5 - map.width / 2) * map.cellSize, y,
+    return [(x + 0.5 - map.width / 2) * map.cellSize, y + sampleTerrainHeight(map, x + .5, z + .5),
       (z + 0.5 - map.height / 2) * map.cellSize];
   }
   function instances(geometry, material, positions) {
@@ -40,11 +42,15 @@ export function createMapView(map) {
 
   const tileGeometry = new THREE.PlaneGeometry(map.cellSize, map.cellSize);
   tileGeometry.rotateX(-Math.PI / 2);
-  const tiles = instances(tileGeometry, new THREE.MeshStandardMaterial(),
+  const tiles = map.elevation ? createTerrainTiles(map) : instances(tileGeometry, new THREE.MeshStandardMaterial(),
     map.cells.map((_, i) => positionFor(i % map.width, Math.floor(i / map.width))));
   tiles.name = 'ground-tiles';
+  if (map.elevation) {
+    tileGeometry.dispose(); group.add(tiles); resources.push(tiles.geometry, tiles.material);
+    const skirt = createTerrainSkirt(map); group.add(skirt); resources.push(skirt.geometry,skirt.material);
+  }
   // Visual base ends below y=0; the authoritative playable plane stays unchanged.
-  for (const [height, y, hex] of [[0.18, -0.10, 0x735338], [0.50, -0.44, 0x4b5145]]) {
+  for (const [height, y, hex] of (map.elevation ? [] : [[0.18, -0.10, 0x735338], [0.50, -0.44, 0x4b5145]])) {
     const geometry = new THREE.BoxGeometry(map.width * map.cellSize, height, map.height * map.cellSize);
     // The ground tiles already cover the base. Hidden upper caps only compete
     // with them in the depth buffer at distant views (soil is just 0.01 below).
@@ -215,6 +221,14 @@ export function createMapView(map) {
       const x = simulation.selected % map.width;
       const z = Math.floor(simulation.selected / map.width);
       marker.position.set(...positionFor(x, z, 0.025));
+      if (map.elevation) for (const part of [marker, amber]) {
+        const vertices=part.geometry.getAttribute('position');
+        const center=sampleTerrainHeight(map,x+.5,z+.5);
+        for(let v=0;v<vertices.count;v++) vertices.setY(v,
+          sampleTerrainHeight(map,x+.5+vertices.getX(v)/map.cellSize,
+            z+.5+vertices.getZ(v)/map.cellSize)-center);
+        vertices.needsUpdate=true; part.geometry.computeBoundingSphere();
+      }
     }
   }
 
