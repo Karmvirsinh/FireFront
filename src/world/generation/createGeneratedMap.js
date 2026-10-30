@@ -3,6 +3,7 @@ import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
 import { validateGeneratedMap } from './validateGeneratedMap.js';
+import { createTerrain } from './createTerrain.js';
 
 // Explicit candidate construction also lets regressions replay a previously
 // selected attempt when improved validation accepts an earlier one. Install only
@@ -33,12 +34,16 @@ export function buildCandidate(seed, attempt) {
 // The candidate seam permits controlled failure/retry tests, not a UI setting.
 export function createGeneratedMap(value, candidateFactory = buildCandidate) {
   const seed = normalizeSeed(value);
+  let selected;
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
       const map = validateGeneratedMap(candidateFactory(seed, attempt));
       if (map.generation.seed !== seed || map.generation.attempt !== attempt) throw new Error('Candidate identity mismatch.');
-      return map;
+      selected = map;
+      break;
     }
     catch (error) { if (attempt === 3) throw new Error(`Could not generate seed ${seed} after 4 attempts. Current map retained.`, { cause: error }); }
   }
+  // Terrain failure must not select a different horizontal layout candidate.
+  return { ...selected, elevation: createTerrain(selected, seed) };
 }

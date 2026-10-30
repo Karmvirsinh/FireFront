@@ -1,3 +1,4 @@
+import { validateTerrain } from './terrain.js';
 // Plain-data boundary shared by world factories, simulation and rendering.
 const TERRAINS = ['obstacle', 'vegetation', 'clearing', 'route', 'start', 'safe'];
 const FUELS = ['none', 'grass', 'brush', 'forest'];
@@ -34,6 +35,7 @@ export function normalizeMap(input) {
   require(Number.isInteger(map.width) && map.width > 0
     && Number.isInteger(map.height) && map.height > 0, 'positive integer dimensions required');
   require(Number.isFinite(map.cellSize) && map.cellSize > 0, 'positive cellSize required');
+  validateTerrain(map);
   require(Array.isArray(map.cells) && map.cells.length === map.width * map.height, 'cell count must match dimensions');
   require(Array.from(map.cells).every((cell) => cell && TERRAINS.includes(cell.terrain)
     && FUELS.includes(cell.fuelType) && typeof cell.walkable === 'boolean'), 'unsupported cell data');

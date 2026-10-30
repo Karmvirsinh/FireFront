@@ -1,5 +1,7 @@
 # Map foundation contract
 
+> Terrain foundation (2026-10-30): optional shared corner elevation data and pure sampling are now supported; see [terrain contract](terrain.md). The displayed surface and all runtime behavior remain flat until visual integration. Historical flat-only statements below describe the original foundation.
+
 > The foundation-only scope below is historical. The first seeded increment now supplies this same flat contract; see [seeded environment](seeded-environment.md). Fixed-map adapter/data and regression scenarios remain unchanged.
 
 This Assignment 4 increment accepts different **flat** plain-data maps without generating them. The normal application still loads the fixed MVP. It adds no seed controls, elevation, start/results screens, dependencies or simulation rules. The five technical pillars remain separate from the three user interaction stages described in README.
