@@ -20,8 +20,17 @@ export function createTerrainTiles(map) {
   const colors = new THREE.Float32BufferAttribute(new Float32Array(map.cells.length*18),3);
   geometry.setAttribute('color',colors);
   const mesh = new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({vertexColors:true}));
-  mesh.setColorAt = (index,color) => {
-    for(let v=0;v<6;v++) colors.setXYZ(index*6+v,color.r,color.g,color.b);
+  const normals=geometry.getAttribute('normal');
+  const shade=new THREE.Color(),earth=new THREE.Color(0x80654d),rock=new THREE.Color(0x85867b);
+  mesh.setColorAt = (index,color,surface=true) => {
+    for(let face=0;face<2;face++){
+      const slope=Math.acos(Math.max(-1,Math.min(1,normals.getY(index*6+face*3))))*180/Math.PI;
+      shade.copy(color);
+      if(surface&&map.elevation?.generation?.version==='terrain-structure-v3'&&slope>28){
+        shade.lerp(slope>40?rock:earth,Math.min(.85,(slope-28)/18));
+      }
+      for(let v=0;v<3;v++)colors.setXYZ(index*6+face*3+v,shade.r,shade.g,shade.b);
+    }
   };
   mesh.getColorAt = (index,color) => color.fromBufferAttribute(colors,index*6);
   // Callers mark logical cells; upload the batched color buffer after changes.

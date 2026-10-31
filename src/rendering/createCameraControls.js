@@ -8,7 +8,8 @@ export function createCameraControls(camera, canvas, keyboardTarget = window, ma
   controls.screenSpacePanning = false;
   const mapSpan = mapBounds ? Math.max(mapBounds.worldWidth, mapBounds.worldDepth) : 12;
   const panLimit = mapSpan / 4;
-  controls.minDistance = Math.min(mapSpan / 2, 16);
+  controls.minDistance = Math.max(Math.min(mapSpan / 2, 16),
+    ((mapBounds?.relief ?? 0)/2 + .4) / Math.cos(MathUtils.degToRad(75)));
   controls.maxDistance = 22;
   controls.minPolarAngle = MathUtils.degToRad(15);
   controls.maxPolarAngle = MathUtils.degToRad(75);

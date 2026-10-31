@@ -43,3 +43,39 @@ Navigation cells (physical walkability AND selected Path-first mask) have a 20-d
 Local fitting computes upper/lower height envelopes over the corner-edge graph using a finite priority queue, averages them to balance peak lowering and valley raising, blends displacement for five neighbor passes and reapplies the envelopes. Remote compliant terrain is retained; no global scale reduction, trail trench cut, bridge or altered traversal mask. This queue is terrain fitting only, not a new evacuation planner. The final finite-height/triangle-slope/relief checks must pass or generation fails after terrain-only retries. No cliff/overhang or slope-based terrain/fuel reclassification is introduced.
 
 Limitations: local fitting can soften hills near dense trail junctions; the conservative component bound may flatten more than strictly necessary. Flatter regions are geometric blends independent of the unchanged vegetation classification, so not every clearing or forest patch is flat. Appearance remains pending human acceptance. Current renderer/markers/fire use the unchanged sampler and NW–SE triangulation. Automated slope statistics are not visual acceptance or a performance benchmark.
+
+## Terrain structure — terrain-structure-v3 (uncommitted review)
+
+Normal forest-environment-v7 maps now use a separate **terrain-structure-v3** identity. The forest cells, physical classifications, canopy, endpoints/spawns, trail layout and navigation mask remain byte-for-byte equal to the forest checkpoint. createGeneratedMapV7Baseline preserves its exact landforms-v2 terrain; v6 and v5 factories remain historical. The fixed fixture is flat. No new library, external data/tool, asset pack or WFC was selected.
+
+### Families and finite levels
+
+An independent terrain:structure-family-v3 stream chooses **lowland (25%)**, **plateau-country (40%)** or **ridge-valley (35%)**. These are seeded probabilities, not quotas over a small sample. Lowland uses one 0.5–1.2-unit hill and a 0.4-unit valley. The other families use two broad 1.2–3-unit hills, a 1–2.2-unit valley, and a terraced plateau. Plateau-country raises the main plateau 4–6 world units and attempts a second 2–4-unit plateau; ridge-valley uses a 2.5–4-unit main plateau. There is no mandatory second plateau if bounded placement cannot find separate space.
+
+Plateau radii are 9–14 world units (secondary 8–12); tops are flat apart from 0.035-unit subtle noise. The main plateau has a localized intermediate shelf at 45% height. Two smooth finite risers connect the lower ground, shelf and top; this does not quantize every hill into steps. Hills/valleys can originate from -10% to 110% of map extents. Plateau centers can reach the boundaries; 55% of main candidates explicitly choose an edge. Shapes can be partially clipped at edges/corners. Separate plateau placement avoids one taller plateau swallowing another's shelf.
+
+Shared heights and NW–SE triangles remain authoritative: no vertical discontinuities, overhangs, stacked ground, water or stairs. Relief is capped at 9 world units. Local fitting retains the 20-degree limit across **every** permitted navigation cell; off-policy finite faces are capped at 55 degrees. The existing conservative edge-component fitting preserves all trail/spawn/junction/bypass connections without changing A* or walking speed. It can soften risers wherever an existing trail crosses them; natural trail routing is the following checkpoint.
+
+### Feature survival and failure behavior
+
+Terrain candidates use terrain:structure-v3 with at most **12** attempts, keeping the family and horizontal map fixed. Each final proposed plateau must retain at least **40 cell centers** in its inner top with slopes below 5 degrees and height at least 70% of the intended level; every terraced plateau also needs **15 shelf cells** with slopes below 8 degrees and at least **10 off-policy riser cells** above 28 degrees. Geometry, height offset and counts are stored in elevation.generation and independently recomputed in tests. These are minimum integrity checks, not visual acceptance.
+
+If trails or clipping erase these features, retry terrain only. If all attempts fail, report failure and retain the installed map. Do not remove a trail, change family to a flat fallback or call an erased plateau successful. A sample is not a guarantee for every uint32 seed. Broad tops can be partly hidden by the preserved forest; clipped corner tops are smaller than complete interior tops.
+
+### Surface treatment and behavior
+
+Only current V3 ground faces receive earth tint above 28 degrees and gray rock tint above 40 degrees, blended with the logical ground color up to 85%. This is **surface finish**, separate from unchanged obstacle cells and loose boulder meshes. Forest/grass on exposed faces remains eligible fuel; visual rock does not automatically become nonfuel or blocked. The visible map note states this. Fire-state colors override surface finish while burning/hot/cool; reset restores the slope finish. No overlapping surface sheets or separate cliff collider were added.
+
+Agent occupancy, sensing, fire adjacency, hazards, speed and direct-active-fire loss remain horizontal-grid rules. Camera minimum distance additionally protects clearance above the highest relief at the existing lowest orbit angle; bindings, pan limits, simulation-reset camera preservation and R remain unchanged. Loose rock distribution and repetitive grass/vegetation assets are explicitly deferred to dressing.
+
+### Current examples
+
+| Seed | Family | Relief | Useful visual evidence |
+| --- | --- | --- | --- |
+| 0 | plateau-country | 6.75 world units | North-edge terraced plateau near grid (81,0), broad interior plateau |
+| 7 | lowland | 1.13 | Flatter woodland/clearings with a gentle low corridor |
+| 34 | lowland | 1.03 | A second flatter arrangement with different forest/trails |
+| 2026 | plateau-country | 5.85 | Terraced clipped southeast corner and broad interior plateau |
+| 1 | ridge-valley | 3.91 | Eastern boundary terrace plus broader hill/low-ground proportions |
+
+Seed 0's final main plateau has 111 qualifying top cells, 70 shelf cells and 551 riser cells; seed 2026's clipped main plateau has 46/41/212. Cells are 0.25 square world units. Sample terrain slopes and counts do not promise the appearance of the concepts; see progress for real visual/browser evidence and pending manual review.

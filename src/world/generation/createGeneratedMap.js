@@ -1,3 +1,4 @@
+import { createTerrainStructure } from './createTerrainStructure.js';
 import { createForestVegetation } from './createForestVegetation.js';
 import { createTerrainV1 } from './createTerrainV1.js';
 import { normalizeSeed, seedStream, GENERATOR_VERSION, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION } from './seed.js';
@@ -34,7 +35,7 @@ export function buildCandidate(seed, attempt, settings = GENERATOR_SETTINGS) {
 
 // Bounded deterministic retries; caller installs only the validated result.
 // The candidate seam permits controlled failure/retry tests, not a UI setting.
-export function createGeneratedMap(value, candidateFactory = buildCandidate, settings = GENERATOR_SETTINGS) {
+export function createGeneratedMap(value, candidateFactory = buildCandidate, settings = GENERATOR_SETTINGS, terrainFactory = settings === V5_SETTINGS ? createTerrainV1 : settings === V6_SETTINGS ? createTerrain : createTerrainStructure) {
   const seed = normalizeSeed(value);
   let selected;
   for (let attempt = 0; attempt < (settings.maxAttempts ?? 4); attempt += 1) {
@@ -47,7 +48,7 @@ export function createGeneratedMap(value, candidateFactory = buildCandidate, set
     catch (error) { if (attempt === (settings.maxAttempts ?? 4)-1) throw new Error(`Could not generate seed ${seed} after ${settings.maxAttempts ?? 4} attempts. Current map retained.`, { cause: error }); }
   }
   // Terrain failure must not select a different horizontal layout candidate.
-  return { ...selected, elevation: (settings === V5_SETTINGS ? createTerrainV1 : createTerrain)(selected, seed) };
+  return { ...selected, elevation: terrainFactory(selected, seed) };
 }
 
 // Explicit historical profile: never reconstruct old scenarios with current rules.
@@ -56,3 +57,6 @@ export const createGeneratedMapV5 = (value, factory = buildV5Candidate) => creat
 
 export const buildV6Candidate = (seed, attempt) => buildCandidate(seed, attempt, V6_SETTINGS);
 export const createGeneratedMapV6 = (value, factory = buildV6Candidate) => createGeneratedMap(value, factory, V6_SETTINGS);
+
+// Frozen pre-structure v7 terrain, for exact forest-checkpoint comparisons.
+export const createGeneratedMapV7Baseline = value => createGeneratedMap(value, buildCandidate, GENERATOR_SETTINGS, createTerrain);

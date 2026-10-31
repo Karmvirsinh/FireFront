@@ -88,7 +88,9 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
       text('#population-detail', `${count} agents`);
       doc.documentElement.classList.toggle('generated-environment', Boolean(map.generation));
       text('#navigation-note', map.navigation?.mode === 'path-first'
-        ? 'Ground color shows fuel coverage. Grass/clearings may be walkable; Path-first agents stay on paths and endpoint areas.'
+        ? (map.elevation?.generation?.version === 'terrain-structure-v3'
+          ? 'Ground tints show fuel. Rock/earth on steep faces is surface finish and may still contain fuel. Path-first agents stay on paths and endpoint areas.'
+          : 'Ground color shows fuel coverage. Grass/clearings may be walkable; Path-first agents stay on paths and endpoint areas.')
         : 'Ground color shows fuel coverage. Models do not mark fuel boundaries. Off-path vegetation is blocked.');
       canvas.setAttribute('aria-label', `${map.name ?? 'Map'} with a start area, safe zone, vegetation and blocked ground`);
       return { map, simulation, view, dispose };

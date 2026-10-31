@@ -1,3 +1,4 @@
+import { terrainCellGradients } from '../src/world/terrain.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Color, Matrix4, Vector3 } from 'three';
@@ -341,9 +342,11 @@ test('generation form validates/retains failures, locks active runs, and repeate
       current.map.cells.forEach((cell,index)=>{
         tiles.getColorAt(index,color);const hex=color.getHex();
         if(hex===0x478ecb) blue++;if(hex===0x55b69b) green++;
+        const exposed = current.map.elevation?.generation?.version==='terrain-structure-v3'
+          && terrainCellGradients(current.map,index)[0] > Math.tan(28*Math.PI/180);
         if(cell.terrain==='route') assert.equal(hex,0x806247);
-        if(cell.terrain==='clearing') assert.equal(hex,0xc4b38b);
-        if(cell.fuelType==='grass') assert.equal(hex,0x91aa59);
+        if(cell.terrain==='clearing'&&!exposed) assert.equal(hex,0xc4b38b);
+        if(cell.fuelType==='grass'&&!exposed) assert.equal(hex,0x91aa59);
         if(['route','clearing','start','safe'].includes(cell.terrain)) assert.equal(current.simulation.eligible(index),false);
       });
       assert.equal(blue,1,'compact origin indicator, not a twenty-cell blue pad');assert.equal(green,1);

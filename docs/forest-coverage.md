@@ -1,5 +1,7 @@
 # Forest coverage and canopy refinement
 
+> Forest preservation checkpoint: b96d971. Broader coverage is an acceptable intermediate improvement; the latest checklist was not reported passed and overall landscape appearance remains unaccepted. Normal maps now use terrain-structure-v3; createGeneratedMapV7Baseline explicitly preserves this checkpoint's landforms-v2 surface for comparisons. Forest/canopy data and trails are unchanged by the terrain-structure work. Scattered rocks and replacement grass/vegetation assets remain deferred.
+
 Review work on feature/terrain-elevation after landforms preservation checkpoint **f1da2a6**. Overall landscape/forest appearance awaits human acceptance. Dimensions remain 104×104, cell size 0.5, population 20.
 
 ## Identity and preserved comparison

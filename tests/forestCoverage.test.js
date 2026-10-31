@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGeneratedMap,createGeneratedMapV6,createGeneratedMapV5} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV7Baseline as createGeneratedMap,createGeneratedMapV6,createGeneratedMapV5} from '../src/world/generation/createGeneratedMap.js';
 import {createCanopyLayout} from '../src/rendering/createCanopyLayout.js';
 import {createMapView} from '../src/rendering/createMapView.js';
 import {createFireSimulation} from '../src/simulation/createFireSimulation.js';

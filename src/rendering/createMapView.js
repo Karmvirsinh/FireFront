@@ -201,7 +201,7 @@ export function createMapView(map) {
   function syncFire(simulation) {
     for (const index of simulation.takeChanges()) {
       const cell = simulation.cells[index];
-      tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index], index)));
+      tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index], index)), cell.state === 'unburned');
       tiles.instanceColor.addUpdateRange(index * 3, 3);
       tiles.instanceColor.needsUpdate = true;
       fireView.sync(index, cell.state);
