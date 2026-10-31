@@ -1,3 +1,4 @@
+import { createTerrainV1 } from './createTerrainV1.js';
 import { normalizeSeed, seedStream, GENERATOR_VERSION, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION } from './seed.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
@@ -44,7 +45,7 @@ export function createGeneratedMap(value, candidateFactory = buildCandidate, set
     catch (error) { if (attempt === (settings.maxAttempts ?? 4)-1) throw new Error(`Could not generate seed ${seed} after ${settings.maxAttempts ?? 4} attempts. Current map retained.`, { cause: error }); }
   }
   // Terrain failure must not select a different horizontal layout candidate.
-  return { ...selected, elevation: createTerrain(selected, seed) };
+  return { ...selected, elevation: (settings === V5_SETTINGS ? createTerrainV1 : createTerrain)(selected, seed) };
 }
 
 // Explicit historical profile: never reconstruct old scenarios with current rules.
