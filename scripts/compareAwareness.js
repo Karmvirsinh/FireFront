@@ -1,7 +1,8 @@
 // Opt-in deterministic functional traces, not rendered FPS or wall-clock benchmarks.
+// Historical v5 coordinates/timings; explicitly retained 64x64 generator.
 // Run: node scripts/compareAwareness.js
 import assert from 'node:assert/strict';
-import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
+import { createGeneratedMapV5 as createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
 import { createEvacuationSimulation } from '../src/simulation/createEvacuationSimulation.js';
 import { AGENT_CONFIG } from '../src/agents/agentConfig.js';
 import { findPath } from '../src/agents/findPath.js';

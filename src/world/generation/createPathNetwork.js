@@ -7,14 +7,17 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
   const nodes = [];
   // Bounded rejection sampling: no grid template and no vegetation randomness consumed.
   for (let attempt = 0; nodes.length < count && attempt < 600; attempt++) {
-    const p = { x: 8 + Math.floor(random() * (settings.width - 16)),
-      z: 8 + Math.floor(random() * (settings.height - 16)) };
+    const p = { x: (settings.nodeMargin ?? 8) + Math.floor(random() * (settings.width - 2*(settings.nodeMargin ?? 8))),
+      z: (settings.nodeMargin ?? 8) + Math.floor(random() * (settings.height - 2*(settings.nodeMargin ?? 8))) };
     if ([start, safeZone].every(q => euclidean(p, q) >= 7)
       && nodes.every(q => euclidean(p, q) >= settings.nodeSpacing)) nodes.push(p);
   }
   if (nodes.length !== count || ['x', 'z'].some(axis =>
-    Math.max(...nodes.map(p => p[axis])) - Math.min(...nodes.map(p => p[axis])) < 28)) {
+    Math.max(...nodes.map(p => p[axis])) - Math.min(...nodes.map(p => p[axis])) < (settings.minNetworkSpan ?? 28))) {
     throw new Error('Could not place well-spaced forest nodes.');
+  }
+  if (settings.width > 64 && new Set(nodes.map(p => `${p.x < settings.width/2}:${p.z < settings.height/2}`)).size < 4) {
+    throw new Error('Forest nodes must cover all four map quadrants.');
   }
   const pairs = [];
   for (let a = 0; a < count; a++) for (let b = a + 1; b < count; b++) {
@@ -147,7 +150,7 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
     }
     if(!attached) throw new Error('Endpoint cannot attach cleanly to forest network.');
   }
-  if(cells.size>300) throw new Error('Trail network exceeds the sparse carving budget.');
+  if(cells.size>(settings.maxCarvedCells ?? 300)) throw new Error('Trail network exceeds the sparse carving budget.');
   // Rounded oversampling and overlapping curves can form redundant 2x2 blocks.
   // Reconnect every incident arm inside the removed cell's 3x3 neighborhood.
   // Whole-network connectivity alone can substitute a distant detour and erase

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createAgentSimulation } from '../src/agents/createAgentSimulation.js';
 import { observeHazards } from '../src/agents/observeHazards.js';
 import { AGENT_CONFIG } from '../src/agents/agentConfig.js';
-import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
+import { createGeneratedMapV5 as createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
 import { createEvacuationSimulation } from '../src/simulation/createEvacuationSimulation.js';
 import { inspectRecovery } from '../scripts/inspectAwarenessRecovery.js';
 import { findPath } from '../src/agents/findPath.js';

@@ -1,4 +1,20 @@
-# Seeded environment - forest-network-v5
+# Seeded environment — current forest-network-v6
+
+## 104×104 adaptation (2026-10-31, user-validated checkpoint)
+
+Normal generation is 104×104 (10,816 cells, 52×52 world units), with unchanged 0.5 cell size and population 20. The 5×4 START spawn footprint and single SAFE cell stay compact. Endpoint radii are 35–41 cells around map center (minimum separation 56), rather than the old fixed 21–25 central radius.
+
+V6 uses 14–18 nodes, minimum spacing 15, margin 10, minimum 58-cell span on each axis and presence in all four quadrants. Local tree links retain the 38-cell cap; optional loops retain their 27-cell cap, maximum two opportunities and 0.45 opportunity probability. Carving is bounded at 650 cells; actual sample results are in progress. One-cell trails, compact junction validation, no broad bands, detour/proximity limits and local bypass-preserving thinning remain. At most 16 deterministic path candidates are attempted; failures preserve the installed map. This is an authored quality policy, not a guarantee of useful alternative routes for every fire.
+
+Terrain remains layout-last **gentle-hills-v1** with unchanged settings/stream. Vegetation/rock thresholds, noise scales and random namespace remain unchanged. Larger dimensions and node placement necessarily change seed layouts, carving and event times. Do not reuse v5 ignition coordinates/timings as v6 demonstrations.
+
+## Versioned regression path
+
+`createGeneratedMap(seed)` and `buildCandidate(seed, attempt)` select current v6. `createGeneratedMapV5(seed)` and `buildV5Candidate(seed, attempt)` explicitly select frozen `V5_SETTINGS`/`V5_VERSION`, including the original four-attempt policy. Both profiles share parameterized construction and version-aware validation; no second application or silent historical regeneration. V5 endpoint, path, vegetation and terrain streams remain identical. Historical timing/bypass/awareness tests and the comparison script explicitly request v5; dimension-generic session tests use current v6. The authored fixture and benchmark are separate and unchanged.
+
+Historical records below describe v5 and earlier versions.
+
+## Historical forest-network-v5
 
 ## V5 local-reconnection correction
 

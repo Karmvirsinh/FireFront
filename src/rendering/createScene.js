@@ -11,7 +11,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xdce8ef);
 
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, Math.max(map.width,map.height)>64 ? Math.max(500, Math.hypot(map.width,map.height)*map.cellSize*20) : 500);
   camera.position.set(0, 40, 30);
   camera.lookAt(0, 0, 0);
 

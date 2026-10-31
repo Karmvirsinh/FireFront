@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
-import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
+import { createGeneratedMapV5 as createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
 import { validateGeneratedMap } from '../src/world/generation/validateGeneratedMap.js';
-import { normalizeSeed, seedStream, GENERATOR_SETTINGS, GENERATOR_VERSION } from '../src/world/generation/seed.js';
+import { normalizeSeed, seedStream, V5_SETTINGS as GENERATOR_SETTINGS, V5_VERSION as GENERATOR_VERSION } from '../src/world/generation/seed.js';
 import { placeEndpoints } from '../src/world/generation/placeEndpoints.js';
 import { createVegetation } from '../src/world/generation/createVegetation.js';
 import { createPathNetwork } from '../src/world/generation/createPathNetwork.js';

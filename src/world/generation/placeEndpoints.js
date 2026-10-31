@@ -1,6 +1,6 @@
 export function placeEndpoints(settings, random) {
   const angle = random() * Math.PI * 2;
-  const radius = () => 21 + random() * 4;
+  const radius = () => (settings.endpointRadiusMin ?? 21) + random() * (settings.endpointRadiusRange ?? 4);
   function point(theta) {
     const r = radius();
     return { x: Math.round(settings.width / 2 + Math.cos(theta) * r),

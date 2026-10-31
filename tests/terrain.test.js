@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGeneratedMap, buildCandidate } from '../src/world/generation/createGeneratedMap.js';
+import { createGeneratedMapV5 as createGeneratedMap, buildV5Candidate as buildCandidate } from '../src/world/generation/createGeneratedMap.js';
 import { validateGeneratedMap } from '../src/world/generation/validateGeneratedMap.js';
 import { createTerrain } from '../src/world/generation/createTerrain.js';
 import { normalizeMap } from '../src/world/mapContract.js';

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { normalizeMap } from '../../src/world/mapContract.js';
 import { createVegetation } from '../../src/world/generation/createVegetation.js';
 import { placeEndpoints } from '../../src/world/generation/placeEndpoints.js';
-import { GENERATOR_SETTINGS, seedStream } from '../../src/world/generation/seed.js';
+import { V5_SETTINGS as GENERATOR_SETTINGS, seedStream } from '../../src/world/generation/seed.js';
 
 // Compact logical fixtures captured from e8ff7bf before the thinning correction.
 // Keep formerly stalled Local scenarios even when a new generator opens bypasses.

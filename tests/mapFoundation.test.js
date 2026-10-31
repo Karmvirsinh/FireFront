@@ -333,7 +333,7 @@ test('generation form validates/retains failures, locks active runs, and repeate
       // Existing rendering must not decorate the generated bare network.
       for(const mesh of foliage) for(let slot=0;slot<mesh.count;slot++) {
         const position=new Vector3().setFromMatrixPosition(new Matrix4().fromArray(mesh.instanceMatrix.array,slot*16));
-        const index=Math.floor(position.z/.5+32)*64+Math.floor(position.x/.5+32);
+        const index=Math.floor(position.z/current.map.cellSize+current.map.height/2)*current.map.width+Math.floor(position.x/current.map.cellSize+current.map.width/2);
         assert.equal(current.map.navigation.allowedCells[index],false);
       }
       const tiles=f.renderers.at(-1).scene.getObjectByName('ground-tiles'), color=new Color();
@@ -384,7 +384,7 @@ test('awareness setup preserves installed map/seed/camera/fire selection, locks 
     f.app.replaceMap(createGeneratedMap(7));f.tick();
     const current=f.app.current, map=current.map, renderer=f.renderers.at(-1), camera=renderer.camera;
     assert.equal(current.simulation.agents.awareness,'local');assert.equal(f.nodes['awareness-mode'].disabled,false);
-    current.simulation.select(34*64+40);const selected=current.simulation.selected;
+    current.simulation.select(map.cells.map((cell,i)=>({cell,i,d:Math.hypot(i%map.width-map.start.x,Math.floor(i/map.width)-map.start.z)})).filter(p=>p.cell.fuelType!=='none').sort((a,b)=>a.d-b.d)[0].i);const selected=current.simulation.selected;
     camera.position.multiplyScalar(.9);const position=camera.position.clone();
     f.nodes['awareness-mode'].value='global';emit(f.nodes['awareness-mode'],'change');
     assert.equal(current.simulation.agents.awareness,'global');assert.equal(f.app.current,current);assert.equal(current.map,map);

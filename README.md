@@ -6,9 +6,11 @@ FireFront is an educational 3D wildfire and evacuation simulator for a universit
 
 ## Current scope
 
-The deployed Assignment 3 baseline remains `27893e2`. Local `main` has adopted the validated foundation at `6e39804`; generator checkpoint `1949f12` and Local Awareness checkpoint `74db471` remain on their earlier branches. The validated `feature/alpha-lifecycle` increment adds an entry screen, optional tour and run results. Ordinary pages choose a fresh numeric seed at each reload and generate a flat **64×64 logical grid**, with one varying START, one SAFE destination, forest paths, vegetation/clearings/rocks and **20 agents**. Entering the same seed still reproduces the same environment. The unchanged authored two-route map remains available through `?map=fixed` and the benchmark entry point. One user-selected ignition spreads through adjacent fuel, burns out and cools. Agents automatically evacuate, reroute, become trapped when no route is safe, and retry when hazards clear. The forest-themed dashboard shows ignition/reset controls, five agent counts, status, legends, camera hints and FPS.
+Normal local environments now use **forest-network-v6: 104×104 cells**, cell size 0.5 world units, 20 agents, one START and one SAFE. Networks contain 14–18 ordinary nodes with narrow trails and occasional useful loops. Current terrain shaping is unchanged and still awaits refinement. Seed input reproduces the selected generator version's environment.
 
-The deployed site is the Assignment 3 fixed-map MVP; this local Assignment 4 increment adds flat seeded environments. Neither implements the complete semester feature set or predicts physical wildfires. The requirements and historical development/validation record are preserved in [docs/requirements.md](docs/requirements.md) and [docs/progress.md](docs/progress.md).
+The published checkpoint remains `5a183e9` (64×64 v5); these larger maps are the validated local adaptation. The authored two-route fixture at `?map=fixed` and historical benchmark stay 64×64. Historical generated examples below are explicitly **v5**, not current v6 coordinates/timings. The pure `createGeneratedMapV5(seed)` regression path preserves those environments without duplicating the application. See [seeded environment](docs/seeded-environment.md).
+
+Single ignition, fire lifecycle, Global/Local awareness, agent state machine, entry/tour/results and reset controls remain. FireFront is illustrative and does not implement every semester feature or calibrated wildfire physics.
 
 ## Prerequisites and installation
 

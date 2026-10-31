@@ -1,4 +1,4 @@
-import { normalizeSeed, seedStream, GENERATOR_VERSION, GENERATOR_SETTINGS } from './seed.js';
+import { normalizeSeed, seedStream, GENERATOR_VERSION, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION } from './seed.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
@@ -8,8 +8,7 @@ import { createTerrain } from './createTerrain.js';
 // Explicit candidate construction also lets regressions replay a previously
 // selected attempt when improved validation accepts an earlier one. Install only
 // through createGeneratedMap / validateGeneratedMap.
-export function buildCandidate(seed, attempt) {
-  const settings = GENERATOR_SETTINGS;
+export function buildCandidate(seed, attempt, settings = GENERATOR_SETTINGS) {
   const endpoints = placeEndpoints(settings, seedStream(seed, 'endpoints'));
   const network = createPathNetwork(endpoints, settings, seedStream(seed, 'paths', attempt));
   const cells = createVegetation(settings, seedStream(seed, 'vegetation'), seedStream(seed, 'rocks'));
@@ -21,7 +20,7 @@ export function buildCandidate(seed, attempt) {
   }
   return { width: settings.width, height: settings.height, cellSize: settings.cellSize,
     ...endpoints, cells, name: `Seed ${seed}`,
-    generation: { seed, version: GENERATOR_VERSION, settings: { ...settings }, attempt },
+    generation: { seed, version: settings === V5_SETTINGS ? V5_VERSION : GENERATOR_VERSION, settings: { ...settings }, attempt },
     pathNetwork: { widthCells: settings.pathWidth, nodes: network.nodes, centerlines: network.centerlines, connections: network.connections, trailCells: [...network.cells].sort((a, b) => a - b) },
     navigation: { mode: 'path-first', allowedCells: cells.map((cell) => ['route', 'start', 'safe'].includes(cell.terrain)) },
     rendering: { compactEndpoints: true, terrainColors: { route: 0x806247, clearing: 0xc4b38b }, labels: [
@@ -32,18 +31,22 @@ export function buildCandidate(seed, attempt) {
 
 // Bounded deterministic retries; caller installs only the validated result.
 // The candidate seam permits controlled failure/retry tests, not a UI setting.
-export function createGeneratedMap(value, candidateFactory = buildCandidate) {
+export function createGeneratedMap(value, candidateFactory = buildCandidate, settings = GENERATOR_SETTINGS) {
   const seed = normalizeSeed(value);
   let selected;
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < (settings.maxAttempts ?? 4); attempt += 1) {
     try {
       const map = validateGeneratedMap(candidateFactory(seed, attempt));
       if (map.generation.seed !== seed || map.generation.attempt !== attempt) throw new Error('Candidate identity mismatch.');
       selected = map;
       break;
     }
-    catch (error) { if (attempt === 3) throw new Error(`Could not generate seed ${seed} after 4 attempts. Current map retained.`, { cause: error }); }
+    catch (error) { if (attempt === (settings.maxAttempts ?? 4)-1) throw new Error(`Could not generate seed ${seed} after ${settings.maxAttempts ?? 4} attempts. Current map retained.`, { cause: error }); }
   }
   // Terrain failure must not select a different horizontal layout candidate.
   return { ...selected, elevation: createTerrain(selected, seed) };
 }
+
+// Explicit historical profile: never reconstruct old scenarios with current rules.
+export const buildV5Candidate = (seed, attempt) => buildCandidate(seed, attempt, V5_SETTINGS);
+export const createGeneratedMapV5 = (value, factory = buildV5Candidate) => createGeneratedMap(value, factory, V5_SETTINGS);

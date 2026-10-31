@@ -196,3 +196,7 @@ Use a configurable illustrative 20-degree trail slope cap, preserving every navi
 ## Visible integration approval — 2026-10-30
 
 Use the existing shared corner heights and fixed triangulation for continuous low-poly hills. Ground, sides, upright objects/agents, labels, selection and fire visuals follow terrain; picking targets actual ground only and camera framing includes relief. Preserve flat fixed-map fallback, layout/streams, terrain parameters, simulation rules/timings, bindings, cleanup and reset semantics. No slope-based effects or new dependencies. This supersedes the foundation's flat-visible restriction; human visual acceptance remains pending.
+
+## 2026-10-31 — Approved 104×104 adaptation
+
+Normal generated maps move to forest-network-v6, 104×104 cells, cellSize 0.5, 20 agents. Adapt endpoint distribution and forest-network coverage with roughly 14–18 ordinary nodes, retaining narrow trails, sparse useful loops, local bypass protection and all-spawn reachability. Preserve explicit versioned 64×64 generated regression factories and the authored fixed/benchmark workload. Current gentle-hills-v1 shaping stays unchanged; terrain appearance remains unaccepted. Camera must permit both overview and useful close inspection. No simulation/pacing/awareness/loss or dependency changes. Old generated coordinates/timings remain historical v5 evidence. Leave work uncommitted for human map-coverage/readability/responsiveness review; no merge/push/deploy.

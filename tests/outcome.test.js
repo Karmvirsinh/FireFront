@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createOutcomeTracker } from '../src/simulation/createOutcomeTracker.js';
 import { createEvacuationSimulation } from '../src/simulation/createEvacuationSimulation.js';
 import { startupOptions, freshSeed } from '../src/app/startup.js';
-import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
+import { createGeneratedMapV5 as createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
 import { AGENT_CONFIG } from '../src/agents/agentConfig.js';
 
 function fixture() {

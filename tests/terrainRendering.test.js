@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
+import { createGeneratedMapV5 as createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
 import { sampleTerrainHeight } from '../src/world/terrain.js';
 import { createTerrainGeometry, createTerrainSkirt } from '../src/rendering/terrainGeometry.js';
 import { createGroundPicker } from '../src/rendering/createGroundPicker.js';

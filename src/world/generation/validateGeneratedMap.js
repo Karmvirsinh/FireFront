@@ -1,19 +1,20 @@
 import { normalizeMap } from '../mapContract.js';
 import { isNavigable } from '../navigationPolicy.js';
 import { neighbors } from '../../agents/findPath.js';
-import { GENERATOR_SETTINGS as SETTINGS, GENERATOR_VERSION, normalizeSeed } from './seed.js';
+import { GENERATOR_SETTINGS as SETTINGS, GENERATOR_VERSION, V5_VERSION, V5_SETTINGS, normalizeSeed } from './seed.js';
 
 export function validateGeneratedMap(candidate) {
   const map = normalizeMap(candidate);
+  const settings = map.generation?.version === V5_VERSION ? V5_SETTINGS : SETTINGS;
   const fail = (message) => { throw new Error(`Generated map invalid: ${message}`); };
-  if (!map.generation || map.generation.version !== GENERATOR_VERSION
+  if (!map.generation || ![GENERATOR_VERSION,V5_VERSION].includes(map.generation.version)
     || normalizeSeed(map.generation.seed) !== map.generation.seed
-    || !Number.isInteger(map.generation.attempt) || map.generation.attempt < 0 || map.generation.attempt > 3
-    || Object.entries(SETTINGS).some(([key, value]) => map.generation.settings?.[key] !== value)
-    || map.pathNetwork?.widthCells !== SETTINGS.pathWidth) fail('generator metadata');
-  if (map.width !== SETTINGS.width || map.height !== SETTINGS.height || map.cellSize !== SETTINGS.cellSize
-    || map.spawnCells.length !== SETTINGS.population || new Set(map.spawnCells).size !== SETTINGS.population) fail('dimensions/population');
-  if (Math.hypot(map.start.x - map.safeZone.x, map.start.z - map.safeZone.z) < 34) fail('endpoints too close');
+    || !Number.isInteger(map.generation.attempt) || map.generation.attempt < 0 || map.generation.attempt >= (settings.maxAttempts ?? 4)
+    || Object.entries(settings).some(([key, value]) => map.generation.settings?.[key] !== value)
+    || map.pathNetwork?.widthCells !== settings.pathWidth) fail('generator metadata');
+  if (map.width !== settings.width || map.height !== settings.height || map.cellSize !== settings.cellSize
+    || map.spawnCells.length !== settings.population || new Set(map.spawnCells).size !== settings.population) fail('dimensions/population');
+  if (Math.hypot(map.start.x - map.safeZone.x, map.start.z - map.safeZone.z) < (settings.minEndpointSeparation ?? 34)) fail('endpoints too close');
   if (map.navigation?.mode !== 'path-first') fail('missing Path-first policy');
   const start = map.start.z * map.width + map.start.x;
   const goal = map.safeZone.z * map.width + map.safeZone.x;
@@ -26,7 +27,7 @@ export function validateGeneratedMap(candidate) {
   }
   const lines = map.pathNetwork.centerlines;
   if (!Array.isArray(lines) || !lines.length) fail('missing path centerlines');
-  const radius = (SETTINGS.pathWidth - 1) / 2;
+  const radius = (settings.pathWidth - 1) / 2;
   for (const line of lines) {
     if (!Array.isArray(line) || line.length < 1) fail('invalid path centerline');
     for (const [step, p] of line.entries()) {
@@ -41,15 +42,17 @@ export function validateGeneratedMap(candidate) {
   const nodes=map.pathNetwork.nodes, connections=map.pathNetwork.connections;
   const validPoint=p=>p&&Number.isInteger(p.x)&&Number.isInteger(p.z)&&p.x>=0&&p.x<map.width
     &&p.z>=0&&p.z<map.height&&map.navigation.allowedCells[p.z*map.width+p.x];
-  if(!Array.isArray(nodes)||nodes.length<SETTINGS.nodeMin||nodes.length>SETTINGS.nodeMax
+  if(!Array.isArray(nodes)||nodes.length<settings.nodeMin||nodes.length>settings.nodeMax
     ||nodes.some(p=>!validPoint(p)||map.cells[p.z*map.width+p.x].terrain!=='route')) fail('invalid forest nodes');
+  if (settings.width > 64 && (new Set(nodes.map(p => `${p.x < map.width/2}:${p.z < map.height/2}`)).size !== 4
+    || ['x','z'].some(axis => Math.max(...nodes.map(p=>p[axis]))-Math.min(...nodes.map(p=>p[axis])) < settings.minNetworkSpan))) fail('insufficient map coverage');
   for(let i=0;i<nodes.length;i++) for(let j=0;j<i;j++) {
-    if(Math.hypot(nodes[i].x-nodes[j].x,nodes[i].z-nodes[j].z)<SETTINGS.nodeSpacing) fail('forest node spacing');
+    if(Math.hypot(nodes[i].x-nodes[j].x,nodes[i].z-nodes[j].z)<settings.nodeSpacing) fail('forest node spacing');
   }
   if(!Array.isArray(connections)||connections.length!==lines.length) fail('missing network connections');
   const treeDegree=Array(nodes.length).fill(0), allDegree=Array(nodes.length).fill(0);
   const tree=connections.filter(c=>c.kind==='tree');
-  if(tree.length!==nodes.length-1||connections.filter(c=>c.kind==='loop').length>SETTINGS.maxLoopConnections
+  if(tree.length!==nodes.length-1||connections.filter(c=>c.kind==='loop').length>settings.maxLoopConnections
     ||['start','safe'].some(kind=>connections.filter(c=>c.kind===kind).length!==1)) fail('network topology');
   for(const [i,c] of connections.entries()) {
     if(!['tree','loop','start','safe'].includes(c.kind)||!validPoint(c.from)||!validPoint(c.to)
@@ -77,7 +80,7 @@ export function validateGeneratedMap(candidate) {
   const carved = map.pathNetwork.trailCells;
   if (!Array.isArray(carved) || carved.some(i => !Number.isInteger(i) || !map.navigation.allowedCells[i])
     || new Set(carved).size !== carved.length) fail('invalid carved trail cells');
-  if(carved.length>300) fail('excessive carved area');
+  if(carved.length>(settings.maxCarvedCells ?? 300)) fail('excessive carved area');
   const carvedSet = new Set(carved);
   if (map.cells.some((cell, i) => cell.terrain === 'route' && !carvedSet.has(i))) fail('unintended trail widening');
   const degree = i => neighbors(map, i).length;
