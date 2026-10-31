@@ -1,13 +1,13 @@
 import { normalizeMap } from '../mapContract.js';
 import { isNavigable } from '../navigationPolicy.js';
 import { neighbors } from '../../agents/findPath.js';
-import { GENERATOR_SETTINGS as SETTINGS, GENERATOR_VERSION, V5_VERSION, V5_SETTINGS, normalizeSeed } from './seed.js';
+import { GENERATOR_SETTINGS as SETTINGS, GENERATOR_VERSION, V5_VERSION, V5_SETTINGS, V6_VERSION, V6_SETTINGS, normalizeSeed } from './seed.js';
 
 export function validateGeneratedMap(candidate) {
   const map = normalizeMap(candidate);
-  const settings = map.generation?.version === V5_VERSION ? V5_SETTINGS : SETTINGS;
+  const settings = map.generation?.version === V5_VERSION ? V5_SETTINGS : map.generation?.version === V6_VERSION ? V6_SETTINGS : SETTINGS;
   const fail = (message) => { throw new Error(`Generated map invalid: ${message}`); };
-  if (!map.generation || ![GENERATOR_VERSION,V5_VERSION].includes(map.generation.version)
+  if (!map.generation || ![GENERATOR_VERSION,V5_VERSION,V6_VERSION].includes(map.generation.version)
     || normalizeSeed(map.generation.seed) !== map.generation.seed
     || !Number.isInteger(map.generation.attempt) || map.generation.attempt < 0 || map.generation.attempt >= (settings.maxAttempts ?? 4)
     || Object.entries(settings).some(([key, value]) => map.generation.settings?.[key] !== value)

@@ -1,3 +1,4 @@
+import { createCanopyLayout } from './createCanopyLayout.js';
 import { sampleTerrainHeight } from '../world/terrain.js';
 import { createTerrainTiles, createTerrainSkirt } from './terrainGeometry.js';
 import * as THREE from 'three';
@@ -74,6 +75,8 @@ export function createMapView(map) {
   const brush = [];
   const grass = [];
   const forest = [];
+  const canopy = map.rendering?.canopyVersion ? new Map(createCanopyLayout(map).map(tree=>[tree.cell,tree])) : null;
+  const treeScales = [];
   const rocks = [];
   const decorationByCell = new Map();
   const brushCells = [];
@@ -92,8 +95,10 @@ export function createMapView(map) {
       grass.push(positionFor(x, z, 0.06));
       grassCells.push(index);
     }
-    if (cell.fuelType === 'forest' && x % 2 === 0 && z % 2 === 0) {
-      forest.push(positionFor(x, z, 0));
+    if (cell.fuelType === 'forest' && (canopy ? canopy.has(index) : x % 2 === 0 && z % 2 === 0)) {
+      const tree=canopy?.get(index);
+      forest.push(positionFor(tree ? tree.x-.5 : x, tree ? tree.z-.5 : z, 0));
+      treeScales.push(tree ? new THREE.Vector3(tree.width,tree.height,tree.width) : new THREE.Vector3(1,1,1));
       forestCells.push(index);
     }
     // Sparse visual rocks; all gray cells are blocked, even between rock meshes.
@@ -114,10 +119,15 @@ export function createMapView(map) {
   crownGeometry.translate(0, 0.7, 0);
   const trunks = instances(trunkGeometry, new THREE.MeshStandardMaterial({ color: 0x71523b }), forest);
   const crowns = instances(crownGeometry, new THREE.MeshStandardMaterial({ color: 0x244631 }), forest);
+  for (const mesh of [trunks,crowns]) {
+    treeScales.forEach((scale,i)=>{const matrix=new THREE.Matrix4();mesh.getMatrixAt(i,matrix);matrix.scale(scale);mesh.setMatrixAt(i,matrix);});
+    mesh.instanceMatrix.needsUpdate=true;
+  }
   for (const [mesh, cells, name] of [[brushMesh, brushCells, 'brush'], [grassMesh, grassCells, 'grass'],
     [trunks, forestCells, 'forest-trunks'], [crowns, forestCells, 'forest-crowns']]) {
     mesh.name = name;
     mesh.userData.fuelDecoration = true;
+    mesh.userData.cells = [...cells];
     cells.forEach((cellIndex, instanceIndex) => {
       const matrix = new THREE.Matrix4();
       mesh.getMatrixAt(instanceIndex, matrix);

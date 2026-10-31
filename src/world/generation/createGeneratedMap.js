@@ -1,5 +1,6 @@
+import { createForestVegetation } from './createForestVegetation.js';
 import { createTerrainV1 } from './createTerrainV1.js';
-import { normalizeSeed, seedStream, GENERATOR_VERSION, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION } from './seed.js';
+import { normalizeSeed, seedStream, GENERATOR_VERSION, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION } from './seed.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
@@ -12,7 +13,8 @@ import { createTerrain } from './createTerrain.js';
 export function buildCandidate(seed, attempt, settings = GENERATOR_SETTINGS) {
   const endpoints = placeEndpoints(settings, seedStream(seed, 'endpoints'));
   const network = createPathNetwork(endpoints, settings, seedStream(seed, 'paths', attempt));
-  const cells = createVegetation(settings, seedStream(seed, 'vegetation'), seedStream(seed, 'rocks'));
+  const cells = settings.vegetationVersion ? createForestVegetation(settings, seedStream(seed,'forest-regions-v2'), seedStream(seed,'rocks'))
+    : createVegetation(settings, seedStream(seed, 'vegetation'), seedStream(seed, 'rocks'));
   for (const index of network.cells) cells[index] = { terrain: 'route', fuelType: 'none', walkable: true };
   for (const [name, zone] of Object.entries(endpoints.zones)) {
     for (let z = zone.z0; z <= zone.z1; z += 1) for (let x = zone.x0; x <= zone.x1; x += 1) {
@@ -21,10 +23,10 @@ export function buildCandidate(seed, attempt, settings = GENERATOR_SETTINGS) {
   }
   return { width: settings.width, height: settings.height, cellSize: settings.cellSize,
     ...endpoints, cells, name: `Seed ${seed}`,
-    generation: { seed, version: settings === V5_SETTINGS ? V5_VERSION : GENERATOR_VERSION, settings: { ...settings }, attempt },
+    generation: { seed, version: settings === V5_SETTINGS ? V5_VERSION : settings === V6_SETTINGS ? V6_VERSION : GENERATOR_VERSION, settings: { ...settings }, attempt },
     pathNetwork: { widthCells: settings.pathWidth, nodes: network.nodes, centerlines: network.centerlines, connections: network.connections, trailCells: [...network.cells].sort((a, b) => a - b) },
     navigation: { mode: 'path-first', allowedCells: cells.map((cell) => ['route', 'start', 'safe'].includes(cell.terrain)) },
-    rendering: { compactEndpoints: true, terrainColors: { route: 0x806247, clearing: 0xc4b38b }, labels: [
+    rendering: { ...(settings.canopyVersion ? {canopyVersion:settings.canopyVersion,canopySeed:seed} : {}), compactEndpoints: true, terrainColors: { route: 0x806247, clearing: 0xc4b38b }, labels: [
       { text: 'START', x: endpoints.start.x, z: endpoints.zones.start.z1 + 1.5, width: 2.7 },
       { text: 'SAFE', x: endpoints.safeZone.x, z: endpoints.zones.safe.z1 + 1.5, width: 2.7 },
     ] } };
@@ -51,3 +53,6 @@ export function createGeneratedMap(value, candidateFactory = buildCandidate, set
 // Explicit historical profile: never reconstruct old scenarios with current rules.
 export const buildV5Candidate = (seed, attempt) => buildCandidate(seed, attempt, V5_SETTINGS);
 export const createGeneratedMapV5 = (value, factory = buildV5Candidate) => createGeneratedMap(value, factory, V5_SETTINGS);
+
+export const buildV6Candidate = (seed, attempt) => buildCandidate(seed, attempt, V6_SETTINGS);
+export const createGeneratedMapV6 = (value, factory = buildV6Candidate) => createGeneratedMap(value, factory, V6_SETTINGS);

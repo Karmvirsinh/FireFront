@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGeneratedMap,createGeneratedMapV5} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV6 as createGeneratedMap,createGeneratedMapV5} from '../src/world/generation/createGeneratedMap.js';
 import {findPath} from '../src/agents/findPath.js';
 import {createEvacuationSimulation} from '../src/simulation/createEvacuationSimulation.js';
 import {AGENT_CONFIG} from '../src/agents/agentConfig.js';

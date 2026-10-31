@@ -1,3 +1,9 @@
+# Current forest-environment-v7 (uncommitted review)
+
+V7 changes fuel coverage and canopy, retaining the exact v6 104×104 terrain, trail network, endpoints and spawns. It uses forest-regions-v2 classification and woodland-v2 placement. See [forest coverage](forest-coverage.md) for diagnostics, rules and limitations. Fire rules are unchanged, but different fuel coverage legitimately changes spread and evacuation outcomes. Historical v6 timings must not be quoted as v7 results. Explicit createGeneratedMapV6/buildV6Candidate exports preserve the previous complete profile alongside v5; there is one application. Terrain families, escarpments and terrain-aware trail generation remain deferred.
+
+The following v6 and earlier sections are historical records.
+
 # Seeded environment — current forest-network-v6
 
 ## 104×104 adaptation (2026-10-31, user-validated checkpoint)
