@@ -1,6 +1,7 @@
 import alea from 'alea';
 
-export const GENERATOR_VERSION = 'forest-environment-v7';
+export const GENERATOR_VERSION = 'forest-environment-v8';
+export const V7_VERSION = 'forest-environment-v7';
 export const V6_VERSION = 'forest-network-v6';
 export const V5_VERSION = 'forest-network-v5';
 export const V5_SETTINGS = Object.freeze({ width: 64, height: 64, cellSize: 0.5,
@@ -13,7 +14,9 @@ export const V6_SETTINGS = Object.freeze({ ...V5_SETTINGS, width:104, height:104
   maxCarvedCells:650, endpointRadiusMin:35,endpointRadiusRange:6,minEndpointSeparation:56,
   maxAttempts:16 });
 
-export const GENERATOR_SETTINGS = Object.freeze({ ...V6_SETTINGS, vegetationVersion:'forest-regions-v2', canopyVersion:'woodland-v2' });
+export const V7_SETTINGS = Object.freeze({ ...V6_SETTINGS, vegetationVersion:'forest-regions-v2', canopyVersion:'woodland-v2' });
+
+export const GENERATOR_SETTINGS = Object.freeze({ ...V7_SETTINGS, terrainFirst:true, maxAttempts:32 });
 
 // Decimal spelling only: no rounding, wrapping, exponent notation or random fallback.
 export function normalizeSeed(value) {

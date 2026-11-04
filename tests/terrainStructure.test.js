@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGeneratedMap,createGeneratedMapV7Baseline} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV7 as createGeneratedMap,createGeneratedMapV7Baseline} from '../src/world/generation/createGeneratedMap.js';
 import {validateTerrainSlopes} from '../src/world/generation/createTerrain.js';
 import {STRUCTURE_SETTINGS,inspectStructure} from '../src/world/generation/createTerrainStructure.js';
 import {terrainCellGradients,sampleTerrainHeight} from '../src/world/terrain.js';

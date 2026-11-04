@@ -1,5 +1,5 @@
 // Build an ordinary forest graph first; endpoints attach only after it exists.
-export function createPathNetwork({ start, safeZone }, settings, random) {
+export function createPathNetwork({ start, safeZone }, settings, random, terrainRouting = null) {
   const euclidean = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   const manhattan = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.z - b.z);
   const index = p => p.z * settings.width + p.x;
@@ -9,7 +9,7 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
   for (let attempt = 0; nodes.length < count && attempt < 600; attempt++) {
     const p = { x: (settings.nodeMargin ?? 8) + Math.floor(random() * (settings.width - 2*(settings.nodeMargin ?? 8))),
       z: (settings.nodeMargin ?? 8) + Math.floor(random() * (settings.height - 2*(settings.nodeMargin ?? 8))) };
-    if ([start, safeZone].every(q => euclidean(p, q) >= 7)
+    if ((!terrainRouting || terrainRouting.allowed[index(p)]) && [start, safeZone].every(q => euclidean(p, q) >= 7)
       && nodes.every(q => euclidean(p, q) >= settings.nodeSpacing)) nodes.push(p);
   }
   if (nodes.length !== count || ['x', 'z'].some(axis =>
@@ -99,8 +99,9 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
   }
   function candidate(a,b,kind) {
     const bend=(random()*2-1)*Math.min(5,euclidean(a,b)*0.22);
-    for(const offset of [bend,-bend*0.5,0]) {
-      const line=rasterize(a,b,offset), directSteps=manhattan(a,b);
+    for(const offset of terrainRouting ? [bend] : [bend,-bend*0.5,0]) {
+      const line=terrainRouting ? terrainRouting.route(a,b,cells,offset) : rasterize(a,b,offset), directSteps=manhattan(a,b);
+      if (!line) return null;
       if(line.length-1>directSteps*1.8) continue;
       const interior=line.filter(p=>manhattan(p,a)>4&&manhattan(p,b)>4);
       if(interior.some(p=>cells.has(index(p)))) continue;
@@ -108,6 +109,20 @@ export function createPathNetwork({ start, safeZone }, settings, random) {
       const nearby=interior.filter(p=>existing.some(q=>manhattan(p,q)<=2)).length;
       const nearbyFraction=interior.length?nearby/interior.length:0;
       if(nearbyFraction>(kind==='loop'?0.2:0.35)) continue;
+      if (terrainRouting && kind === 'loop') {
+        const queue=[index(a)], distances=new Map([[index(a),0]]);
+        for(let head=0;head<queue.length&&!distances.has(index(b));head++) {
+          const i=queue[head];
+          for(const j of [i-settings.width,i+1,i+settings.width,i-1]) {
+            if(cells.has(j)&&!distances.has(j)
+              &&Math.abs(j%settings.width-i%settings.width)+Math.abs(Math.floor(j/settings.width)-Math.floor(i/settings.width))===1) {
+              distances.set(j,distances.get(i)+1);queue.push(j);
+            }
+          }
+        }
+        const oldLength=distances.get(index(b));
+        if(!Number.isFinite(oldLength)||line.length-1>oldLength*.85||oldLength-(line.length-1)<6) continue;
+      }
       return { line, directSteps, rasterSteps:line.length-1, nearbyFraction };
     }
     return null;

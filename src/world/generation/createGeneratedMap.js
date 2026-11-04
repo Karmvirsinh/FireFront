@@ -1,7 +1,8 @@
+import { buildTerrainCandidate } from './buildTerrainCandidate.js';
 import { createTerrainStructure } from './createTerrainStructure.js';
 import { createForestVegetation } from './createForestVegetation.js';
 import { createTerrainV1 } from './createTerrainV1.js';
-import { normalizeSeed, seedStream, GENERATOR_VERSION, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION } from './seed.js';
+import { normalizeSeed, seedStream, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION, V7_SETTINGS, V7_VERSION } from './seed.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
@@ -11,7 +12,7 @@ import { createTerrain } from './createTerrain.js';
 // Explicit candidate construction also lets regressions replay a previously
 // selected attempt when improved validation accepts an earlier one. Install only
 // through createGeneratedMap / validateGeneratedMap.
-export function buildCandidate(seed, attempt, settings = GENERATOR_SETTINGS) {
+export function buildCandidate(seed, attempt, settings = V7_SETTINGS) {
   const endpoints = placeEndpoints(settings, seedStream(seed, 'endpoints'));
   const network = createPathNetwork(endpoints, settings, seedStream(seed, 'paths', attempt));
   const cells = settings.vegetationVersion ? createForestVegetation(settings, seedStream(seed,'forest-regions-v2'), seedStream(seed,'rocks'))
@@ -24,7 +25,7 @@ export function buildCandidate(seed, attempt, settings = GENERATOR_SETTINGS) {
   }
   return { width: settings.width, height: settings.height, cellSize: settings.cellSize,
     ...endpoints, cells, name: `Seed ${seed}`,
-    generation: { seed, version: settings === V5_SETTINGS ? V5_VERSION : settings === V6_SETTINGS ? V6_VERSION : GENERATOR_VERSION, settings: { ...settings }, attempt },
+    generation: { seed, version: settings === V5_SETTINGS ? V5_VERSION : settings === V6_SETTINGS ? V6_VERSION : V7_VERSION, settings: { ...settings }, attempt },
     pathNetwork: { widthCells: settings.pathWidth, nodes: network.nodes, centerlines: network.centerlines, connections: network.connections, trailCells: [...network.cells].sort((a, b) => a - b) },
     navigation: { mode: 'path-first', allowedCells: cells.map((cell) => ['route', 'start', 'safe'].includes(cell.terrain)) },
     rendering: { ...(settings.canopyVersion ? {canopyVersion:settings.canopyVersion,canopySeed:seed} : {}), compactEndpoints: true, terrainColors: { route: 0x806247, clearing: 0xc4b38b }, labels: [
@@ -33,9 +34,11 @@ export function buildCandidate(seed, attempt, settings = GENERATOR_SETTINGS) {
     ] } };
 }
 
+const settingsCandidate = (seed, attempt) => buildTerrainCandidate(seed, attempt);
+
 // Bounded deterministic retries; caller installs only the validated result.
 // The candidate seam permits controlled failure/retry tests, not a UI setting.
-export function createGeneratedMap(value, candidateFactory = buildCandidate, settings = GENERATOR_SETTINGS, terrainFactory = settings === V5_SETTINGS ? createTerrainV1 : settings === V6_SETTINGS ? createTerrain : createTerrainStructure) {
+export function createGeneratedMap(value, candidateFactory = settingsCandidate, settings = GENERATOR_SETTINGS, terrainFactory = settings === V5_SETTINGS ? createTerrainV1 : settings === V6_SETTINGS ? createTerrain : createTerrainStructure) {
   const seed = normalizeSeed(value);
   let selected;
   for (let attempt = 0; attempt < (settings.maxAttempts ?? 4); attempt += 1) {
@@ -47,8 +50,9 @@ export function createGeneratedMap(value, candidateFactory = buildCandidate, set
     }
     catch (error) { if (attempt === (settings.maxAttempts ?? 4)-1) throw new Error(`Could not generate seed ${seed} after ${settings.maxAttempts ?? 4} attempts. Current map retained.`, { cause: error }); }
   }
-  // Terrain failure must not select a different horizontal layout candidate.
-  return { ...selected, elevation: terrainFactory(selected, seed) };
+  // Historical layout-first profiles attach terrain only after horizontal selection.
+  // Terrain-first candidates already carry their validated authoritative surface.
+  return selected.elevation ? selected : { ...selected, elevation: terrainFactory(selected, seed) };
 }
 
 // Explicit historical profile: never reconstruct old scenarios with current rules.
@@ -59,4 +63,5 @@ export const buildV6Candidate = (seed, attempt) => buildCandidate(seed, attempt,
 export const createGeneratedMapV6 = (value, factory = buildV6Candidate) => createGeneratedMap(value, factory, V6_SETTINGS);
 
 // Frozen pre-structure v7 terrain, for exact forest-checkpoint comparisons.
-export const createGeneratedMapV7Baseline = value => createGeneratedMap(value, buildCandidate, GENERATOR_SETTINGS, createTerrain);
+export const createGeneratedMapV7Baseline = value => createGeneratedMap(value, buildCandidate, V7_SETTINGS, createTerrain);
+export const createGeneratedMapV7 = value => createGeneratedMap(value, buildCandidate, V7_SETTINGS, createTerrainStructure);

@@ -1,12 +1,12 @@
 # Forest coverage and canopy refinement
 
-> Forest preservation checkpoint: b96d971. Broader coverage is an acceptable intermediate improvement; the latest checklist was not reported passed and overall landscape appearance remains unaccepted. Normal maps now use terrain-structure-v3; createGeneratedMapV7Baseline explicitly preserves this checkpoint's landforms-v2 surface for comparisons. Forest/canopy data and trails are unchanged by the terrain-structure work. Scattered rocks and replacement grass/vegetation assets remain deferred.
+> Forest preservation checkpoint: b96d971. Broader coverage is an acceptable intermediate improvement; the latest checklist was not reported passed and overall landscape appearance remains unaccepted. At the preserved terrain-structure checkpoint, normal maps used terrain-structure-v3; createGeneratedMapV7Baseline explicitly preserves this checkpoint's landforms-v2 surface for comparisons. Forest/canopy data and trails are unchanged by the terrain-structure work. Scattered rocks and replacement grass/vegetation assets remain deferred.
 
 Review work on feature/terrain-elevation after landforms preservation checkpoint **f1da2a6**. Overall landscape/forest appearance awaits human acceptance. Dimensions remain 104×104, cell size 0.5, population 20.
 
 ## Identity and preserved comparison
 
-Normal generation is **forest-environment-v7**, with separate **forest-regions-v2** classification and **woodland-v2** canopy presentation. Frozen V6_SETTINGS/V6_VERSION and explicit createGeneratedMapV6/buildV6Candidate factories preserve v6 alongside existing v5. Shared endpoint/path/rock streams are unchanged. V7 uses a separate forest-regions-v2 stream rather than consuming old vegetation randomness. Exact landforms-v2 heights, endpoint/spawn cells, final trails, bypasses and navigation mask are verified against v6.
+This historical checkpoint uses **forest-environment-v7**, with separate **forest-regions-v2** classification and **woodland-v2** canopy presentation. Frozen V6_SETTINGS/V6_VERSION and explicit createGeneratedMapV6/buildV6Candidate factories preserve v6 alongside existing v5. Shared endpoint/path/rock streams are unchanged. V7 uses a separate forest-regions-v2 stream rather than consuming old vegetation randomness. Exact landforms-v2 heights, endpoint/spawn cells, final trails, bypasses and navigation mask are verified against v6.
 
 ## Coverage
 
@@ -39,3 +39,6 @@ Patches use four-edge forest-class connectivity after carving, not all-fuel conn
 2. Zoom/orbit: no obvious tree rows, readable trails/agents and clear endpoint footprints.
 3. Select forest fuel, start fire, inspect standing burning/charred/cool trees, then reset: positions/scales restore and camera stays put.
 4. Regenerate/replay and inspect ordinary responsiveness/FPS and console. No performance benchmark is required or claimed.
+
+
+Terrain-aware v8 supersedes normal v7 generation: forest/rock streams and canopy rules are retained, but new trails and adapted endpoint footprints change final carved cells. The percentages/scenarios above remain historical v7 evidence. createGeneratedMapV7 retains the V3 structure checkpoint; createGeneratedMapV7Baseline retains this document’s V2 forest comparison.

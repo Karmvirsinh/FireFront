@@ -26,7 +26,7 @@ export function createTerrainTiles(map) {
     for(let face=0;face<2;face++){
       const slope=Math.acos(Math.max(-1,Math.min(1,normals.getY(index*6+face*3))))*180/Math.PI;
       shade.copy(color);
-      if(surface&&map.elevation?.generation?.version==='terrain-structure-v3'&&slope>28){
+      if(surface&&['terrain-structure-v3','terrain-routed-v4'].includes(map.elevation?.generation?.version)&&slope>28){
         shade.lerp(slope>40?rock:earth,Math.min(.85,(slope-28)/18));
       }
       for(let v=0;v<3;v++)colors.setXYZ(index*6+face*3+v,shade.r,shade.g,shade.b);

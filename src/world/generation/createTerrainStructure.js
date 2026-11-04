@@ -54,14 +54,14 @@ export function inspectStructure(map,forms,offset=0){
  return {plateaus};
 }
 
-export function createTerrainStructure(map,seed){
+export function createTerrainStructure(map,seed,attemptOffset=0){
  const settings={...STRUCTURE_SETTINGS};
  const familyRandom=seedStream(seed,'terrain:structure-family-v3');
  const draw=familyRandom();
  const family=draw<.25?'lowland':draw<.65?'plateau-country':'ridge-valley';
  let last;
  for(let attempt=0;attempt<settings.maxAttempts;attempt++){
-  const random=seedStream(seed,'terrain:structure-v3',attempt),forms=createForms(map,random,family),noise=createNoise2D(random);
+  const random=seedStream(seed,'terrain:structure-v3',attempt+attemptOffset),forms=createForms(map,random,family),noise=createNoise2D(random);
   const raw=Array.from({length:(map.width+1)*(map.height+1)},(_,i)=>{
    const x=i%(map.width+1)*map.cellSize,z=Math.floor(i/(map.width+1))*map.cellSize;
    let y=0;
