@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FireFront · Terrain & art studies</title></head>
+<body><div id="study-app">
+<header><div><p class="eyebrow">FIRE FRONT / VISUAL DEVELOPMENT</p><h1>Terrain & woodland studies</h1></div><a href="./">Compare normal application ↗</a></header>
+<main>
+<nav aria-label="Landscape studies"><button data-study="woodland" aria-pressed="true">01 · Rolling woodland</button><button data-study="plateau" aria-pressed="false">02 · Irregular plateau</button><button data-study="ridge" aria-pressed="false">03 · Rugged ridge</button></nav>
+<section class="workspace"><div class="scene-column"><div class="view-heading"><div><h2 id="study-title"></h2><p id="study-subtitle"></p></div><div class="views" aria-label="Camera views"><button id="overview">Overview</button><button id="detail">Close-up</button></div></div>
+<div id="viewport"><canvas id="study-canvas" aria-label="Interactive terrain art prototype"></canvas><span class="view-tag" id="view-tag">Overview</span><output id="surface-status">Inspect the surface · click terrain for slope and traversal</output></div>
+<p class="camera-hints">Wheel: zoom · Middle drag: orbit · Right drag: pan · <kbd>R</kbd>: overview · Click: inspect ground</p></div>
+<aside><p class="eyebrow">SMALL, CONTROLLED EXAMPLES</p><h3 id="seed-title">Seed variation</h3><div class="seeds" aria-label="Seed variations"><button data-seed="7" aria-pressed="true">Seed 7</button><button data-seed="2026" aria-pressed="false">Seed 2026</button></div><p>Same art direction, different outline, relief and woodland arrangement.</p>
+<h3>Read the landscape</h3><ul class="legend"><li><i class="grass"></i>Meadow / forest-floor cover</li><li><i class="trail"></i>Bare, slope-safe trail</li><li><i class="rock"></i>Exposed rock / steep ground</li><li><i class="channel"></i>Dry channel · no water</li></ul>
+<label class="toggle"><input type="checkbox" id="traversal"> Show traversal overlay</label><p class="overlay-help">Mint: physically walkable. Terracotta: trees or steep ground block traversal. Every trail cell stays at or below 20°.</p>
+<dl id="study-facts"></dl><div class="scope"><strong>Visual prototype</strong><p>No live fire or evacuation. Original modular artwork; terrain and trails share one authoritative surface. This page does not replace the normal generator.</p></div>
+</aside></section></main><footer>Terrain/art study v1 · 64×64 cells · 0.5 world units per cell · Human appearance review pending</footer>
+</div><script type="module" src="/src/prototype/main.js"></script></body></html>
