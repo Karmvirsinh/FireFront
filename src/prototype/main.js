@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createStudyMap,STUDIES} from './createStudyMap.js';
+import {createStudyMap,STUDIES,GALLERY} from './createStudyMap.js';
+import {createGaeaStudyMap} from './createGaeaStudyMap.js';
 import {createStudyView} from './createStudyView.js';
+import {createScanView} from './createScanView.js';
+import {inspectTraversal} from './traversalScan.js';
 import {createGroundPicker} from '../rendering/createGroundPicker.js';
 import {sampleTerrainHeight} from '../world/terrain.js';
 import './style.css';
@@ -14,13 +17,14 @@ const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xf4edd6,0x536
 const sun=new THREE.DirectionalLight(0xffebc5,3.2);sun.position.set(-16,27,14);sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:80});sun.shadow.normalBias=.04;sun.shadow.bias=-.00015;scene.add(sun);
 const camera=new THREE.PerspectiveCamera(43,1,.1,160);
-const controls=new OrbitControls(camera,canvas);controls.enableDamping=false;controls.screenSpacePanning=false;controls.mouseButtons={LEFT:null,MIDDLE:THREE.MOUSE.ROTATE,RIGHT:THREE.MOUSE.PAN};controls.minDistance=4;controls.maxDistance=85;controls.minPolarAngle=.12;controls.maxPolarAngle=Math.PI*.44;
-let kind='woodland',seed=7,map,view,pick,disposed=false,currentView='overview';
+const controls=new OrbitControls(camera,canvas);controls.enableDamping=false;controls.screenSpacePanning=false;controls.mouseButtons={LEFT:null,MIDDLE:THREE.MOUSE.ROTATE,RIGHT:THREE.MOUSE.PAN};controls.minDistance=4;controls.maxDistance=110;controls.minPolarAngle=.12;controls.maxPolarAngle=Math.PI*.44;
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+let kind=new URLSearchParams(location.search).get('study')==='gaea'?'gaea':'woodland',seed=kind==='gaea'?30085:7,map,view,pick,scan,scanning=false,disposed=false,currentView='overview';
 function setView(close=false){
- const study=STUDIES[kind];currentView=close?'detail':'overview';
+ currentView=close?'detail':'overview';
  if(close){
-  const [x,z]=study.detail;controls.target.set(x,sampleTerrainHeight(map,x/.5+32,z/.5+32)+.7,z);
-  camera.position.copy(controls.target).add(new THREE.Vector3(...study.look));
+  const [x,z]=map.prototype.detail;controls.target.set(x,sampleTerrainHeight(map,x/map.cellSize+map.width/2,z/map.cellSize+map.height/2)+.7,z);
+  camera.position.copy(controls.target).add(new THREE.Vector3(...map.prototype.look));
  }else{
   const box=new THREE.Box3().setFromObject(view.group),center=box.getCenter(new THREE.Vector3());
   const direction=new THREE.Vector3(kind==='ridge'?-24:24,27,28).normalize();
@@ -37,30 +41,43 @@ function setView(close=false){
  document.querySelector('#view-tag').textContent=close?'Close-up · freely orbit':'Overview · freely orbit';
 }
 function replace(){
- if(view){scene.remove(view.group);view.dispose();pick.dispose();}
- map=createStudyMap(kind,seed);view=createStudyView(map);scene.add(view.group);pick=createGroundPicker(camera,canvas,map);
- view.overlay.visible=document.querySelector('#traversal').checked;
- document.querySelector('#study-title').textContent=STUDIES[kind].title;document.querySelector('#study-subtitle').textContent=STUDIES[kind].subtitle;
- const max=Math.max(...map.elevation.cornerHeights),trees=view.placements.trees.reduce((n,a)=>n+a.length,0);
- const facts={'Seed':seed,'Relief':max.toFixed(2)+' units','Trees':trees,'Trail cells':map.pathNetwork.trailCells.length,'Trail rise':map.prototype.trailRise.toFixed(2)+' units'};
+ let nextView,nextScan,nextPick,nextMap;
+ try{nextMap=kind==='gaea'?createGaeaStudyMap():createStudyMap(kind,seed);nextView=createStudyView(nextMap);nextScan=createScanView(nextMap,kind==='gaea'?4:2);nextPick=createGroundPicker(camera,canvas,nextMap);}
+ catch(error){nextView?.dispose();nextScan?.dispose();nextPick?.dispose();document.querySelector('#surface-status').textContent=`Could not build composition: ${error.message}`;return;}
+ if(view){scene.remove(view.group,scan.group);view.dispose();scan.dispose();pick.dispose();}
+ map=nextMap;view=nextView;scan=nextScan;pick=nextPick;scene.add(view.group,scan.group);scanning=false;
+ document.querySelector('#study-title').textContent=kind==='gaea'?'Gaea · Sandstone Butte export':`${STUDIES[kind].title} · seed ${seed}`;
+ document.querySelector('#study-subtitle').textContent=map.prototype.summary;
+ for(const button of document.querySelectorAll('[data-example]'))button.setAttribute('aria-pressed',String(button.dataset.example===`${kind}-${seed}`));
+ document.querySelector('#gaea-study').setAttribute('aria-pressed',String(kind==='gaea'));
+ document.querySelector('#gaea-note').hidden=kind!=='gaea';
+ document.querySelector('#scan-coverage').textContent=kind==='gaea'?'fourth':'second';
+ document.querySelector('#study-grid').textContent=`${map.width}×${map.height} cells · ${map.cellSize} world units per cell`;
+ const facts={'Seed':seed,'Relief':Math.max(...map.elevation.cornerHeights).toFixed(2)+' units','Trees':view.placements.trees.reduce((n,a)=>n+a.length,0),'Trail cells':map.pathNetwork.trailCells.length,'Trail rise':map.prototype.trailRise.toFixed(2)+' units'};
  const dl=document.querySelector('#study-facts');dl.replaceChildren();for(const [name,value]of Object.entries(facts)){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=name;dd.textContent=value;row.append(dt,dd);dl.append(row);}
- document.querySelector('#surface-status').textContent='Click terrain to inspect its slope and physical traversal.';
+ document.querySelector('#surface-status').textContent='Click any cell for slope suitability, physical blockers and Path-first policy.';
+ document.querySelector('#scan-status').textContent='Press T or Scan terrain. Hold 6 s, then fade 1.5 s; reduced motion stays static.';
  setView();
 }
 const listeners=[];
 function on(target,type,handler){target.addEventListener(type,handler);listeners.push(()=>target.removeEventListener(type,handler));}
-for(const button of document.querySelectorAll('[data-study]'))on(button,'click',()=>{kind=button.dataset.study;for(const b of document.querySelectorAll('[data-study]'))b.setAttribute('aria-pressed',String(b===button));replace();});
-for(const button of document.querySelectorAll('[data-seed]'))on(button,'click',()=>{seed=Number(button.dataset.seed);for(const b of document.querySelectorAll('[data-seed]'))b.setAttribute('aria-pressed',String(b===button));replace();});
-on(document.querySelector('#overview'),'click',()=>setView());on(document.querySelector('#detail'),'click',()=>setView(true));
-on(document.querySelector('#traversal'),'change',event=>{view.overlay.visible=event.target.checked;});
+on(document.querySelector('#gaea-study'),'click',()=>{kind='gaea';seed=30085;replace();});
+for(const [i,example]of GALLERY.entries()){
+ const button=document.createElement('button');button.dataset.example=example.id;button.setAttribute('aria-pressed',String(i===0));
+ button.textContent=`${String(i+1).padStart(2,'0')} · ${STUDIES[example.kind].title} / ${example.seed}`;
+ on(button,'click',()=>{kind=example.kind;seed=example.seed;replace();});document.querySelector('#gallery').append(button);
+}
+if(window.matchMedia('(max-width: 820px)').matches)document.querySelector('.gallery-panel').open=false;
+function startScan(){scan.start(performance.now()/1000,reducedMotion.matches);scanning=true;document.querySelector('#scan-status').textContent='Scan visible. Click a cell for its actual reason. Red is blocked, not lethal.';}
+on(document.querySelector('#overview'),'click',()=>setView());on(document.querySelector('#detail'),'click',()=>setView(true));on(document.querySelector('#scan'),'click',startScan);
 on(controls,'start',()=>{currentView='custom';document.querySelector('#view-tag').textContent='Custom view';});
-on(window,'keydown',e=>{if(e.repeat||e.ctrlKey||e.altKey||e.metaKey||e.target.isContentEditable||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key.toLowerCase()==='r')setView();});
+on(window,'keydown',e=>{if(e.repeat||e.ctrlKey||e.altKey||e.metaKey||e.target.isContentEditable||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key.toLowerCase()==='r')setView();if(e.key.toLowerCase()==='t')startScan();});
 let press=null;
 on(canvas,'pointerdown',e=>{press=e.button===0?{x:e.clientX,y:e.clientY}:null;});
-on(canvas,'pointerup',e=>{if(e.button!==0||!press||Math.hypot(e.clientX-press.x,e.clientY-press.y)>4){press=null;return;}press=null;const i=pick(e.clientX,e.clientY);if(i===null)return;const c=map.cells[i];document.querySelector('#surface-status').textContent=`Cell (${i%64}, ${Math.floor(i/64)}) · ${c.terrain} · ${c.slope.toFixed(1)}° · ${c.walkable?'physically walkable':'blocked'}${c.terrain==='trail'?' · verified trail':''}`;});
+on(canvas,'pointerup',e=>{if(e.button!==0||!press||Math.hypot(e.clientX-press.x,e.clientY-press.y)>4){press=null;return;}press=null;const i=pick(e.clientX,e.clientY);if(i===null)return;document.querySelector('#surface-status').textContent=`Cell (${i%map.width}, ${Math.floor(i/map.width)}) · ${map.cells[i].terrain}. ${inspectTraversal(map,i).reason}`;});
 on(canvas,'pointercancel',()=>{press=null;});on(canvas,'contextmenu',e=>e.preventDefault());on(window,'blur',()=>{press=null;});
 function resize(){const r=viewport.getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();if(view&&currentView==='overview')setView();}
 const observer=new ResizeObserver(resize);observer.observe(viewport);replace();resize();
-renderer.setAnimationLoop(()=>{if(disposed)return;controls.update();renderer.render(scene,camera);});
-function dispose(){if(disposed)return;disposed=true;renderer.setAnimationLoop(null);observer.disconnect();listeners.forEach(stop=>stop());controls.dispose();pick?.dispose();view?.dispose();sun.shadow.map?.dispose();renderer.dispose();}
+renderer.setAnimationLoop(time=>{if(disposed)return;controls.update();if(scanning&&!scan.update(time/1000)){scanning=false;document.querySelector('#scan-status').textContent='Scan ended. Press T to repeat; cell inspection remains available.';}renderer.render(scene,camera);});
+function dispose(){if(disposed)return;disposed=true;renderer.setAnimationLoop(null);observer.disconnect();listeners.forEach(stop=>stop());controls.dispose();pick?.dispose();view?.dispose();scan?.dispose();sun.shadow.map?.dispose();renderer.dispose();}
 on(window,'pagehide',dispose);if(import.meta.hot)import.meta.hot.dispose(dispose);

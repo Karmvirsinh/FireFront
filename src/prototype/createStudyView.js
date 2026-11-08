@@ -19,6 +19,9 @@ export function createStudyView(map){
   const grain=Math.sin(x*24+z*17)*Math.sin(z*29-x*11)*.025;
   const mottling=Math.sin(x*.74+Math.sin(z*.47))*Math.cos(z*.63)*.055;
   color.multiplyScalar(1+grain+mottling);
+  // Only the imported study uses Gaea's exported layer mask, as surface detail.
+  // It does not control fuel, walkability or any production classification.
+  if(map.surfaceLayers&&cell.terrain==='rock')color.multiplyScalar(.86+map.surfaceLayers[Math.floor(i/6)]*.5);
   if(slope>20){
    const strata=.88+.12*Math.sin(y*11+Math.sin(x*1.4+z*.7)*.6);
    shade.setHex(slope>38?0x898878:0x827359).multiplyScalar(strata);
@@ -38,16 +41,16 @@ export function createStudyView(map){
  // Off-grid jitter, spatial exclusion and a seeded forest edge break model rows.
  const treePoints=[];
  for(let attempt=0;attempt<1000;attempt++){
-  const gx=1+random()*62,gz=1+random()*62,index=Math.floor(gz)*64+Math.floor(gx),cell=map.cells[index];
+  const gx=1+random()*(map.width-2),gz=1+random()*(map.height-2),index=Math.floor(gz)*map.width+Math.floor(gx),cell=map.cells[index];
   if(cell.terrain!=='forest'||cell.slope>24||nearTrail(index))continue;
-  const x=(gx-32)*.5,z=(gz-32)*.5;
+  const x=(gx-map.width/2)*map.cellSize,z=(gz-map.height/2)*map.cellSize;
   if(treePoints.some(p=>Math.hypot(p.x-x,p.z-z)<.86))continue;
   const p={x,z,y:sampleTerrainHeight(map,gx,gz),s:.70+random()*.40,angle:random()*6.28,index};
   treePoints.push(p);placements.trees[random()<.55?0:1].push(p);
  }
  for(let attempt=0;attempt<2600;attempt++){
-  const gx=random()*64,gz=random()*64,index=Math.floor(gz)*64+Math.floor(gx),cell=map.cells[index];
-  const p={x:(gx-32)*.5,z:(gz-32)*.5,y:sampleTerrainHeight(map,gx,gz),s:.65+random()*.75,angle:random()*6.28,index};
+  const gx=random()*map.width,gz=random()*map.height,index=Math.floor(gz)*map.width+Math.floor(gx),cell=map.cells[index];
+  const p={x:(gx-map.width/2)*map.cellSize,z:(gz-map.height/2)*map.cellSize,y:sampleTerrainHeight(map,gx,gz),s:.65+random()*.75,angle:random()*6.28,index};
   if(cell.terrain==='grass'&&cell.slope<20&&random()<.80)placements.grass.push(p);
   else if(cell.terrain==='rock'&&(p.y/relief<.35||p.y/relief>.80)&&random()<.13){p.s=.2+random()*.65;placements.rocks[attempt%3].push(p);}
  }
@@ -62,13 +65,6 @@ export function createStudyView(map){
  }
  instances(createGrassArtwork(),material({vertexColors:true,side:THREE.DoubleSide,roughness:1}),placements.grass,'grass');
  for(let i=0;i<3;i++)instances(createRockArtwork(i),artMaterial,placements.rocks[i],`boulders-${i}`);
- // Slightly raised conforming overlay is optional diagnostic information only.
- const overlayGeometry=keep(groundGeometry.clone()),overlayColors=[],op=overlayGeometry.attributes.position;
- for(let i=0;i<op.count;i++){
-  op.setY(i,op.getY(i)+.025);color.setHex(map.cells[Math.floor(i/6)].walkable?0x5dc5a0:0xc06d4e);overlayColors.push(color.r,color.g,color.b);
- }
- overlayGeometry.setAttribute('color',new THREE.Float32BufferAttribute(overlayColors,3));
- const overlay=new THREE.Mesh(overlayGeometry,keep(new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.36,depthWrite:false})));overlay.visible=false;overlay.renderOrder=1;group.add(overlay);
  let disposed=false;
- return {group,ground,overlay,placements,dispose(){if(disposed)return;disposed=true;meshes.forEach(m=>m.dispose());resources.forEach(r=>r.dispose());}};
+ return {group,ground,placements,dispose(){if(disposed)return;disposed=true;meshes.forEach(m=>m.dispose());resources.forEach(r=>r.dispose());}};
 }

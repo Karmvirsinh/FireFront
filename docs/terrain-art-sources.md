@@ -13,3 +13,14 @@
 | User-supplied landscape concepts | Reference images in the project discussion | Directional references only; no pixels/assets copied into the application. |
 
 This record describes actual provenance and does not relicense the repository or change existing authorship. There are no externally downloaded visual assets in this increment.
+
+## Composition-v2 follow-up
+
+- Original reusable landform operators now live in src/prototype/landformConstruction.js; the original six-study factory is preserved in createStudyMapV1.js. Original asset geometry and baseline surface materials are retained.
+- Shape research only: [NPS landforms](https://www.nps.gov/subjects/geology/landforms.htm), [plateaus and mesas](https://www.nps.gov/subjects/nnlandmarks/plateaus-and-mesas.htm), [fluvial landforms](https://www.nps.gov/subjects/geology/fluvial-landforms.htm), [USGS elevation products](https://www.usgs.gov/3d-elevation-program/about-3dep-products-services). No source images, DEMs or text excerpts are shipped as assets. No real erosion/hydrology simulation is claimed.
+- One subsequent GUI launch successfully opened Gaea 2.3.1 Community, Welcome and a blank editor. No successful export, Gaea-authored terrain or tool settings/license changes resulted. The prior no-export CLI evidence is retained as history, not superseded by GUI access.
+- Scan glyphs are original simple procedural geometry/SVG: dot, triangle and X, with explicit text labels. No icon/asset package or dependency was added.
+
+## Subsequent focused GUI export trial
+
+The earlier no-export result remains historical. A new one-instance GUI trial successfully exported bundled **Sandstone Butte** with Sandstone height and Layers mask as 512-square PNG16. This is externally authored example terrain processed by Gaea, not original FireFront shaping. The project/raw exports stay in ignored logs; the isolated comparison includes resampled numeric data with source hashes. Community non-commercial restrictions and further interactive-product/redistribution considerations apply; no unrestricted asset license is inferred. See [Gaea trial provenance, scale, checks and restrictions](gaea-trial.md). Original project artwork dresses the imported surface; no external trees/textures or Gaea software are shipped.
