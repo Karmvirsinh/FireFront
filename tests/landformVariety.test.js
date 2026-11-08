@@ -19,7 +19,7 @@ test('twelve compositions vary operators, relief, terraces and boundary placemen
   const trail=new Set(map.pathNetwork.trailCells),queue=[[...trail][0]],seen=new Set(queue);
   for(let head=0;head<queue.length;head++)for(const j of [queue[head]-64,queue[head]+1,queue[head]+64,queue[head]-1])if(trail.has(j)&&!seen.has(j)&&Math.abs(j%64-queue[head]%64)+Math.abs(Math.floor(j/64)-Math.floor(queue[head]/64))===1){seen.add(j);queue.push(j);}
   assert.equal(trail.size,seen.size);assert.ok(map.prototype.quality.flatCells>100);
-  for(const c of map.cells)if(c.slope>20)assert.equal(c.walkable,false);
+  for(const c of map.cells)if(c.slope>50||['forest','rock'].includes(c.terrain))assert.equal(c.walkable,false);
   for(const cut of p.cuts){for(let i=1;i<cut.spine.length;i++)assert.ok(cut.spine[i].y<=cut.spine[i-1].y);assert.notEqual(cut.leftBank,cut.rightBank);}
  }
  assert.ok(signatures.size>=8);assert.ok(Math.min(...reliefs)<3&&Math.max(...reliefs)>8);assert.ok(shelfCounts.size>=3);assert.ok(edges&&interiors&&noCuts&&branches);
@@ -47,7 +47,7 @@ function scanFixture(degrees){
   cells:[{terrain:'grass',walkable:true},{terrain:'forest',walkable:false},{terrain:'rock',walkable:false},{terrain:'trail',walkable:true}],navigation:{mode:'path-first',allowedCells:[false,false,false,true]}};
 }
 test('scan separates physical blockers, warning slopes and Path-first policy without lethal semantics',()=>{
- const flat=scanFixture(0),near=scanFixture(18),steep=scanFixture(24);
+ const flat=scanFixture(0),near=scanFixture(30),steep=scanFixture(55);
  assert.deepEqual([inspectTraversal(flat,0).symbol,inspectTraversal(flat,0).physicalWalkable,inspectTraversal(flat,0).pathAllowed],['dot',true,false]);
  assert.match(inspectTraversal(flat,0).reason,/Outside the Path-first/);
  assert.deepEqual([inspectTraversal(near,0).symbol,inspectTraversal(near,3).pathAllowed],['triangle',true]);

@@ -235,3 +235,11 @@ Reuse or launch one installed Gaea instance; use a compatible small example to e
 ## 2026-11-08 — Approved prototype detail/material/scan refinement
 
 Checkpoint positive procedural/Gaea assessment while retaining pending surface-detail and scan acceptance. Compare 129/257 Gaea surface corners sampled from the original export, with matched world size/range/camera/lighting and separate unchanged coarse traversal cells. Displayed geometry must drive picking/object placement/glyph positions; report fine versus coarse slopes explicitly. Replace per-cell patchwork with coherent stylized surface detail and layered cutaway finish across studies, preserving shapes, classifications and horizontal dressing. Correct sparse trail scan coverage/ambiguous offsets using actual rules, visible clicked footprints and separate slope/physical/Path-first reasons; red remains nonlethal. No normal-app change, generator adoption/new recipes, Gaea authoring, simulation integration, asset expansion, water/buildings or new dependencies. Leave refinement uncommitted for review.
+
+## 2026-11-08 — Approved prototype slope capability trial
+
+After checkpointing mesh/material/scan feedback, raise only prototype maximum terrain capability to50°. Pale0–20°, triangle above20–50° when otherwise physically clear, red above50° or another physical blocker. Apply capability to cell/edge/connectivity validation and preserve separate Path-first explanations. Dense forest/rocks remain blocked; canopy overlap does not block trails. Preserve gentle approach construction, exact terrain/trails, classifications, vegetation, materials and both displayed Gaea samplers. Label illustrative trial; no production navigation, fire, agent, climbing, speed/stamina or dependency changes. Leave trial uncommitted; no merge/push/deploy.
+
+## 2026-11-08 — Future Flexible brush decision (not implemented)
+
+Fully consumed, burned-and-cooled brush should become traversable in future Flexible navigation. Path-first stays trail-only. This records a future policy decision, not a current simulation/prototype implementation or a change to the 50-degree trial.

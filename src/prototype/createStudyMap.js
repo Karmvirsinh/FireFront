@@ -3,6 +3,7 @@ import {seedStream,normalizeSeed} from '../world/generation/seed.js';
 import {sampleTerrainHeight,terrainCellGradients} from '../world/terrain.js';
 import {createTerrainRouting,validateTrailTerrain} from '../world/generation/trailTerrain.js';
 import {createLandformPlan,nearestOnLine} from './landformConstruction.js';
+import {PROTOTYPE_MAX_SLOPE_DEGREES,prototypePhysicalCell,validatePrototypeTrails} from './prototypeTraversal.js';
 
 export const STUDIES=Object.freeze({
  woodland:{title:'Gentler ground',subtitle:'Broad hills and flatter stretches; other forms remain possible'},
@@ -12,14 +13,14 @@ export const STUDIES=Object.freeze({
 export const STUDY_SEEDS=[7,34,2026,913];
 export const GALLERY=Object.keys(STUDIES).flatMap(kind=>STUDY_SEEDS.map(seed=>({kind,seed,id:`${kind}-${seed}`})));
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-export function createStudyMap(kind,value){
+export function createStudyMap(kind,value,{maxSlopeDegrees=PROTOTYPE_MAX_SLOPE_DEGREES}={}){
  if(!STUDIES[kind])throw new Error('Unknown prototype emphasis');
  const seed=normalizeSeed(value);let last;
  for(let attempt=0;attempt<8;attempt++)try{
   const {height,...plan}=createLandformPlan(kind,seed,attempt),heights=Array.from({length:65*65},(_,i)=>height(i%65*.5-16,Math.floor(i/65)*.5-16));
   const min=Math.min(...heights),max=Math.max(...heights);
   if(!heights.every(Number.isFinite)||max-min<.6||max-min>12)throw new Error('Landform relief outside study bounds');
-  const map={width:64,height:64,cellSize:.5,name:STUDIES[kind].title,prototype:{version:'terrain-art-variety-v2',kind,seed,attempt,plan},
+  const map={width:64,height:64,cellSize:.5,name:STUDIES[kind].title,prototype:{version:'terrain-art-variety-v2',kind,seed,attempt,plan,maxSlopeDegrees},
    elevation:{units:'world',triangulation:'nw-se',cornerHeights:heights.map(h=>h-min)}};
   const routing=createTerrainRouting(map),random=seedStream(seed,`study-trail-v2:${kind}`,attempt),angle=random()*Math.PI*2;
   const candidates=routing.allowed.map((allowed,i)=>allowed&&i%64>2&&i%64<61&&Math.floor(i/64)>2&&Math.floor(i/64)<61?i:-1).filter(i=>i>=0);
@@ -36,8 +37,10 @@ export function createStudyMap(kind,value){
    const clearing=flat&&Math.hypot(x-flat.x,z-flat.z)<flat.radius*.8;
    const channel=plan.cuts.some(p=>nearestOnLine(x,z,p.spine).distance<Math.min(p.leftWidth,p.rightWidth)*.48);
    const surface=trail.has(i)?'trail':slope>28?'rock':channel?'dry-channel':noise(x*.095+7,z*.095-3)>-.2&&!clearing?'forest':'grass';
-   return {terrain:surface,fuelType:['forest','grass'].includes(surface)?surface:'none',walkable:slope<=20&&surface!=='forest',slope};
+   const baseWalkable=!['forest','rock'].includes(surface);
+   return {terrain:surface,fuelType:['forest','grass'].includes(surface)?surface:'none',baseWalkable,walkable:baseWalkable,slope};
   });
+  map.cells.forEach((cell,i)=>{cell.walkable=prototypePhysicalCell(map,i);});
   map.navigation={mode:'path-first',allowedCells:map.cells.map((_,i)=>trail.has(i))};
   map.pathNetwork={centerlines:[line],trailCells:[...trail]};
   const focus=plan.raised.reduce((a,b)=>a.height>b.height?a:b);
@@ -49,7 +52,9 @@ export function createStudyMap(kind,value){
   map.prototype.summary=[...new Set(plan.raised.map(p=>p.type)),...(plan.basins.length?['basin']:[]),...(plan.flats.length?['flat blend']:[]),...(plan.cuts.length?['dry cut']:[]),...(plan.cuts.length>1?['tributaries']:[])].join(' · ');
   map.prototype.quality={flatCells:map.cells.filter(c=>c.slope<5).length,steepCells:map.cells.filter(c=>c.slope>40).length,
    boundaryRelief:Math.max(...heights.filter((_,i)=>i%65===0||i%65===64||i<65||i>=65*64))-min};
-  validateTrailTerrain(map);return map;
+  // Preserve the existing gentle-approach construction and its historical test;
+  // the independent final eligibility/connection check uses prototype capability.
+  validateTrailTerrain(map);validatePrototypeTrails(map);return map;
  }catch(error){last=error;}
  throw new Error(`Landform composition exhausted eight attempts for ${kind}/${seed}`,{cause:last});
 }

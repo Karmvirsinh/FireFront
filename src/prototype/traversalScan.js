@@ -1,16 +1,16 @@
-import {TRAIL_SLOPE_DEGREES,terrainTrailCell} from '../world/generation/trailTerrain.js';
+import {prototypeSlopeLimit,prototypeSlopeCell,prototypePhysicalCell,PROTOTYPE_GENTLE_SLOPE_DEGREES} from './prototypeTraversal.js';
 import {terrainCellGradients} from '../world/terrain.js';
 import {displayedCellSlope} from './studySurface.js';
 
 export function inspectTraversal(map,index){
  const cell=map.cells[index];if(!cell)throw new Error('Invalid scan cell');
  const slope=Math.atan(Math.max(...terrainCellGradients(map,index)))*180/Math.PI;
- const slopeSuitable=terrainTrailCell(map,index),physicalWalkable=slopeSuitable&&cell.walkable;
+ const max=prototypeSlopeLimit(map),slopeSuitable=prototypeSlopeCell(map,index),physicalWalkable=prototypePhysicalCell(map,index);
  const policyAllowed=map.navigation?.mode!=='path-first'||Boolean(map.navigation.allowedCells[index]),pathAllowed=physicalWalkable&&policyAllowed;
- const nearLimit=slopeSuitable&&slope>=TRAIL_SLOPE_DEGREES*.8;
+ const nearLimit=slopeSuitable&&!prototypeSlopeCell(map,index,PROTOTYPE_GENTLE_SLOPE_DEGREES);
  const symbol=physicalWalkable?(nearLimit?'triangle':'dot'):'cross';
- const slopeText=slopeSuitable?`${slope.toFixed(1)}°: ${nearLimit?'near':'within'} the ${TRAIL_SLOPE_DEGREES}° limit`:`${slope.toFixed(1)}° exceeds the ${TRAIL_SLOPE_DEGREES}° limit`;
- const blocker=!slopeSuitable?'steep surface':!cell.walkable?(cell.terrain==='forest'?'forest-class ground':`${cell.terrain} classification`):null;
+ const slopeText=slopeSuitable?`${slope.toFixed(1)}°: ${nearLimit?'steep but slope-permitted':'gentle'} under the ${max}° prototype trial`:`${slope.toFixed(1)}° exceeds the ${max}° prototype trial`;
+ const blocker=!slopeSuitable?'steep surface':!physicalWalkable?(cell.terrain==='forest'?'forest-class ground':`${cell.terrain} classification / physical blocker`):null;
  const detailSlope=displayedCellSlope(map,index);
  return {index,slope,detailSlope,slopeSuitable,nearLimit,physicalWalkable,policyAllowed,pathAllowed,symbol,blocker,
   reason:`${map.displaySurface?'Coarse traversal slope':'Slope'} ${slopeText}. ${physicalWalkable?'Physically walkable':`Blocked by ${blocker}`}. ${policyAllowed?'On the permitted Path-first trail':'Outside the Path-first trail policy'}.${map.displaySurface?` Displayed fine-face maximum ${detailSlope.toFixed(1)}° within this cell; detail does not redefine coarse navigation.`:''} Red means blocked, not lethal.`};
