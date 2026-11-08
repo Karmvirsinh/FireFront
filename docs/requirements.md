@@ -243,3 +243,7 @@ After checkpointing mesh/material/scan feedback, raise only prototype maximum te
 ## 2026-11-08 — Future Flexible brush decision (not implemented)
 
 Fully consumed, burned-and-cooled brush should become traversable in future Flexible navigation. Path-first stays trail-only. This records a future policy decision, not a current simulation/prototype implementation or a change to the 50-degree trial.
+
+## 2026-11-08 — Approved prototype substrate refinement
+
+After checkpointing the accepted 50-degree trial, refine only isolated surface materials across procedural/Gaea studies: compacted dirt/selective gravel/local wear, calmer broad meadow variation, distinct forest litter/earth, directional weathered rock/earth, and irregular soil-over-bedrock cutaway layers. Optional subtle fossil dressing is not required. Preserve terrain/mesh choices, all models/placements, classifications, scan/50-degree rules and normal application. Original or licensed artwork only; no unapproved dependency. Matched camera/lighting comparisons and human material acceptance remain required; no new behavior/full-map adoption.
