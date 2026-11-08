@@ -60,7 +60,8 @@ test('scan separates physical blockers, warning slopes and Path-first policy wit
 test('scan glyphs conform to terrain, use the actual cell rules and dispose exactly once',()=>{
  for(const {kind,seed}of GALLERY){
   const map=createStudyMap(kind,seed),before=structuredClone(map),scan=createScanView(map);
-  assert.equal(scan.markers.length,1024);for(const m of scan.markers)assert.deepEqual(m,inspectTraversal(map,m.index));
+  assert.ok(scan.markers.length<=1024+map.pathNetwork.trailCells.length);for(const m of scan.markers)assert.deepEqual(m,inspectTraversal(map,m.index));
+  const marked=new Set(scan.markers.map(m=>m.index));assert.ok(map.pathNetwork.trailCells.every(i=>marked.has(i)));
   const counts=[];scan.group.traverse(o=>{if(!o.geometry)return;const p=o.geometry.attributes.position;
    for(let i=0;i<p.count;i++)assert.ok(Math.abs(p.getY(i)-sampleTerrainHeight(map,p.getX(i)/.5+32,p.getZ(i)/.5+32)-.045)<1e-5);
    for(const r of [o.geometry,o.material]){const count={value:0};counts.push(count);r.addEventListener('dispose',()=>count.value++);}

@@ -24,3 +24,7 @@ This record describes actual provenance and does not relicense the repository or
 ## Subsequent focused GUI export trial
 
 The earlier no-export result remains historical. A new one-instance GUI trial successfully exported bundled **Sandstone Butte** with Sandstone height and Layers mask as 512-square PNG16. This is externally authored example terrain processed by Gaea, not original FireFront shaping. The project/raw exports stay in ignored logs; the isolated comparison includes resampled numeric data with source hashes. Community non-commercial restrictions and further interactive-product/redistribution considerations apply; no unrestricted asset license is inferred. See [Gaea trial provenance, scale, checks and restrictions](gaea-trial.md). Original project artwork dresses the imported surface; no external trees/textures or Gaea software are shipped.
+
+## 2026-11-08 — Surface-detail refinement
+
+Meadow/forest-floor, dirt/gravel and weathered-stone grain/crack textures are original deterministic DataTexture artwork in src/prototype/surfaceMaterials.js, using existing simplex-noise/Three.js. No downloaded texture pack, fossil image, external asset or dependency/license was added. World-space material blending and cutaway bands are original shader code. Fine Gaea corner data is resampled from the same recorded PNG16 export; provenance/restrictions remain unchanged. See [comparison semantics, checks and costs](terrain-detail-comparison.md).

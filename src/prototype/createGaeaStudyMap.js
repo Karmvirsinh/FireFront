@@ -4,7 +4,8 @@ import {createNoise2D} from 'simplex-noise';
 import {seedStream} from '../world/generation/seed.js';
 
 // Authored/exported comparison only. No Gaea runtime or production-map adoption.
-export function createGaeaStudyMap(){
+export function createGaeaStudyMap(corners=129){
+ if(![129,257].includes(corners))throw new Error('Supported Gaea mesh corners: 129 or 257');
  const width=data.gridCells,noise=createNoise2D(seedStream(30085,'gaea-trial-dressing'));
  const map={width,height:width,cellSize:data.worldWidth/width,name:'Gaea · Sandstone Butte',
   elevation:{units:'world',triangulation:'nw-se',cornerHeights:[...data.heights]},
@@ -20,5 +21,8 @@ export function createGaeaStudyMap(){
  });
  map.navigation={mode:'path-first',allowedCells:map.cells.map(()=>false)};
  map.pathNetwork={centerlines:[],trailCells:[]};
+ if(corners===257)map.displaySurface={width:256,height:256,cellSize:.125,
+  elevation:{units:'world',triangulation:'nw-se',cornerHeights:[...data.detailHeights]}};
+ map.prototype.meshCorners=corners;
  return map;
 }

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import {createTerrainGeometry,createTerrainSkirt} from '../rendering/terrainGeometry.js';
+import {sampleStudyHeight,displayedSurface} from './studySurface.js';
 import {sampleTerrainHeight} from '../world/terrain.js';
+import {createStudyMaterials} from './surfaceMaterials.js';
 import {seedStream} from '../world/generation/seed.js';
 import {createTreeArtwork,createRockArtwork,createGrassArtwork} from './artwork.js';
 
@@ -8,30 +10,23 @@ export function createStudyView(map){
  const group=new THREE.Group(),resources=new Set(),meshes=[];
  const keep=o=>{resources.add(o);return o;};
  const material=options=>keep(new THREE.MeshStandardMaterial(options));
- const groundGeometry=keep(createTerrainGeometry(map)),colors=[];
- const pos=groundGeometry.attributes.position,normals=groundGeometry.attributes.normal;
- const palette={forest:0x5e7043,grass:0x899657,trail:0x9b7850,rock:0x858375,'dry-channel':0x8c8168};
- const color=new THREE.Color(),shade=new THREE.Color();
- for(let i=0;i<pos.count;i++){
-  const cell=map.cells[Math.floor(i/6)],slope=Math.acos(Math.max(-1,Math.min(1,normals.getY(i))))*180/Math.PI;
-  const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
-  color.setHex(palette[cell.terrain]);
-  const grain=Math.sin(x*24+z*17)*Math.sin(z*29-x*11)*.025;
-  const mottling=Math.sin(x*.74+Math.sin(z*.47))*Math.cos(z*.63)*.055;
-  color.multiplyScalar(1+grain+mottling);
-  // Only the imported study uses Gaea's exported layer mask, as surface detail.
-  // It does not control fuel, walkability or any production classification.
-  if(map.surfaceLayers&&cell.terrain==='rock')color.multiplyScalar(.86+map.surfaceLayers[Math.floor(i/6)]*.5);
-  if(slope>20){
-   const strata=.88+.12*Math.sin(y*11+Math.sin(x*1.4+z*.7)*.6);
-   shade.setHex(slope>38?0x898878:0x827359).multiplyScalar(strata);
-   color.lerp(shade,Math.min(1,(slope-20)/12));
-  }
-  colors.push(color.r,color.g,color.b);
+ const surface=displayedSurface(map),finish=createStudyMaterials(map);finish.resources.forEach(keep);
+ const groundGeometry=keep(createTerrainGeometry(surface));
+ groundGeometry.setAttribute('studyDepth',new THREE.Float32BufferAttribute(new Float32Array(groundGeometry.attributes.position.count),1));
+ const vertices=groundGeometry.attributes.position,blendNormals=[],blendNormal=new THREE.Vector3(),step=.5/map.cellSize;
+ for(let i=0;i<vertices.count;i++){
+  const gx=vertices.getX(i)/map.cellSize+map.width/2,gz=vertices.getZ(i)/map.cellSize+map.height/2;
+  const x0=Math.max(0,gx-step),x1=Math.min(map.width,gx+step),z0=Math.max(0,gz-step),z1=Math.min(map.height,gz+step);
+  blendNormal.set(-(sampleStudyHeight(map,x1,gz)-sampleStudyHeight(map,x0,gz))/((x1-x0)*map.cellSize),1,-(sampleStudyHeight(map,gx,z1)-sampleStudyHeight(map,gx,z0))/((z1-z0)*map.cellSize)).normalize();
+  blendNormals.push(blendNormal.x,blendNormal.y,blendNormal.z);
  }
- groundGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
- const ground=new THREE.Mesh(groundGeometry,material({vertexColors:true,roughness:1}));ground.receiveShadow=true;ground.name='study-ground';group.add(ground);
- const skirt=createTerrainSkirt(map);keep(skirt.geometry);keep(skirt.material);skirt.material.color.setHex(0x64533d);skirt.receiveShadow=true;group.add(skirt);
+ groundGeometry.setAttribute('studyBlendNormal',new THREE.Float32BufferAttribute(blendNormals,3));
+ const ground=new THREE.Mesh(groundGeometry,finish.ground);ground.receiveShadow=true;ground.name='study-ground';group.add(ground);
+ const skirt=createTerrainSkirt(surface);keep(skirt.geometry);skirt.material.dispose();skirt.material=finish.cutaway;
+ const sides=skirt.geometry.attributes.position,depth=[];
+ for(let i=0;i<sides.count;i++)depth.push(sampleStudyHeight(map,sides.getX(i)/map.cellSize+map.width/2,sides.getZ(i)/map.cellSize+map.height/2)-sides.getY(i));
+ skirt.geometry.setAttribute('studyDepth',new THREE.Float32BufferAttribute(depth,1));skirt.receiveShadow=true;group.add(skirt);
+ skirt.geometry.setAttribute('studyBlendNormal',skirt.geometry.attributes.normal);
  const matrix=new THREE.Matrix4(),rotation=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),point=new THREE.Vector3(),scale=new THREE.Vector3();
  const random=seedStream(map.prototype.seed,`art:dressing:${map.prototype.kind}`);
  const placements={trees:[[],[]],grass:[],rocks:[[],[],[]]};
@@ -45,14 +40,14 @@ export function createStudyView(map){
   if(cell.terrain!=='forest'||cell.slope>24||nearTrail(index))continue;
   const x=(gx-map.width/2)*map.cellSize,z=(gz-map.height/2)*map.cellSize;
   if(treePoints.some(p=>Math.hypot(p.x-x,p.z-z)<.86))continue;
-  const p={x,z,y:sampleTerrainHeight(map,gx,gz),s:.70+random()*.40,angle:random()*6.28,index};
+  const p={x,z,y:sampleStudyHeight(map,gx,gz),s:.70+random()*.40,angle:random()*6.28,index};
   treePoints.push(p);placements.trees[random()<.55?0:1].push(p);
  }
  for(let attempt=0;attempt<2600;attempt++){
   const gx=random()*map.width,gz=random()*map.height,index=Math.floor(gz)*map.width+Math.floor(gx),cell=map.cells[index];
-  const p={x:(gx-map.width/2)*map.cellSize,z:(gz-map.height/2)*map.cellSize,y:sampleTerrainHeight(map,gx,gz),s:.65+random()*.75,angle:random()*6.28,index};
+  const p={x:(gx-map.width/2)*map.cellSize,z:(gz-map.height/2)*map.cellSize,y:sampleStudyHeight(map,gx,gz),s:.65+random()*.75,angle:random()*6.28,index};
   if(cell.terrain==='grass'&&cell.slope<20&&random()<.80)placements.grass.push(p);
-  else if(cell.terrain==='rock'&&(p.y/relief<.35||p.y/relief>.80)&&random()<.13){p.s=.2+random()*.65;placements.rocks[attempt%3].push(p);}
+  else if(cell.terrain==='rock'&&(sampleTerrainHeight(map,gx,gz)/relief<.35||sampleTerrainHeight(map,gx,gz)/relief>.80)&&random()<.13){p.s=.2+random()*.65;placements.rocks[attempt%3].push(p);}
  }
  function instances(geometry,mat,items,name){
   keep(geometry);const mesh=new THREE.InstancedMesh(geometry,mat,items.length);mesh.name=name;

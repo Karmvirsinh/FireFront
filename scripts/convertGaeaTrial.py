@@ -46,6 +46,11 @@ data = {
     'layers': [round(sample(layers, (x+.5)/128, (z+.5)/128) / 65535, 5)
                for z in range(128) for x in range(128)],
 }
+low, high = min(data['heights']), max(data['heights'])
+fine = [round(sample(height, x/256, z/256) / 65535 * 16, 6)
+        for z in range(257) for x in range(257)]
+data['detailClampedCorners'] = sum(h < low or h > high for h in fine)
+data['detailHeights'] = [max(low, min(high, h)) for h in fine]
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps(data, separators=(',', ':')) + '\n', encoding='utf-8')
 print(json.dumps({'files': data['files'], 'corners': len(data['heights']),

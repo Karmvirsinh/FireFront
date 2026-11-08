@@ -1,5 +1,6 @@
 import {TRAIL_SLOPE_DEGREES,terrainTrailCell} from '../world/generation/trailTerrain.js';
 import {terrainCellGradients} from '../world/terrain.js';
+import {displayedCellSlope} from './studySurface.js';
 
 export function inspectTraversal(map,index){
  const cell=map.cells[index];if(!cell)throw new Error('Invalid scan cell');
@@ -10,8 +11,9 @@ export function inspectTraversal(map,index){
  const symbol=physicalWalkable?(nearLimit?'triangle':'dot'):'cross';
  const slopeText=slopeSuitable?`${slope.toFixed(1)}°: ${nearLimit?'near':'within'} the ${TRAIL_SLOPE_DEGREES}° limit`:`${slope.toFixed(1)}° exceeds the ${TRAIL_SLOPE_DEGREES}° limit`;
  const blocker=!slopeSuitable?'steep surface':!cell.walkable?(cell.terrain==='forest'?'forest-class ground':`${cell.terrain} classification`):null;
- return {index,slope,slopeSuitable,nearLimit,physicalWalkable,policyAllowed,pathAllowed,symbol,blocker,
-  reason:`Slope ${slopeText}. ${physicalWalkable?'Physically walkable':`Blocked by ${blocker}`}. ${policyAllowed?'On the permitted Path-first trail':'Outside the Path-first trail policy'}. Red means blocked, not lethal.`};
+ const detailSlope=displayedCellSlope(map,index);
+ return {index,slope,detailSlope,slopeSuitable,nearLimit,physicalWalkable,policyAllowed,pathAllowed,symbol,blocker,
+  reason:`${map.displaySurface?'Coarse traversal slope':'Slope'} ${slopeText}. ${physicalWalkable?'Physically walkable':`Blocked by ${blocker}`}. ${policyAllowed?'On the permitted Path-first trail':'Outside the Path-first trail policy'}.${map.displaySurface?` Displayed fine-face maximum ${detailSlope.toFixed(1)}° within this cell; detail does not redefine coarse navigation.`:''} Red means blocked, not lethal.`};
 }
 export function scanEnvelope(elapsed,reducedMotion=false){
  if(elapsed<0||elapsed>=7.5)return {visible:false,opacity:0};
