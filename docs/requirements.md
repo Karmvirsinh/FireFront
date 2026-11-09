@@ -247,3 +247,11 @@ Fully consumed, burned-and-cooled brush should become traversable in future Flex
 ## 2026-11-08 — Approved prototype substrate refinement
 
 After checkpointing the accepted 50-degree trial, refine only isolated surface materials across procedural/Gaea studies: compacted dirt/selective gravel/local wear, calmer broad meadow variation, distinct forest litter/earth, directional weathered rock/earth, and irregular soil-over-bedrock cutaway layers. Optional subtle fossil dressing is not required. Preserve terrain/mesh choices, all models/placements, classifications, scan/50-degree rules and normal application. Original or licensed artwork only; no unapproved dependency. Matched camera/lighting comparisons and human material acceptance remain required; no new behavior/full-map adoption.
+
+## 2026-11-08 — Approved regional cover and exposed-face prototype refinement
+
+After preserving the prior material checkpoint, use coherent seeded surface regions for varied green/earth/litter woodland and earth-dominant/gravelly/worn trail sections. Add fitted fractured faces/outcrops only inside already-blocked exposed rock footprints, clear of permitted trails; preserve logical ground and correct picking. Retain mixed earth banks and distinct boundary cutaways. No authoritative heights, classifications, layout, vegetation, 50-degree scan/policy or production behavior changes. Final appearance needs human review. No new dependencies, terrain recipes, models, fossils, water/buildings or full-map adoption.
+
+## 2026-11-08 — Selective prototype correction
+
+Supersede only the new angular rock formation/fragment experiment and dedicated integration/picking/tests. Restore face geometry and ground-only picking at1bf0c42, preserving prior picking fixes, materials, terrain, older boulders and regional ground/trail variation. Woodland must retain brown/litter-dominant outcomes alongside green/mixed regional cover, without compulsory tree-centered brown patches. No further experiment or full manual acceptance inferred.

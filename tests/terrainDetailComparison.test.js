@@ -58,6 +58,6 @@ test('original material textures, boundary finish and all replacement resources 
  // Verify the shader owns deterministic reusable texture data without requiring WebGL in Node.
  const shader={uniforms:{},vertexShader:'#include <common>\n#include <begin_vertex>',fragmentShader:'#include <common>\n#include <color_fragment>'};
  a.ground.material.onBeforeCompile(shader);
- for(const name of ['studyMeadow','studyDirt','studyForest','studyStone','studyCoverage']){const t=shader.uniforms[name].value;observed.set(t,0);t.addEventListener('dispose',()=>observed.set(t,observed.get(t)+1));assert.ok(t.image.data.some(v=>v>0));}
+ for(const name of ['studyMeadow','studyDirt','studyForest','studyStone','studyGravel','studyCoverage','studyRegions']){const t=shader.uniforms[name].value;observed.set(t,0);t.addEventListener('dispose',()=>observed.set(t,observed.get(t)+1));assert.ok(t.image.data.some(v=>v>0));}
  a.dispose();a.dispose();b.dispose();assert.ok([...observed.values()].every(n=>n===1));
 });

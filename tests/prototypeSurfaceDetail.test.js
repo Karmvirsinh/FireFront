@@ -26,7 +26,7 @@ test('substrates have reproducible distinct artwork, restrained fine detail and 
 test('shared surface artwork is independent of displayed mesh resolution and leaves logical maps unchanged',()=>{
  const maps=[createGaeaStudyMap(129),createGaeaStudyMap(257)],before=maps.map(m=>structuredClone(m)),finishes=maps.map(createStudyMaterials);
  const shaders=finishes.map(f=>{const s={uniforms:{},vertexShader:'#include <common>\n#include <begin_vertex>',fragmentShader:'#include <common>\n#include <color_fragment>'};f.ground.onBeforeCompile(s);return s;});
- for(const name of ['studyMeadow','studyDirt','studyForest','studyStone','studyCoverage'])assert.deepEqual(shaders[0].uniforms[name].value.image.data,shaders[1].uniforms[name].value.image.data);
+ for(const name of ['studyMeadow','studyDirt','studyForest','studyStone','studyGravel','studyCoverage','studyRegions'])assert.deepEqual(shaders[0].uniforms[name].value.image.data,shaders[1].uniforms[name].value.image.data);
  assert.deepEqual(maps,before);
  for(const finish of finishes){let count=0;finish.resources.forEach(r=>r.addEventListener('dispose',()=>count++));finish.resources.forEach(r=>r.dispose());assert.equal(count,finish.resources.length);}
 });

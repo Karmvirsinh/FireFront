@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {createNoise2D} from 'simplex-noise';
 import {seedStream} from '../world/generation/seed.js';
+import {createSurfaceRegions} from './surfaceRegions.js';
 
 // Original generated artwork: no external textures or simulation random streams.
 // Detail differs by substrate; fine marks are sparse, not full-surface spray.
@@ -12,7 +13,7 @@ export function createSurfaceArtwork(size=256){
   const c=noise(u*frequency,(v-1)*frequency),d=noise((u-1)*frequency,(v-1)*frequency);
   return mix(mix(a,b,smooth(u)),mix(c,d,smooth(u)),smooth(v));
  }
- const palettes={meadow:[110,126,67],dirt:[130,104,70],forest:[87,79,49],stone:[137,124,102]},art={};
+ const palettes={meadow:[110,126,67],dirt:[130,104,70],forest:[87,79,49],stone:[137,124,102],gravel:[132,122,100]},art={};
  for(const [kind,base]of Object.entries(palettes)){
   const bytes=new Uint8Array(size*size*4);
   for(let z=0;z<size;z++)for(let x=0;x<size;x++){
@@ -43,7 +44,7 @@ export function createSurfaceArtwork(size=256){
     for(let c=0;c<3;c++)bytes[i+c]=Math.round(mix(bytes[i+c],color[c],a));
    }
   }
-  if(kind==='dirt')for(let cluster=0;cluster<9;cluster++){
+  if(kind==='dirt'||kind==='gravel')for(let cluster=0;cluster<(kind==='gravel'?34:9);cluster++){
    const x=random()*size,z=random()*size;
    for(let n=0;n<8;n++)ellipse(x+(random()-.5)*25,z+(random()-.5)*20,1+random()*1.5,.7+random(),random()*6.28,[151,139,113],.25+random()*.2);
   }
@@ -72,9 +73,11 @@ export function createStudyMaterials(map){
   const i=(z*map.width+x)*4;weights[i]=forest/total*255;weights[i+1]=at(x,z).terrain==='trail'?255:0;weights[i+2]=at(x,z).terrain==='dry-channel'?255:0;weights[i+3]=(map.surfaceLayers?.[z*map.width+x]??.5)*255;
  }
  const coverage=new THREE.DataTexture(weights,map.width,map.height);coverage.magFilter=THREE.LinearFilter;coverage.minFilter=THREE.LinearFilter;coverage.needsUpdate=true;resources.push(coverage);
+ const regionData=createSurfaceRegions(map),regions=new THREE.DataTexture(regionData.data,regionData.width,regionData.height);
+ regions.magFilter=THREE.LinearFilter;regions.minFilter=THREE.LinearFilter;regions.needsUpdate=true;resources.push(regions);
  const common=`varying vec3 vStudyPosition; varying vec3 vStudyNormal; varying float vStudyDepth;`;
  const definitions=`${common}
- uniform sampler2D studyMeadow,studyDirt,studyForest,studyStone,studyCoverage;
+ uniform sampler2D studyMeadow,studyDirt,studyForest,studyStone,studyGravel,studyCoverage,studyRegions;
  uniform vec2 studySize; uniform float studyCut;
  float artHash(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}
  float artField(vec2 q){vec2 i=floor(q),f=fract(q);f=f*f*(3.0-2.0*f);return mix(mix(artHash(i),artHash(i+vec2(1,0)),f.x),mix(artHash(i+vec2(0,1)),artHash(i+vec2(1)),f.x),f.y);}
@@ -85,21 +88,28 @@ export function createStudyMaterials(map){
  function material(cut=false){
   const m=new THREE.MeshStandardMaterial({roughness:.96,side:THREE.DoubleSide});
   m.onBeforeCompile=shader=>{
-   Object.assign(shader.uniforms,{studyMeadow:{value:textures.meadow},studyDirt:{value:textures.dirt},studyForest:{value:textures.forest},studyStone:{value:textures.stone},studyCoverage:{value:coverage},studySize:{value:new THREE.Vector2(map.width*map.cellSize,map.height*map.cellSize)},studyCut:{value:cut?1:0}});
+   Object.assign(shader.uniforms,{studyMeadow:{value:textures.meadow},studyDirt:{value:textures.dirt},studyForest:{value:textures.forest},studyStone:{value:textures.stone},studyCoverage:{value:coverage},studyRegions:{value:regions},studyGravel:{value:textures.gravel},studySize:{value:new THREE.Vector2(map.width*map.cellSize,map.height*map.cellSize)},studyCut:{value:cut?1:0}});
    shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>\n${common}\nattribute float studyDepth; attribute vec3 studyBlendNormal;`).replace('#include <begin_vertex>',`#include <begin_vertex>\nvStudyPosition=(modelMatrix*vec4(position,1.0)).xyz;vStudyNormal=normalize(mat3(modelMatrix)*studyBlendNormal);vStudyDepth=studyDepth;`);
    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${definitions}`).replace('#include <color_fragment>',`
     vec3 p=vStudyPosition,n=normalize(vStudyNormal);
     vec4 cover=texture2D(studyCoverage,p.xz/studySize+.5);
+    vec4 region=texture2D(studyRegions,p.xz/studySize+.5);
     float broad=artField(p.xz*.17),regional=artField(p.xz*.065+12.0);
     vec3 grass=studyTri(studyMeadow,p,n,.12),dirt=studyTri(studyDirt,p,n,.23),forest=studyTri(studyForest,p,n,.21),stone=studyTri(studyStone,p,n,.18);
-    vec3 meadow=grass*mix(vec3(.94,.97,.91),vec3(1.04,1.03,.99),broad);
-    vec3 floorColor=mix(meadow,forest,smoothstep(.12,.85,cover.r));
+    vec3 meadow=grass*mix(vec3(.76,.89,.72),vec3(1.10,1.07,.98),smoothstep(.12,.86,region.r));
+    // Forest classification no longer stamps a brown patch under each grove.
+    float litter=smoothstep(.30,.76,region.g)*mix(.32,.91,cover.r);
+    vec3 floorColor=mix(meadow,forest,litter);
+    floorColor=mix(floorColor,dirt*.92,smoothstep(.72,.94,region.g)*.32);
     float rock=smoothstep(.04,.32,1.0-abs(n.y));
     // Soil pockets and weathered warm/cool stone vary over metres, not pixels.
     vec3 rockColor=mix(stone*vec3(.91,.94,.98),dirt*.91,smoothstep(.4,.85,regional)*.55)*(.96+cover.a*.08);
     vec3 surface=mix(floorColor,rockColor,rock);
     float edge=cover.g+(artField(p.xz*1.4)-.5)*.10;
-    surface=mix(surface,dirt*.88,smoothstep(.12,.7,edge));
+    vec3 gravel=studyTri(studyGravel,p,n,.38);
+    float gravelSection=smoothstep(.55,.83,region.b)*.48;
+    vec3 trail=mix(dirt*mix(.80,1.04,region.a),gravel,gravelSection);
+    surface=mix(surface,trail,smoothstep(.12,.7,edge));
     surface=mix(surface,dirt*.84,cover.b*.65);
     // Cutaway-only depth bands: changing soil thickness, broken bedrock lenses
     // and sparse embedded stones. No identical contour stripes on every side.
@@ -115,7 +125,7 @@ export function createStudyMaterials(map){
     diffuseColor.rgb=pow(mix(surface,cutColor,studyCut),vec3(2.2));
    `);
   };
-  m.customProgramCacheKey=()=>`study-material-v2-${cut}`;resources.push(m);return m;
+  m.customProgramCacheKey=()=>`study-material-v3-${cut}`;resources.push(m);return m;
  }
  return {ground:material(),cutaway:material(true),resources};
 }
