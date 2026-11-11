@@ -1,3 +1,5 @@
+import {createSurfaceMaterials} from './surfaceMaterials.js';
+import {prepareSurfaceGeometry} from './prepareSurfaceGeometry.js';
 import { createCanopyLayout } from './createCanopyLayout.js';
 import { sampleTerrainHeight } from '../world/terrain.js';
 import { createTerrainTiles, createTerrainSkirt } from './terrainGeometry.js';
@@ -20,6 +22,7 @@ export function createMapView(map) {
       && index !== map.start.z * map.width + map.start.x ? 'route' : cell.terrain;
     return FUEL_COLORS[cell.fuelType] ?? terrainColors[terrain] ?? COLORS[terrain];
   }
+  const surfaceFinish=map.generation&&map.elevation?createSurfaceMaterials(map,{simulator:true}):null;
   const group = new THREE.Group();
   const resources = [];
   const transform = new THREE.Object3D();
@@ -47,8 +50,12 @@ export function createMapView(map) {
     map.cells.map((_, i) => positionFor(i % map.width, Math.floor(i / map.width))));
   tiles.name = 'ground-tiles';
   if (map.elevation) {
-    tileGeometry.dispose(); group.add(tiles); resources.push(tiles.geometry, tiles.material);
-    const skirt = createTerrainSkirt(map); group.add(skirt); resources.push(skirt.geometry,skirt.material);
+    tileGeometry.dispose(); group.add(tiles);
+    if(surfaceFinish){tiles.material.dispose();tiles.material=surfaceFinish.ground;prepareSurfaceGeometry(map,tiles.geometry);resources.push(...surfaceFinish.resources);}
+    resources.push(tiles.geometry);if(!surfaceFinish)resources.push(tiles.material);
+    const skirt = createTerrainSkirt(map);
+    if(surfaceFinish){skirt.material.dispose();skirt.material=surfaceFinish.cutaway;prepareSurfaceGeometry(map,skirt.geometry,{cutaway:true});}
+    group.add(skirt);resources.push(skirt.geometry);if(!surfaceFinish)resources.push(skirt.material);
   }
   // Visual base ends below y=0; the authoritative playable plane stays unchanged.
   for (const [height, y, hex] of (map.elevation ? [] : [[0.18, -0.10, 0x735338], [0.50, -0.44, 0x4b5145]])) {
@@ -201,6 +208,7 @@ export function createMapView(map) {
   function syncFire(simulation) {
     for (const index of simulation.takeChanges()) {
       const cell = simulation.cells[index];
+      surfaceFinish?.setFireState(index,cell.state);
       tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index], index)), cell.state === 'unburned');
       tiles.instanceColor.addUpdateRange(index * 3, 3);
       tiles.instanceColor.needsUpdate = true;
@@ -226,6 +234,7 @@ export function createMapView(map) {
         decoration.mesh.instanceMatrix.needsUpdate = true;
       }
     }
+    surfaceFinish?.flush();
     marker.visible = simulation.selected !== null && !simulation.started;
     if (simulation.selected !== null) {
       const x = simulation.selected % map.width;

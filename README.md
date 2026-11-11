@@ -10,6 +10,8 @@ Normal local environments now use **forest-environment-v8: 104×104 cells**, cel
 
 The published checkpoint remains `5a183e9` (64×64 v5); these larger maps are the validated local adaptation. The authored two-route fixture at `?map=fixed` and historical benchmark stay 64×64. Historical generated examples below are explicitly **v5**, not current v8 coordinates/timings. The pure `createGeneratedMapV5(seed)`, `createGeneratedMapV6(seed)` and `createGeneratedMapV7(seed)` regression paths preserve those environments without duplicating the application. See [seeded environment](docs/seeded-environment.md).
 
+**Beta surface integration (local, awaiting human validation):** generated environments now share the prototype’s regional woodland/meadow, earth/litter, dirt/gravel trail, weathered face and layered cutaway treatments. Burning/hot/cooled ground overrides the regional finish; reset restores it. Brown woodland or exposed slopes can contain fuel; bare paths and sandy clearings do not. The torch cursor verifies eligibility. Vegetation artwork/placement, generator, simulation and navigation are unchanged; improved vegetation is the next separate increment. See [Beta surface integration](docs/beta-surfaces.md).
+
 Single ignition, fire lifecycle, Global/Local awareness, agent state machine, entry/tour/results and reset controls remain. FireFront is illustrative and does not implement every semester feature or calibrated wildfire physics.
 
 ## Prerequisites and installation
