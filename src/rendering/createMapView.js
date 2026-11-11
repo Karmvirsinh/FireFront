@@ -1,3 +1,4 @@
+import {createVegetationView} from './createVegetationView.js';
 import {createSurfaceMaterials} from './surfaceMaterials.js';
 import {prepareSurfaceGeometry} from './prepareSurfaceGeometry.js';
 import { createCanopyLayout } from './createCanopyLayout.js';
@@ -79,73 +80,78 @@ export function createMapView(map) {
     group.add(base);
     resources.push(geometry, material);
   }
-  const brush = [];
-  const grass = [];
-  const forest = [];
-  const canopy = map.rendering?.canopyVersion ? new Map(createCanopyLayout(map).map(tree=>[tree.cell,tree])) : null;
-  const treeScales = [];
-  const rocks = [];
-  const decorationByCell = new Map();
-  const brushCells = [];
-  const grassCells = [];
-  const forestCells = [];
-  map.cells.forEach((cell, index) => {
-    const x = index % map.width;
-    const z = Math.floor(index / map.width);
-    color.setHex(groundColor(cell, index));
-    tiles.setColorAt(index, color);
-    if (cell.fuelType === 'brush' && x % 2 === 0 && z % 2 === 0) {
-      brush.push(positionFor(x, z, 0.16));
-      brushCells.push(index);
-    }
-    if (cell.fuelType === 'grass' && x % 2 === 0 && z % 2 === 0) {
-      grass.push(positionFor(x, z, 0.06));
-      grassCells.push(index);
-    }
-    if (cell.fuelType === 'forest' && (canopy ? canopy.has(index) : x % 2 === 0 && z % 2 === 0)) {
-      const tree=canopy?.get(index);
-      forest.push(positionFor(tree ? tree.x-.5 : x, tree ? tree.z-.5 : z, 0));
-      treeScales.push(tree ? new THREE.Vector3(tree.width,tree.height,tree.width) : new THREE.Vector3(1,1,1));
-      forestCells.push(index);
-    }
-    // Sparse visual rocks; all gray cells are blocked, even between rock meshes.
-    if (cell.terrain === 'obstacle' && x >= decorationBounds.x0 && x <= decorationBounds.x1
-      && z >= decorationBounds.z0 && z <= decorationBounds.z1
-      && x % 4 === 0 && z % 4 === 0) rocks.push(positionFor(x, z, 0.12));
+  // Current terrain-first environments adopt Beta artwork. Historical/fixed
+  // rendering fixtures keep their original decoration path for comparison.
+  const vegetationView=map.generation?.settings?.terrainFirst?createVegetationView(map):null;
+  const forestCells=[],decorationByCell=new Map(),rocks=[];
+  let treeHeight=1;
+  map.cells.forEach((cell,index)=>{
+    const x=index%map.width,z=Math.floor(index/map.width);
+    tiles.setColorAt(index,color.setHex(groundColor(cell,index)));
+    if(cell.terrain==='obstacle'&&x>=decorationBounds.x0&&x<=decorationBounds.x1&&z>=decorationBounds.z0&&z<=decorationBounds.z1&&x%4===0&&z%4===0)rocks.push(positionFor(x,z,.12));
   });
-  tiles.instanceColor.needsUpdate = true;
-  const shrubGeometry = new THREE.DodecahedronGeometry(0.23, 0);
-  shrubGeometry.scale(1, 0.65, 1);
-  const brushMesh = instances(shrubGeometry,
-    new THREE.MeshStandardMaterial({ color: 0x2f5638 }), brush);
-  const grassMesh = instances(new THREE.BoxGeometry(0.18, 0.12, 0.18),
-    new THREE.MeshStandardMaterial({ color: 0x72934c }), grass);
-  const trunkGeometry = new THREE.CylinderGeometry(0.045, 0.06, 0.4, 5);
-  trunkGeometry.translate(0, 0.2, 0);
-  const crownGeometry = new THREE.ConeGeometry(0.28, 0.75, 6);
-  crownGeometry.translate(0, 0.7, 0);
-  const trunks = instances(trunkGeometry, new THREE.MeshStandardMaterial({ color: 0x71523b }), forest);
-  const crowns = instances(crownGeometry, new THREE.MeshStandardMaterial({ color: 0x244631 }), forest);
-  for (const mesh of [trunks,crowns]) {
-    treeScales.forEach((scale,i)=>{const matrix=new THREE.Matrix4();mesh.getMatrixAt(i,matrix);matrix.scale(scale);mesh.setMatrixAt(i,matrix);});
-    mesh.instanceMatrix.needsUpdate=true;
-  }
-  for (const [mesh, cells, name] of [[brushMesh, brushCells, 'brush'], [grassMesh, grassCells, 'grass'],
-    [trunks, forestCells, 'forest-trunks'], [crowns, forestCells, 'forest-crowns']]) {
-    mesh.name = name;
-    mesh.userData.fuelDecoration = true;
-    mesh.userData.cells = [...cells];
-    cells.forEach((cellIndex, instanceIndex) => {
-      const matrix = new THREE.Matrix4();
-      mesh.getMatrixAt(instanceIndex, matrix);
-      mesh.setColorAt(instanceIndex, color.setHex(0xffffff));
-      if (!decorationByCell.has(cellIndex)) decorationByCell.set(cellIndex, []);
-      decorationByCell.get(cellIndex).push({ mesh, instanceIndex, matrix });
+  tiles.instanceColor.needsUpdate=true;
+  if(vegetationView){group.add(vegetationView.group);forestCells.push(...vegetationView.treeCells);}
+  else {
+    const brush = [];
+    const grass = [];
+    const forest = [];
+    const canopy = map.rendering?.canopyVersion ? new Map(createCanopyLayout(map).map(tree=>[tree.cell,tree])) : null;
+    const treeScales = [];
+    const brushCells = [];
+    const grassCells = [];
+    map.cells.forEach((cell, index) => {
+      const x = index % map.width;
+      const z = Math.floor(index / map.width);
+      if (cell.fuelType === 'brush' && x % 2 === 0 && z % 2 === 0) {
+        brush.push(positionFor(x, z, 0.16));
+        brushCells.push(index);
+      }
+      if (cell.fuelType === 'grass' && x % 2 === 0 && z % 2 === 0) {
+        grass.push(positionFor(x, z, 0.06));
+        grassCells.push(index);
+      }
+      if (cell.fuelType === 'forest' && (canopy ? canopy.has(index) : x % 2 === 0 && z % 2 === 0)) {
+        const tree=canopy?.get(index);
+        forest.push(positionFor(tree ? tree.x-.5 : x, tree ? tree.z-.5 : z, 0));
+        treeScales.push(tree ? new THREE.Vector3(tree.width,tree.height,tree.width) : new THREE.Vector3(1,1,1));
+        forestCells.push(index);
+      }
     });
+    const shrubGeometry = new THREE.DodecahedronGeometry(0.23, 0);
+    shrubGeometry.scale(1, 0.65, 1);
+    const brushMesh = instances(shrubGeometry,
+      new THREE.MeshStandardMaterial({ color: 0x2f5638 }), brush);
+    const grassMesh = instances(new THREE.BoxGeometry(0.18, 0.12, 0.18),
+      new THREE.MeshStandardMaterial({ color: 0x72934c }), grass);
+    const trunkGeometry = new THREE.CylinderGeometry(0.045, 0.06, 0.4, 5);
+    trunkGeometry.translate(0, 0.2, 0);
+    const crownGeometry = new THREE.ConeGeometry(0.28, 0.75, 6);
+    crownGeometry.translate(0, 0.7, 0);
+    const trunks = instances(trunkGeometry, new THREE.MeshStandardMaterial({ color: 0x71523b }), forest);
+    const crowns = instances(crownGeometry, new THREE.MeshStandardMaterial({ color: 0x244631 }), forest);
+    for (const mesh of [trunks,crowns]) {
+      treeScales.forEach((scale,i)=>{const matrix=new THREE.Matrix4();mesh.getMatrixAt(i,matrix);matrix.scale(scale);mesh.setMatrixAt(i,matrix);});
+      mesh.instanceMatrix.needsUpdate=true;
+    }
+    for (const [mesh, cells, name] of [[brushMesh, brushCells, 'brush'], [grassMesh, grassCells, 'grass'],
+      [trunks, forestCells, 'forest-trunks'], [crowns, forestCells, 'forest-crowns']]) {
+      mesh.name = name;
+      mesh.userData.fuelDecoration = true;
+      mesh.userData.cells = [...cells];
+      cells.forEach((cellIndex, instanceIndex) => {
+        const matrix = new THREE.Matrix4();
+        mesh.getMatrixAt(instanceIndex, matrix);
+        mesh.setColorAt(instanceIndex, color.setHex(0xffffff));
+        if (!decorationByCell.has(cellIndex)) decorationByCell.set(cellIndex, []);
+        decorationByCell.get(cellIndex).push({ mesh, instanceIndex, matrix });
+      });
+    }
+
+    crownGeometry.computeBoundingBox();treeHeight=crownGeometry.boundingBox.max.y;
   }
   instances(new THREE.DodecahedronGeometry(0.22, 0),
     new THREE.MeshStandardMaterial({ color: 0x687276 }), rocks);
-
   function label(text, x, z, width) {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -199,9 +205,8 @@ export function createMapView(map) {
   marker.add(amber);
   marker.visible = false;
   group.add(marker);
-  crownGeometry.computeBoundingBox();
   const fireView = createFireView(map, {
-    treeCells: new Set(forestCells), treeHeight: crownGeometry.boundingBox.max.y,
+    treeCells: new Set(forestCells), treeHeight, vegetationPoses:vegetationView?.firePoses,
   });
   group.add(fireView.group);
 
@@ -209,6 +214,7 @@ export function createMapView(map) {
     for (const index of simulation.takeChanges()) {
       const cell = simulation.cells[index];
       surfaceFinish?.setFireState(index,cell.state);
+      vegetationView?.sync(index,cell.state);
       tiles.setColorAt(index, color.setHex(FIRE_COLORS[cell.state] ?? groundColor(map.cells[index], index)), cell.state === 'unburned');
       tiles.instanceColor.addUpdateRange(index * 3, 3);
       tiles.instanceColor.needsUpdate = true;
@@ -257,6 +263,7 @@ export function createMapView(map) {
     animate: fireView.animate,
     dispose() {
       fireView.dispose();
+      vegetationView?.dispose();
       group.children.forEach((child) => { if (child.isInstancedMesh) child.dispose(); });
       resources.forEach((resource) => resource.dispose());
     },

@@ -47,3 +47,5 @@ Leave changes uncommitted for human validation. Next separately authorized incre
 ## User validation / checkpoint
 
 The user reports all four surface-integration checklist items passed. No exact timings or additional checks are inferred. Save the validated surface increment as `feat: integrate regional terrain materials with fire lifecycle`. Vegetation integration is a separate increment and does not retroactively alter these results.
+
+The surface implementation is now checkpointed as **9439bd6** after the user-reported checklist passes. Its earlier uncommitted handoff is historical. Subsequent vegetation work is documented separately in [Beta vegetation](beta-vegetation.md).

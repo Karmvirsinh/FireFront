@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Rendering only: no clocks, fuel consumption, or random numbers enter the simulation.
-export function createFireView(map, { treeCells, treeHeight }) {
+export function createFireView(map, { treeCells, treeHeight, vegetationPoses = null }) {
   const group = new THREE.Group();
   const burning = new Set();
   const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
@@ -43,7 +43,8 @@ export function createFireView(map, { treeCells, treeHeight }) {
   coreGeometry.translate(0, 0.11, 0.025);
   const cores = batch('fire-cores', coreGeometry, 0xffe19a);
   // A separate surrounding cluster reaches the crown at actual tree models only.
-  // Open gaps preserve the standing silhouette; all tongues stay inside the cell.
+  // Open gaps preserve the standing silhouette. Beta poses scale the cluster
+  // to its actual tree within the layout’s trail/endpoint clearance.
   const treeFlames = batch('tree-flames', tongues([
     [0, 0.13, treeHeight * 1.05 - 0.015, 0.11],
     [-0.11, -0.08, treeHeight * 0.95 - 0.015, 0.12],
@@ -88,9 +89,12 @@ export function createFireView(map, { treeCells, treeHeight }) {
     }
     const slot = mesh.userData.cells ? treeSlots.get(index) : index;
     if (slot === undefined) return;
-    transform.position.set((index % map.width + 0.5 - map.width / 2) * map.cellSize, sampleTerrainHeight(map,index % map.width + .5,Math.floor(index/map.width)+.5),
-      (Math.floor(index / map.width) + 0.5 - map.height / 2) * map.cellSize);
-    transform.scale.set(1, scale, 1);
+    const pose=vegetationPoses?.get(index),gx=pose?.gx??index%map.width+.5,gz=pose?.gz??Math.floor(index/map.width)+.5;
+    transform.position.set((gx-map.width/2)*map.cellSize,sampleTerrainHeight(map,gx,gz),(gz-map.height/2)*map.cellSize);
+    const tree=treeCells.has(index);
+    const height=pose?(tree?pose.height/treeHeight:Math.max(.7,pose.height/.32)):1;
+    const width=pose?(tree?Math.min(1.8,pose.radius*.7/.24):Math.max(.65,Math.min(1.5,pose.radius/.24))):1;
+    transform.scale.set(width,scale*height,width);
     transform.updateMatrix();
     mesh.setMatrixAt(slot, active ? transform.matrix : hidden);
     mesh.instanceMatrix.addUpdateRange(slot * 16, 16);
