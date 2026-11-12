@@ -1250,3 +1250,24 @@ Human checklist (pending):
 
 The user reports interaction checks passed, but rejects the production ground appearance: square-edged bare soil across clearings, hilltops and slopes exposes the logical grid. This checkpoint preserves the integrated Smooth257 terrain, curated Kenney woodland, shadows and validated bare-face fire fix. Overall ground/landscape appearance is not accepted. Next bounded work traces generation and shared material coverage against the accepted comparison; no vegetation, shape or lighting redesign.
 
+
+
+## 2026-11-12 — Continuous production ground correction (visually accepted)
+
+- Preserved all integration work on codex/production-woodland-integration at **ced9179** (`feat: integrate curated woodland and fine terrain surface`). User-reported interaction passes are recorded; ground appearance was rejected. This correction remains uncommitted.
+- Traced both generation and rendering: continuous clearing noise was rasterized, and production's final nearest-category grass/soil/rock replacement discarded the shared continuous comparison finish. Every obstacle also acquired a bedrock stamp. The problem was not insufficient mesh resolution or missing textures.
+- Fine production now uses continuous distance-to-nonfuel-union shoulders with the accepted regional/triplanar and slope-informed earth/rock treatment. Nonfuel interiors remain completely bare; only explicit exposed landform faces contribute mineral coverage. Loose obstacles retain compatible earth and original boulders. Exact trail/endpoint/fire masks, mineral ignition rejection and vegetated-slope spread remain. No cells, generator version, terrain, vegetation, lighting, navigation or simulation rules changed.
+- **12/12 focused tests passed** sequentially, including new bare-interior/edge/continuity checks and existing fine terrain, woodland lifecycle and bare-face fire regressions. Production build passes108modules; diff checks pass. No full-suite repeat or benchmark capture was needed for this rendering-only correction.
+- Latest shared image identifies seed34, but no exact offending ground coordinate was reported. Before/after seed34 captures use identical640×480 canvas/camera/light/color and shadows-off comparison mode; accepted Mixed34/257/Smooth reviewed under matched lighting/scale. Different layouts are not claimed as identical geometry. Production seed0 also inspected with ordinary shadows/close zoom. Square bare stamps are replaced by continuous shoulders; trails remain visibly distinct. The user subsequently reviewed and accepted the corrected ground appearance/blending.
+
+See [pipeline findings and checks](production-woodland-integration.md#ground-integration-correction-2026-11-12-uncommitted-review). Final production interaction observations follow below.
+
+
+Final browser observations: rebuilt preview seed0/(6,77) selected the same logical cell, started fire/evacuation, and reached burned-cool. Reset restored20waiting, original ground/plants and unlocked setup while preserving zoom. After zoom, road and bare-face rejection passed and fuel at(22,55) remained selectable. R works; narrow390×740 has one canvas and no horizontal overflow. Development seed34 and rebuilt preview seed0 consoles were clear. No complete evacuation run was repeated for this material-only change; the preceding checkpoint's recorded completion evidence remains historical evidence. Final mask construction precomputes source flags to avoid temporary arrays in its inner loop; the2targeted coverage/reset tests and build passed again after that equivalent allocation cleanup.
+
+Review links remain Development http://127.0.0.1:5178/FireFront/ and Production preview http://127.0.0.1:4178/FireFront/ . Pending human checklist: inspect seed34/0 clearing shoulders and exposed crest/base transitions up close; confirm bare interiors remain bare and trails distinct; check ignition rejection/picking, lifecycle and reset. The comparison remains accessible at asset-terrain-comparison.html. Correction uncommitted; no merge/push/deploy or unrelated work.
+
+
+## 2026-11-12 — Ground correction accepted/checkpointed
+
+User-reported human visual acceptance of the corrected production ground/blending is confirmed. This supersedes that correction’s earlier pending visual status; automated focused tests, build and diff checks passed as recorded. No additional human checks are inferred. Ground correction is checkpointed separately before selectable planners, multiple endpoints and nonburnable functional buildings.

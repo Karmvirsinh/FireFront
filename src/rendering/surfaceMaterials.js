@@ -3,6 +3,7 @@ import {createNoise2D} from 'simplex-noise';
 import {seedStream} from '../world/generation/seed.js';
 import {createGroundTreatment} from './groundTreatment.js';
 import {createSurfaceRegions} from './surfaceRegions.js';
+import {createSurfaceCoverage} from './surfaceCoverage.js';
 
 // Original generated artwork: no external textures or simulation random streams.
 // Detail differs by substrate; fine marks are sparse, not full-surface spray.
@@ -92,7 +93,9 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
    if(name==='fire')fireTexture=t;else logicalTexture=t;
   }
  }
- const treatment=new THREE.DataTexture(createGroundTreatment(map),map.width,map.height);
+ const continuous=simulator&&!!map.elevation?.surface;
+ const substrate=continuous?createSurfaceCoverage(map):{data:createGroundTreatment(map),width:map.width,height:map.height};
+ const treatment=new THREE.DataTexture(substrate.data,substrate.width,substrate.height);
  treatment.magFilter=treatment.minFilter=THREE.LinearFilter;treatment.needsUpdate=true;resources.push(treatment);
  const common=`varying vec3 vStudyPosition; varying vec3 vStudyNormal; varying float vStudyDepth;`;
  const definitions=`${common}
@@ -155,13 +158,24 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
      habitat=mix(habitat,bedrock,bed*.8);
      habitat=mix(habitat,rockColor,rock);
 
-     // Fuel must read as continuous vegetated/leaf-litter cover, never bare rock.
-     if(kind<.5)surface=${map.generation?.settings?.surfaceFuelVersion ? 'mix(floorColor,meadow,rock*.55)' : 'habitat'};
+     // The fine production surface shares the comparison's regional floor and
+     // slope material expressions. Logical codes gate safety/state, not soil
+     // colors: continuous distance shoulders hide raster edges without painting
+     // green over any nonfuel interior. Explicit landform faces, not scattered
+     // obstacle cells, own the coherent exposed-rock treatment.
+     ${continuous?`float bareCover=shoulder.r;
+     if(kind>1.5&&kind<3.5)bareCover=1.0;
+     vec3 continuousFloor=mix(floorColor,bareFloor,bareCover);
+     continuousFloor=mix(continuousFloor,rockColor,shoulder.g*bareCover*(.18+.82*rock));
+     surface=continuousFloor;
+     if(kind>.5&&kind<1.5)surface=trail;
+     else if(kind>3.5&&kind<4.5)surface=vec3(.278,.557,.796);
+     else if(kind>4.5)surface=vec3(.333,.714,.608);`:`if(kind<.5)surface=${map.generation?.settings?.surfaceFuelVersion ? 'mix(floorColor,meadow,rock*.55)' : 'habitat'};
      else if(kind<1.5)surface=trail;
      else if(kind<2.5)surface=mix(bareFloor,gravel*.87,.10+region.b*.08);
      else if(kind<3.5)surface=mix(bedrock,rockColor,rock);
      else if(kind<4.5)surface=vec3(.278,.557,.796);
-     else surface=vec3(.333,.714,.608);
+     else surface=vec3(.333,.714,.608);`}
      float fire=floor(texture2D(studyFire,uv).r*255.0+.5);
      if(fire>.5&&fire<1.5)surface=vec3(.404,.282,.184);
      else if(fire<2.5&&fire>1.5)surface=vec3(.200,.165,.161);
@@ -170,7 +184,7 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
     diffuseColor.rgb=pow(mix(surface,cutColor,studyCut),vec3(2.2));
    `);
   };
-  m.customProgramCacheKey=()=>`study-material-v5-${cut}-${simulator}`;resources.push(m);return m;
+  m.customProgramCacheKey=()=>`study-material-v6-${cut}-${simulator}-${continuous}`;resources.push(m);return m;
  }
  return {ground:material(),cutaway:material(true),resources,
   setFireState(index,state){

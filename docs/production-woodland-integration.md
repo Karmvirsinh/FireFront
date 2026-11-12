@@ -154,3 +154,58 @@ Human review: inspect seeds0/2/7/34; compare size against agents/trails; test pi
 after pan/orbit; watch burning, burnout/cooling and reset; check regeneration and
 narrow layout. Existing original boulders and accepted ground materials should
 remain. No new human passes or complete performance validation are claimed.
+
+
+## Ground integration correction (2026-11-12, visually accepted)
+
+The production integration was preserved at **ced9179**, `feat: integrate curated
+woodland and fine terrain surface`. The user reports interaction checks passed,
+but rejected the square-edged ground appearance. This is not final visual acceptance.
+
+Pipeline diagnosis:
+- Both pages already use the same triplanar artwork, continuous slope-based
+  earth/stone blend, regional woodland colors and layered cutaway shader.
+- Comparison coverage/region maps use linear filtering and keep that continuous
+  surface result. Production adds nearest-filtered logical and fire textures.
+  Its final category switch replaced the surface with grass/earth/rock separately
+  for every cell, overriding the continuous treatment. Finer mesh sampling did
+  not remove those categorical color edges.
+- Clearing classification originates in continuous seeded forest/noise fields,
+  then is rasterized to logical cells. Independent obstacle noise adds nonfuel
+  cells; treating every such cell as gray bedrock produced unrelated stamps.
+  Explicit mineral faces already have terrain-informed surfaceReason metadata.
+  No new misplaced terrain feature or vegetation-generation defect was found.
+
+Correction:
+- Fine production now keeps the shared regional floor/rock expressions. A
+  deterministic 416×416 coverage texture measures Euclidean distance to the
+  union of actual nonfuel cell rectangles, with continuous outward shoulders.
+  It is not a blur/interpolation of categorical codes. Bare interiors and their
+  boundaries stay fully bare; the transition extends into neighboring ground.
+- Only explicitly exposed landform faces contribute mineral coverage. Loose
+  obstacle cells retain compatible bare earth beneath the original boulders,
+  rather than painting isolated gray squares. Surface normals control the
+  shared earth-to-rock transition on those faces; gentle vegetated slopes retain
+  their regional floor. No extra spray noise or global brown tint was added.
+- Trail/endpoint and fire-state masks remain exact and nearest-filtered. Fuel,
+  walkability, terrain heights, placement, lighting, shadows and geometry remain
+  unchanged. No generator version change is needed: v12 maps and simulation
+  outcomes are unchanged. Legacy/fixed fixtures and the comparison retain their
+  existing material branches. The validated mineral/nonfuel ignition rule remains.
+
+Verification: **12/12 focused tests** passed (about 41 s): nonfuel interiors/edges,
+continuous shoulders, mineral versus loose-blocker coverage, immutable maps,
+lifecycle/reset textures, fine-surface picking/slope/connectivity, woodland
+ownership/determinism and historical bare-face fire regressions. Production build
+passed (108 modules); diff checks passed. Existing size warnings remain visible.
+No new benchmark or asset investigation was performed.
+
+The latest handoff image identifies seed34; no exact offending ground coordinate
+was supplied. Seed34 was compared before/after at the same 640×480 canvas,
+comparison camera, light/color settings and shadows off. Accepted Mixed/34 at
+257/Smooth was inspected under the same presentation settings, with equal wheel
+zoom for close inspection. These are different landscape layouts, not identical
+geometry; matched lighting/scale supports a material comparison only. Seed0 was
+also checked with ordinary production shadows at overview/close range.
+
+Human validation update: the user reviewed and accepted the corrected production ground appearance/blending. The earlier pending visual status for this correction is superseded. No additional manual checks are inferred.
