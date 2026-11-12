@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import {createTreeArtwork,createGrassArtwork,createBrushArtwork} from './vegetationArtwork.js';
 import {createVegetationLayout} from './createVegetationLayout.js';
+import {createKenneyVegetationView} from './createKenneyVegetationView.js';
 
 export function createVegetationView(map){
+ if(map.rendering?.woodlandArtwork==='kenney-woodland-v1')return createKenneyVegetationView(map);
  const group=new THREE.Group();group.name='beta-vegetation';
  const resources=new Set(),meshes=[],byCell=new Map(),firePoses=new Map(),layout=createVegetationLayout(map);
  const artMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1});resources.add(artMaterial);

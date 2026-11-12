@@ -1,5 +1,7 @@
-import { GENERATOR_SETTINGS, GENERATOR_VERSION, V8_SETTINGS, V8_VERSION, V9_SETTINGS, V9_VERSION, V10_SETTINGS, V10_VERSION, seedStream } from './seed.js';
+import { GENERATOR_SETTINGS, GENERATOR_VERSION, V8_SETTINGS, V8_VERSION, V9_SETTINGS, V9_VERSION, V10_SETTINGS, V10_VERSION, V11_SETTINGS, V11_VERSION, seedStream } from './seed.js';
 import {applySurfaceFuelCover} from './surfaceFuelCover.js';
+import {woodlandCharacter} from './woodlandCharacter.js';
+import {createFineComposedTerrain} from './createFineComposedTerrain.js';
 import { createComposedTerrain } from './createComposedTerrain.js';
 import { createTerrainStructure } from './createTerrainStructure.js';
 import { createTerrainRouting } from './trailTerrain.js';
@@ -19,7 +21,7 @@ export function buildTerrainCandidate(seed,attempt,settings=GENERATOR_SETTINGS,t
   // terrain streams never consume vegetation/rock/path randomness.
   const terrainSeedAttempt=Math.floor(attempt/8);
   const cached=terrainCache?.get(terrainSeedAttempt);
-  base.elevation=cached?.elevation??(historical?createTerrainStructure(base,seed,terrainSeedAttempt*12):createComposedTerrain(base,seed,terrainSeedAttempt,!legacyComposition));
+  base.elevation=cached?.elevation??(historical?createTerrainStructure(base,seed,terrainSeedAttempt*12):settings.surfaceCorners?createFineComposedTerrain(base,seed,terrainSeedAttempt):createComposedTerrain(base,seed,terrainSeedAttempt,!legacyComposition));
   base.elevation.generation={...base.elevation.generation,version:historical?'terrain-routed-v4':settings.terrainVersion,terrainFirst:true,
     routingAttempt:terrainSeedAttempt,gradingMaxDisplacement:0};
   const routing=cached?.routing??createTerrainRouting(base);
@@ -44,10 +46,10 @@ export function buildTerrainCandidate(seed,attempt,settings=GENERATOR_SETTINGS,t
   for(const [name,zone] of Object.entries(endpoints.zones))for(let z=zone.z0;z<=zone.z1;z++)for(let x=zone.x0;x<=zone.x1;x++)
     cells[z*settings.width+x]={terrain:name==='start'?'start':'safe',fuelType:'none',walkable:true};
   const map={...base,...endpoints,cells,name:`Seed ${seed}`,
-    generation:{seed,version:historical?V8_VERSION:legacyComposition?V9_VERSION:settings===V10_SETTINGS?V10_VERSION:GENERATOR_VERSION,settings:{...settings},attempt},
+    generation:{seed,version:historical?V8_VERSION:legacyComposition?V9_VERSION:settings===V10_SETTINGS?V10_VERSION:settings===V11_SETTINGS?V11_VERSION:GENERATOR_VERSION,settings:{...settings},attempt},
     pathNetwork:{widthCells:1,nodes:network.nodes,centerlines:network.centerlines,connections:network.connections,trailCells:[...network.cells].sort((a,b)=>a-b)},
     navigation:{mode:'path-first',allowedCells:cells.map(c=>['route','start','safe'].includes(c.terrain))},
-    rendering:{canopyVersion:settings.canopyVersion,canopySeed:seed,compactEndpoints:true,terrainColors:{route:0x806247,clearing:historical?0xc4b38b:0x9b896e},labels:[
+    rendering:{...(settings.woodlandArtwork?{woodlandArtwork:settings.woodlandArtwork,woodlandCharacter:woodlandCharacter(seed)}:{}),canopyVersion:settings.canopyVersion,canopySeed:seed,compactEndpoints:true,terrainColors:{route:0x806247,clearing:historical?0xc4b38b:0x9b896e},labels:[
       {text:'START',x:start.x,z:start.z+2.5,width:2.7},{text:'SAFE',x:safeZone.x,z:safeZone.z+1.5,width:2.7}]}};
   return settings.surfaceFuelVersion?applySurfaceFuelCover(map):map;
 }
@@ -55,3 +57,5 @@ export function buildTerrainCandidate(seed,attempt,settings=GENERATOR_SETTINGS,t
 export const buildTerrainCandidateV9=(seed,attempt)=>buildTerrainCandidate(seed,attempt,V9_SETTINGS);
 
 export const buildTerrainCandidateV10=(seed,attempt)=>buildTerrainCandidate(seed,attempt,V10_SETTINGS);
+
+export const buildTerrainCandidateV11=(seed,attempt)=>buildTerrainCandidate(seed,attempt,V11_SETTINGS);

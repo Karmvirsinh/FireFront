@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Matrix4,Vector3} from 'three';
-import {createGeneratedMap} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV11 as createGeneratedMap} from '../src/world/generation/createGeneratedMap.js';
 import {sampleTerrainHeight} from '../src/world/terrain.js';
 import {createVegetationView} from '../src/rendering/createVegetationView.js';
 import {createFireView} from '../src/rendering/createFireView.js';

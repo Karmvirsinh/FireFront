@@ -1,12 +1,12 @@
 import { createTerrainGeometry } from './terrainGeometry.js';
 import { Mesh, MeshBasicMaterial, Plane, Raycaster, Vector2, Vector3 } from 'three';
 
-export function createGroundPicker(camera, canvas, map) {
+export function createGroundPicker(camera, canvas, map, groundMesh=null) {
   const raycaster = new Raycaster();
   const pointer = new Vector2();
   const ground = new Plane(new Vector3(0, 1, 0), 0);
   const hit = new Vector3();
-  const surface = map.elevation ? new Mesh(createTerrainGeometry(map),new MeshBasicMaterial()) : null;
+  const surface = groundMesh??(map.elevation ? new Mesh(createTerrainGeometry(map),new MeshBasicMaterial()) : null);
   const pick = (clientX, clientY) => {
     const rect = canvas.getBoundingClientRect();
     if (clientX < rect.left || clientX >= rect.left + rect.width
@@ -25,6 +25,6 @@ export function createGroundPicker(camera, canvas, map) {
     const z = Math.floor(hit.z / map.cellSize + map.height / 2);
     return x >= 0 && x < map.width && z >= 0 && z < map.height ? z * map.width + x : null;
   };
-  pick.dispose = () => { surface?.geometry.dispose(); surface?.material.dispose(); };
+  pick.dispose = () => { if(!groundMesh){surface?.geometry.dispose(); surface?.material.dispose();} };
   return pick;
 }

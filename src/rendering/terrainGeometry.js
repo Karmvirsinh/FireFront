@@ -1,7 +1,13 @@
 import * as THREE from 'three';
-import { sampleTerrainHeight } from '../world/terrain.js';
+import { sampleTerrainHeight,renderTerrainMap } from '../world/terrain.js';
 
 export function createTerrainGeometry(map) {
+  if(map.elevation?.surface){
+    const s=renderTerrainMap(map),positions=[],indices=[];
+    for(let z=0;z<=s.height;z++)for(let x=0;x<=s.width;x++)positions.push((x-s.width/2)*s.cellSize,sampleTerrainHeight(s,x,z),(z-s.height/2)*s.cellSize);
+    for(let z=0;z<s.height;z++)for(let x=0;x<s.width;x++){const a=z*(s.width+1)+x,b=a+s.width+1;indices.push(a,b,b+1,a,b+1,a+1);}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return g;
+  }
   const positions = [];
   for (let z = 0; z < map.height; z++) for (let x = 0; x < map.width; x++) {
     for (const [dx,dz] of [[0,0],[0,1],[1,1],[0,0],[1,1],[1,0]]) {
@@ -17,6 +23,13 @@ export function createTerrainGeometry(map) {
 
 export function createTerrainTiles(map) {
   const geometry = createTerrainGeometry(map);
+  if(map.elevation?.surface){
+    // Fine vertices do not align with104logical cells. Category/fire colors are
+    // authoritative nearest-filtered shader textures, not per-vertex painting.
+    const logical=new Float32Array(map.cells.length*3),mesh=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial());
+    mesh.setColorAt=(i,c)=>{logical.set(c.toArray(),i*3);};mesh.getColorAt=(i,c)=>c.fromArray(logical,i*3);
+    mesh.instanceColor={addUpdateRange(){},set needsUpdate(v){}};return mesh;
+  }
   const colors = new THREE.Float32BufferAttribute(new Float32Array(map.cells.length*18),3);
   geometry.setAttribute('color',colors);
   const mesh = new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({vertexColors:true}));
@@ -39,6 +52,7 @@ export function createTerrainTiles(map) {
 }
 
 export function createTerrainSkirt(map) {
+  map=renderTerrainMap(map);
   const positions=[];
   const bottom=Math.min(...map.elevation.cornerHeights)-.69;
   const point=(x,z,y)=>[(x-map.width/2)*map.cellSize,y,(z-map.height/2)*map.cellSize];

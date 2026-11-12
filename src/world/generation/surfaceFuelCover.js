@@ -2,6 +2,7 @@ import {createNoise2D} from 'simplex-noise';
 import {seedStream} from './seed.js';
 import {sampleTerrainHeight,terrainCellGradients} from '../terrain.js';
 import {nearestOnLine,polygonDistance,positiveHeight} from './landformComposition.js';
+import {continuousRidge} from './continuousLandforms.js';
 
 export const SURFACE_FUEL_VERSION='landform-cover-v1';
 // This independent substrate setting is NOT the agent walking limit. A slope
@@ -21,7 +22,7 @@ export function mineralFaceReason(map,index,noise=()=>0){
   if(slope>MINERAL_FACE_MIN_DEGREES&&q.distance>width*.45&&q.distance<width*1.05&&height<bed+.6)return 'exposed-cut-bank';
  }
  if(slope<=MINERAL_FACE_MIN_DEGREES)return null;
- const contributions=(plan.raised??[]).map(p=>positiveHeight(p,x,z,noise));
+ const contributions=(plan.raised??[]).map(p=>map.elevation?.surface&&p.type==='ridge'?continuousRidge(p,x,z):positiveHeight(p,x,z,noise));
  const highest=Math.max(0,...contributions);
  for(const [feature,p] of (plan.raised??[]).entries()){
   // A buried feature must not strip vegetation from another landform above it.

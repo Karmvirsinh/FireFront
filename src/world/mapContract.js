@@ -87,7 +87,7 @@ export function getCameraBounds(map) {
     x0 = Math.min(x0, x - label.width / 2); x1 = Math.max(x1, x + label.width / 2);
     z0 = Math.min(z0, z - label.width / 8); z1 = Math.max(z1, z + label.width / 8);
   }
-  const heights = map.elevation?.cornerHeights ?? [0];
+  const heights = map.elevation?.surface?.cornerHeights??map.elevation?.cornerHeights ?? [0];
   const minY=Math.min(...heights), maxY=Math.max(...heights);
   return { centerY:(minY+maxY)/2, relief:maxY-minY, worldWidth: map.width * map.cellSize, worldDepth: map.height * map.cellSize,
     framing: { width: x1 - x0 + 3, depth: z1 - z0 + 2,

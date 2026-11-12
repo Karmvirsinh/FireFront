@@ -1,8 +1,8 @@
-import { buildTerrainCandidate, buildTerrainCandidateV8, buildTerrainCandidateV9, buildTerrainCandidateV10 } from './buildTerrainCandidate.js';
+import { buildTerrainCandidate, buildTerrainCandidateV8, buildTerrainCandidateV9, buildTerrainCandidateV10, buildTerrainCandidateV11 } from './buildTerrainCandidate.js';
 import { createTerrainStructure } from './createTerrainStructure.js';
 import { createForestVegetation } from './createForestVegetation.js';
 import { createTerrainV1 } from './createTerrainV1.js';
-import { normalizeSeed, seedStream, GENERATOR_SETTINGS, V8_SETTINGS, V9_SETTINGS, V10_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION, V7_SETTINGS, V7_VERSION } from './seed.js';
+import { normalizeSeed, seedStream, GENERATOR_SETTINGS, V8_SETTINGS, V9_SETTINGS, V10_SETTINGS, V11_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION, V7_SETTINGS, V7_VERSION } from './seed.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
@@ -75,3 +75,5 @@ export const createGeneratedMapV8 = value => createGeneratedMap(value, buildTerr
 export const createGeneratedMapV9=value=>createGeneratedMap(value,buildTerrainCandidateV9,V9_SETTINGS);
 
 export const createGeneratedMapV10=(value,factory=buildTerrainCandidateV10)=>createGeneratedMap(value,factory,V10_SETTINGS);
+
+export const createGeneratedMapV11=(value,factory=buildTerrainCandidateV11)=>createGeneratedMap(value,factory,V11_SETTINGS);

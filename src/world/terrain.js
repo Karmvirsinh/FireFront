@@ -11,13 +11,17 @@ export function validateTerrain(map) {
     || !Array.from(e.cornerHeights).every(Number.isFinite)) {
     throw new Error('Invalid map: elevation requires finite shared world-unit corner heights and nw-se triangulation');
   }
+  if(e.surface){const s=e.surface;if(!Number.isInteger(s.width)||!Number.isInteger(s.height)||s.width<1||s.height<1||s.units!=='world'||s.triangulation!==TERRAIN_TRIANGULATION||!Array.isArray(s.cornerHeights)||s.cornerHeights.length!==(s.width+1)*(s.height+1)||!s.cornerHeights.every(Number.isFinite)||Math.abs(s.cellSize*s.width-map.width*map.cellSize)>1e-8||Math.abs(s.cellSize*s.height-map.height*map.cellSize)>1e-8)throw new Error('Invalid authoritative terrain surface');}
 }
+
+export function renderTerrainMap(map){const s=map.elevation?.surface;return s?{width:s.width,height:s.height,cellSize:s.cellSize,elevation:s}:map;}
 
 // Continuous grid coordinates (agent positions already use this convention).
 // Outside positions clamp to the nearest boundary, useful for offset labels.
 export function sampleTerrainHeight(map, gridX, gridZ) {
   if (!Number.isFinite(gridX) || !Number.isFinite(gridZ)) throw new Error('Terrain coordinates must be finite');
   if (!map.elevation) return 0;
+  if(map.elevation.surface){const s=map.elevation.surface;return sampleTerrainHeight({width:s.width,height:s.height,elevation:{cornerHeights:s.cornerHeights}},gridX*s.width/map.width,gridZ*s.height/map.height);}
   const gx = Math.max(0, Math.min(map.width, gridX));
   const gz = Math.max(0, Math.min(map.height, gridZ));
   const x = Math.min(map.width - 1, Math.floor(gx));
@@ -34,6 +38,13 @@ export function sampleTerrainHeight(map, gridX, gridZ) {
 // atan(gradient) gives the steepest slope, not just a center-to-center estimate.
 export function terrainCellGradients(map, index) {
   if (!map.elevation) return [0, 0];
+  if(map.elevation.surface){
+    const s=map.elevation.surface,rx=s.width/map.width,rz=s.height/map.height,x=index%map.width,z=Math.floor(index/map.width),surface={width:s.width,height:s.height,cellSize:s.cellSize,elevation:{cornerHeights:s.cornerHeights}};let max=0;
+    // Conservative: every fine triangle whose cell intersects this logical cell.
+    // The grids need not divide evenly (256surface cells vs104logical cells).
+    for(let fz=Math.floor(z*rz);fz<Math.ceil((z+1)*rz-1e-10);fz++)for(let fx=Math.floor(x*rx);fx<Math.ceil((x+1)*rx-1e-10);fx++)max=Math.max(max,...terrainCellGradients(surface,fz*s.width+fx));
+    return [max,max];
+  }
   const x = index % map.width, z = Math.floor(index / map.width);
   const i = z * (map.width + 1) + x, stride = map.width + 1;
   const h = map.elevation.cornerHeights;

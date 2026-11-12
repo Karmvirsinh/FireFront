@@ -108,3 +108,8 @@ Current generated clearing palette is sandy beige #c4b38b, superseding the gray 
 Connection diagnostics still record Manhattan `directSteps`, pre-thinning `rasterSteps` and `nearbyFraction`, but limits are v4-specific: raster/chord at most 1.8, nearby fraction at most 0.35 (0.2 for loops), excluding four-cell junction approaches. Tree degree is at most three with at least one branch; extra forest links permit degree four. Loops also record `previousRouteLength`, the shortest existing abstract-graph distance in Euclidean edge units before adding the link. This is a graph usefulness check, not an agent route or performance measurement. Graph connectivity and actual cell BFS are validated independently.
 
 `generation.attempt` now identifies path-only retries. Endpoints, vegetation and rocks always use their seed's original attempt-zero independent streams; the shared namespace remains forest-paths-v1. New map identity is forest-network-v4. Fixed maps omit these optional fields and keep their exact previous behavior.
+
+
+## Optional fine authoritative surface (v12)
+
+`elevation.surface` may contain `{width,height,cellSize,units:'world',triangulation:'nw-se',cornerHeights}` spanning exactly the same world footprint. If present it supersedes the coarse reference corner array for all sampling/rendering/navigation. Missing surface preserves legacy behavior; missing elevation remains flat. Production104logical cells map to256surface cells by256/104, not an integer subdivision. sampleTerrainHeight handles this conversion; terrainCellGradients conservatively covers every intersecting fine triangle. Coarse reference samples remain plain data/compatibility metadata, not a second displayed surface. Fuel/walkability/nav cells remain104².

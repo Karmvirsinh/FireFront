@@ -1201,3 +1201,52 @@ Open `http://127.0.0.1:4173/`. Existing dependencies are installed; on a fresh c
 ## 2026-11-12 — Preservation checkpoint before selected production direction
 
 User prefers Smooth terrain with257corners and the adapted Kenney FireFront palette. Vegetation scale is tentative: evaluate on the full simulator, not a reason to globally shrink/thin. Checklist mostly passed, not blanket final acceptance. Original rocks/placement and validated bare-face fire fix remain required; rejected face formations stay removed. Current comparison/shadow work and its prerequisites are preserved together before expanding production integration. Next approved work: curated temperate asset roster, seeded regional woodland composition, lifecycle integration and genuine fine-field terrain with production20°routing validation. No merge/push/deployment.
+
+
+## 2026-11-12 — Curated production woodland and fine terrain (review pending)
+
+Preservation checkpoint: **ef0df4b**, `feat: checkpoint visual comparisons and shadow presentation`, on `codex/asset-terrain-comparison`. New integration branch: **codex/production-woodland-integration**. No merge, push or deployment. Prior validated bare-face fuel/fire fix and original boulders are retained; rejected rock formations remain removed.
+
+Feedback recorded accurately: Smooth/257 and Kenney FireFront colors are preferred; vegetation size is tentative and needs full-simulator review. Earlier comparison checklist mostly passed, not blanket final visual acceptance. No new human checks are claimed for this integration.
+
+Implemented:
+- Curated Nature Kit CC0 roster: **16 distinct tree silhouettes**, four low spreading shrubs and four grass/ground-cover forms. Imported source files remain byte-identical to the official archive, with license, hashes and source records. Runtime geometry is a small compiled selection. No new dependency or Gaea adoption.
+- Independent seeded woodland character (broadleaf/conifer/mixed/autumn), coherent regional family/season mixtures, species/age variation and existing irregular placement. Full tree radius clearance protects trails/endpoints. Source geometry height-normalized fingerprints distinguish all 16 silhouettes; recolors are not counted as species.
+- Instanced per-cell geometry, standing/darkened burning trees, exhausted remnants, grass/shrub burnout, model-aligned flames, cooling and exact reset restoration. Visual model choice leaves logical fuel/walkability unchanged.
+- **forest-woodland-v12 / simulator-continuous-surface-v3**: true analytic production field sampled at 257×257 shared corners, Smooth normals, unchanged 104×104 logical grid and 52-unit footprint. The shared continuous ridge/cut corrections are reused. Every height consumer and ground raycast uses the displayed surface; logical colors/state masks remain categorical at cell boundaries.
+- Terrain-first routing conservatively checks all overlapping fine triangles against production's **20°** rule before final network/spawn construction. No prototype 50° trial, blanket terrain grading or hidden coarse-only barrier checks. Layouts/ignition examples can change; v11 and earlier explicit regression paths remain. Authored flat map and historical benchmark are preserved.
+
+Actual automated checks:
+- Focused integration/historical tests: 12/12 and 13/13 passed.
+- Full suite, sequential once: **189/189 passed**, about 357 seconds. Production build passed (107 modules). No rules or test assertions weakened to obtain a pass.
+- Seeds 0, 2, 7, 34 and 2026: deterministic maps, finite surface, complete protected connections/spawns and fine-slope validation. Seeds 0/2/7/34 exercise all four woodland characters. Actual tree counts for 0/7/34/2026: 729/737/753/845, diagnostic rather than a visual acceptance claim.
+- New bounded scenario traces conserve 20 agents: seed 0/(70,41), Global at 180 s: 8 evacuating/12 trapped; Local: 20 evacuating. Seed 2/(83,23), both models at 180 s: 20 trapped. All first moved at 0.05 s and experienced trapping; none completed within the bound. No faster-completion promise is made.
+- Separate small fuel-island completion examples, Local: seed 0/(6,77) reaches 20 evacuated at 113.35 simulation seconds; seed 7/(24,97) at 157.35 s. These are complete-flow checks, not route-hazard demonstrations or FPS measurements. Old generated coordinates/timings are historical, not v12 results.
+
+Known limitations:
+- Seed 34 succeeds at attempt 60 but visibly pauses synchronous generation for several seconds. Bounded terrain/network retries preserve constraints rather than flattening away features. Generation responsiveness remains a limitation.
+- Main entry grows to 527.09 kB / 95.18 kB gzip (previous 84.59 / 31.51 kB). Existing shared/comparison chunk warnings remain visible, and main now also crosses Vite's default warning threshold. No threshold suppression or unrelated dependency changes.
+- Settled inspected preview readouts around 144 FPS are ordinary local observations only, not a new benchmark or a performance guarantee.
+
+See [full roster, contract and scenario evidence](production-woodland-integration.md). Final browser checks and human review checklist follow below. Overall vegetation scale, species mixture and landscape appearance remain pending human validation.
+
+
+Final browser review (automated interaction, not user validation):
+- Reused one tab and existing Development/preview servers. Production seeds 0, 2, 7 and 34 show broadleaf, autumn, conifer and mixed woodland respectively, including overview/close views, shadows and readable trail/agent footprints. Seed 34 completed after its noted generation pause; one canvas remained after replacement.
+- Production seed 0/(6,77), Local: selected exact visible ground cell, observed burning through burned-cool, and the results popup confirmed **20 evacuated, zero lost/trapped, 113.35 s**. Inspect scene works. Simulation reset restored 20 waiting agents, unlocked setup and restored plants while preserving the zoomed camera.
+- After zoom, fuel selection and single-marker movement worked; the visible trail and exposed face rejected ignition without moving the selection. A separate forest-floor ignition at (22,55) visibly spread into nearby woodland, showing standing darkened trees, flames and charred remnants. Reset during that run restored the scene. R returned the camera without resetting the run.
+- Narrow 390×740 stacked and scrolled without horizontal overflow; short 1280×650 retained usable overview and panel scrolling. Temporary viewport overrides were cleared.
+- Development entry/Skip, seed regeneration, fine-ground selection at (56,64), ignition/start lock and active-run reset passed. Both inspected consoles had no warning/error messages. Physical pan/orbit, final appearance and full-map vegetation scale remain for human review. No new benchmark capture was made.
+
+Current local URLs: Development http://127.0.0.1:5178/FireFront/ ; rebuilt Production preview http://127.0.0.1:4178/FireFront/ . All new integration remains uncommitted. Next task is human review, not another feature.
+
+Human checklist (pending):
+1. Compare seeds 0, 2, 7 and 34 at overview/close range: woodland character, tree/shrub variety, size versus agents/trails, shadows and original boulders.
+2. Move the camera physically, select fuel, reject a bare face/road, and confirm the marker/torch follow the visible fine surface.
+3. Start fire: standing trees darken, exhausted plants become remnants, cooling removes active flames/embers, and reset restores the original plants/ground while preserving camera.
+4. Check regeneration, narrow/short layout and consoles. Optional full-flow example: Local seed 0/(6,77), approximately 113 s; it is an isolated fuel patch, not a rerouting scenario.
+
+## 2026-11-12 — Production integration preservation before ground correction
+
+The user reports interaction checks passed, but rejects the production ground appearance: square-edged bare soil across clearings, hilltops and slopes exposes the logical grid. This checkpoint preserves the integrated Smooth257 terrain, curated Kenney woodland, shadows and validated bare-face fire fix. Overall ground/landscape appearance is not accepted. Next bounded work traces generation and shared material coverage against the accepted comparison; no vegetation, shape or lighting redesign.
+

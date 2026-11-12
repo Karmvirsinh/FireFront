@@ -49,7 +49,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
     onRendered(performance.now());
   });
 
-  const pickCell = createGroundPicker(camera, canvas, map);
+  const pickCell = createGroundPicker(camera, canvas, map,map.elevation?.surface?mapView.ground:null);
   return {
     setInteractionEnabled: navigation.setEnabled,
     performanceInfo() {

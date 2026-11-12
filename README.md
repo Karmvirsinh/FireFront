@@ -235,3 +235,33 @@ Gaea's educational/noncommercial provenance remains separate from Kenney CC0.
 Comparison correction: the65baseline now retains exact gallery face normals and original rock manifest. Fine procedural modes explicitly label continuous ridge-cap repairs; Gaea sampling stays separate. The neutral untouched Kenney source check is at `asset-terrain-comparison.html?modelCheck=1`; source turquoise is not silently recolored green. See the comparison document for findings and pending visual review.
 
 Presentation review: comparison terrain now defaults to Smooth, with an independent Faceted option at every mesh size. B uses a labelled FireFront natural palette; neutral source rendering remains available. Generated simulator/comparison shadows are restored with map-fitted coverage; simulation rules and historical fixture workloads remain unchanged. This work is uncommitted pending visual review.
+
+
+## Current production woodland integration (review pending)
+
+The current working branch is `codex/production-woodland-integration`, based on
+comparison/shadow checkpoint `ef0df4b`. Normal generated environments now use
+**forest-woodland-v12**: a 104×104 logical map with a genuinely sampled, Smooth
+257×257-corner terrain surface. Production trails retain the 20° limit; the
+prototype's 50° trial remains separate. New generated layouts differ from prior
+versions, so earlier ignition coordinates/timings are historical examples.
+
+Kenney Nature Kit CC0 vegetation uses 16 tree silhouettes, four low shrubs and
+four ground-cover forms, with seeded broadleaf, conifer, mixed and autumn woodland
+characters. Fire lifecycle, model ownership and reset follow the logical fuel
+cells; decorative species do not change fuel or traversal. Original boulders,
+accepted ground materials and the bare-face fire correction are retained.
+See [roster, terrain contract, checks and limitations](docs/production-woodland-integration.md).
+
+Use the existing commands: `npm ci`, `npm run dev -- --host 127.0.0.1`,
+`npm test -- --test-concurrency=1`, `npm run build`, then
+`npm run preview -- --host 127.0.0.1`. Vite prints the actual port. With the reused
+servers for this review, Development is http://127.0.0.1:5178/FireFront/ and
+Production preview is http://127.0.0.1:4178/FireFront/. Gallery and isolated
+comparison remain at `terrain-art.html` and `asset-terrain-comparison.html` under
+that base path; Gaea remains an authored comparison only.
+
+For a short complete-flow check, use Local / seed 0 / ignition (6,77): this small
+fuel island allows 20 evacuations at approximately 113.35 simulation seconds in
+automated tracing. It is not a rerouting demonstration. Larger fuel components
+can leave runs unfinished at 180 seconds; details are documented above.

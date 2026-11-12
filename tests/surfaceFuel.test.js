@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Matrix4,Vector3} from 'three';
 import {applySurfaceFuelCover} from '../src/world/generation/surfaceFuelCover.js';
-import {createGeneratedMap,createGeneratedMapV10} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV11 as createGeneratedMap,createGeneratedMapV10} from '../src/world/generation/createGeneratedMap.js';
 import {FIRE_CONFIG} from '../src/simulation/fireConfig.js';
 import {createFireSimulation} from '../src/simulation/createFireSimulation.js';
 import {createFireView} from '../src/rendering/createFireView.js';

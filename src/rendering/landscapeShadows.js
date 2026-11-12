@@ -16,7 +16,7 @@ export function configureLandscapeShadows(renderer,sun,map,{enabled=true}={}){
  if(renderer.shadowMap){renderer.shadowMap.enabled=enabled;renderer.shadowMap.type=PCFShadowMap;}
  sun.castShadow=enabled;
  if(!enabled)return {dispose(){}};
- const heights=map.displaySurface?.elevation?.cornerHeights??map.elevation?.cornerHeights??[0];
+ const heights=map.elevation?.surface?.cornerHeights??map.displaySurface?.elevation?.cornerHeights??map.elevation?.cornerHeights??[0];
  let low=Infinity,high=-Infinity;for(const h of heights){low=Math.min(low,h);high=Math.max(high,h);}
  const halfX=map.width*map.cellSize/2,halfZ=map.height*map.cellSize/2;
  // Full static map and upright canopy, rather than a camera-following crop.

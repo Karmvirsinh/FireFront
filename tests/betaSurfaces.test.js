@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGeneratedMap} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV11 as createGeneratedMap} from '../src/world/generation/createGeneratedMap.js';
 import {createMapView} from '../src/rendering/createMapView.js';
 import {createFireSimulation} from '../src/simulation/createFireSimulation.js';
 import {createSurfaceMaterials} from '../src/rendering/surfaceMaterials.js';

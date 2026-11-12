@@ -259,6 +259,7 @@ export function createMapView(map) {
 
   return {
     group,
+    ground:tiles,
     syncFire,
     animate: fireView.animate,
     dispose() {

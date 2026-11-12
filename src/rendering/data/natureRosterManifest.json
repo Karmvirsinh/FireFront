@@ -1,0 +1,170 @@
+[
+  {
+    "name": "tree_oak",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_default",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_detailed",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_simple",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_small",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 2.5,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_tall",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 3.9,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_thin",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 3.9,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_fat",
+    "kind": "tree",
+    "family": "broadleaf",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineGroundB",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineDefaultA",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineRoundA",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineRoundC",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 3.3,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineSmallA",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 2.5,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineTallA",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 3.9,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineTallA_detailed",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 3.9,
+    "radius": 1.25
+  },
+  {
+    "name": "tree_pineTallC",
+    "kind": "tree",
+    "family": "conifer",
+    "height": 3.9,
+    "radius": 1.25
+  },
+  {
+    "name": "plant_bush",
+    "kind": "brush",
+    "family": "brush",
+    "height": 0.45,
+    "radius": 0.29
+  },
+  {
+    "name": "plant_bushLarge",
+    "kind": "brush",
+    "family": "brush",
+    "height": 0.45,
+    "radius": 0.29
+  },
+  {
+    "name": "plant_bushLargeTriangle",
+    "kind": "brush",
+    "family": "brush",
+    "height": 0.45,
+    "radius": 0.29
+  },
+  {
+    "name": "plant_bushTriangle",
+    "kind": "brush",
+    "family": "brush",
+    "height": 0.45,
+    "radius": 0.29
+  },
+  {
+    "name": "grass",
+    "kind": "grass",
+    "family": "grass",
+    "height": 0.32,
+    "radius": 0.23
+  },
+  {
+    "name": "grass_large",
+    "kind": "grass",
+    "family": "grass",
+    "height": 0.32,
+    "radius": 0.23
+  },
+  {
+    "name": "plant_flatShort",
+    "kind": "grass",
+    "family": "grass",
+    "height": 0.32,
+    "radius": 0.23
+  },
+  {
+    "name": "plant_flatTall",
+    "kind": "grass",
+    "family": "grass",
+    "height": 3.9,
+    "radius": 0.23
+  }
+]
