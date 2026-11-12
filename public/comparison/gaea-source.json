@@ -1,0 +1,10 @@
+{
+  "source": "QuadSpinner Gaea 2.3.1 Community / bundled Sandstone Butte",
+  "file": "Sandstone_Out.png",
+  "sha256": "8bd68ddffe0af7b8463ccf5c267bf7c1aaf50af109ab9cfdc2a0cab8d031f94c",
+  "size": 512,
+  "encoding": "little-endian uint16, first image row = z0",
+  "worldWidth": 32,
+  "heightScale": 16,
+  "usage": "Local educational noncommercial comparison; see docs/gaea-trial.md"
+}

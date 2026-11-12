@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {createNoise2D} from 'simplex-noise';
 import {seedStream} from '../world/generation/seed.js';
+import {createGroundTreatment} from './groundTreatment.js';
 import {createSurfaceRegions} from './surfaceRegions.js';
 
 // Original generated artwork: no external textures or simulation random streams.
@@ -83,7 +84,7 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
  if(simulator){
   map.cells.forEach((cell,i)=>{
    const compactStart=cell.terrain==='start'&&i!==map.start.z*map.width+map.start.x;
-   kinds[i*4]=cell.terrain==='safe'?5:cell.terrain==='start'&&!compactStart?4:cell.fuelType!=='none'?0:['route','start'].includes(cell.terrain)?1:cell.terrain==='obstacle'?3:2;
+   kinds[i*4]=cell.terrain==='safe'?5:cell.terrain==='start'&&!compactStart?4:cell.fuelType!=='none'?0:['route','start'].includes(cell.terrain)?1:cell.terrain==='obstacle'||cell.surfaceCover==='mineral'?3:2;
    kinds[i*4+3]=states[i*4+3]=255;
   });
   for(const [name,bytes] of [['fire',states],['logical',kinds]]){
@@ -91,9 +92,11 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
    if(name==='fire')fireTexture=t;else logicalTexture=t;
   }
  }
+ const treatment=new THREE.DataTexture(createGroundTreatment(map),map.width,map.height);
+ treatment.magFilter=treatment.minFilter=THREE.LinearFilter;treatment.needsUpdate=true;resources.push(treatment);
  const common=`varying vec3 vStudyPosition; varying vec3 vStudyNormal; varying float vStudyDepth;`;
  const definitions=`${common}
- uniform sampler2D studyMeadow,studyDirt,studyForest,studyStone,studyGravel,studyCoverage,studyRegions,studyFire,studyLogical;
+ uniform sampler2D studyMeadow,studyDirt,studyForest,studyStone,studyGravel,studyCoverage,studyRegions,studyFire,studyLogical,studyTreatment;
  uniform vec2 studySize; uniform float studyCut,studySimulation;
  float artHash(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}
  float artField(vec2 q){vec2 i=floor(q),f=fract(q);f=f*f*(3.0-2.0*f);return mix(mix(artHash(i),artHash(i+vec2(1,0)),f.x),mix(artHash(i+vec2(0,1)),artHash(i+vec2(1)),f.x),f.y);}
@@ -104,7 +107,7 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
  function material(cut=false){
   const m=new THREE.MeshStandardMaterial({roughness:.96,side:THREE.DoubleSide});
   m.onBeforeCompile=shader=>{
-   Object.assign(shader.uniforms,{studyMeadow:{value:textures.meadow},studyDirt:{value:textures.dirt},studyForest:{value:textures.forest},studyStone:{value:textures.stone},studyCoverage:{value:coverage},studyRegions:{value:regions},studyGravel:{value:textures.gravel},studySize:{value:new THREE.Vector2(map.width*map.cellSize,map.height*map.cellSize)},studyCut:{value:cut?1:0},studySimulation:{value:simulator?1:0},studyFire:{value:fireTexture??coverage},studyLogical:{value:logicalTexture??coverage}});
+   Object.assign(shader.uniforms,{studyMeadow:{value:textures.meadow},studyDirt:{value:textures.dirt},studyForest:{value:textures.forest},studyStone:{value:textures.stone},studyCoverage:{value:coverage},studyRegions:{value:regions},studyGravel:{value:textures.gravel},studySize:{value:new THREE.Vector2(map.width*map.cellSize,map.height*map.cellSize)},studyCut:{value:cut?1:0},studySimulation:{value:simulator?1:0},studyFire:{value:fireTexture??coverage},studyLogical:{value:logicalTexture??coverage},studyTreatment:{value:treatment}});
    shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>\n${common}\nattribute float studyDepth; attribute vec3 studyBlendNormal;`).replace('#include <begin_vertex>',`#include <begin_vertex>\nvStudyPosition=(modelMatrix*vec4(position,1.0)).xyz;vStudyNormal=normalize(mat3(modelMatrix)*studyBlendNormal);vStudyDepth=studyDepth;`);
    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${definitions}`).replace('#include <color_fragment>',`
     vec3 p=vStudyPosition,n=normalize(vStudyNormal);
@@ -141,11 +144,22 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
     if(studySimulation>.5&&studyCut<.5){
      vec2 uv=p.xz/studySize+.5;
      float kind=floor(texture2D(studyLogical,uv).r*255.0+.5);
-     // Visual regional blending stays inside each authoritative category.
-     if(kind<.5)surface=mix(floorColor,rockColor,rock);
+     // Logical category/fire masks stay nearest-filtered. Only substrate shoulders
+     // blend spatially; all nonfuel interiors stay bare, with no meadow substitution.
+     vec2 shoulder=texture2D(studyTreatment,uv).rg;
+     float bare=smoothstep(.025,.5,shoulder.r+(broad-.5)*.035);
+     float bed=smoothstep(.03,.5,shoulder.g+(regional-.5)*.03);
+     vec3 bareFloor=mix(dirt*vec3(1.0,.98,.92),forest*1.08,.18+region.g*.18);
+     vec3 bedrock=mix(bareFloor,rockColor,.28+.32*regional);
+     vec3 habitat=mix(floorColor,bareFloor,bare*.88);
+     habitat=mix(habitat,bedrock,bed*.8);
+     habitat=mix(habitat,rockColor,rock);
+
+     // Fuel must read as continuous vegetated/leaf-litter cover, never bare rock.
+     if(kind<.5)surface=${map.generation?.settings?.surfaceFuelVersion ? 'mix(floorColor,meadow,rock*.55)' : 'habitat'};
      else if(kind<1.5)surface=trail;
-     else if(kind<2.5)surface=mix(dirt,vec3(.77,.70,.54),.78);
-     else if(kind<3.5)surface=rockColor;
+     else if(kind<2.5)surface=mix(bareFloor,gravel*.87,.10+region.b*.08);
+     else if(kind<3.5)surface=mix(bedrock,rockColor,rock);
      else if(kind<4.5)surface=vec3(.278,.557,.796);
      else surface=vec3(.333,.714,.608);
      float fire=floor(texture2D(studyFire,uv).r*255.0+.5);
@@ -156,7 +170,7 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
     diffuseColor.rgb=pow(mix(surface,cutColor,studyCut),vec3(2.2));
    `);
   };
-  m.customProgramCacheKey=()=>`study-material-v4-${cut}-${simulator}`;resources.push(m);return m;
+  m.customProgramCacheKey=()=>`study-material-v5-${cut}-${simulator}`;resources.push(m);return m;
  }
  return {ground:material(),cutaway:material(true),resources,
   setFireState(index,state){

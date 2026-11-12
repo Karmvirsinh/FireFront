@@ -1,5 +1,7 @@
 # Map foundation contract
 
+> Surface/fuel agreement (2026-11-12): current generated cells may carry plain-data `surfaceCover` (`vegetated`, `mineral`, `bare`) and an optional `surfaceReason`. Fuel-bearing cells are vegetated; explicit mineral/bare cells have `fuelType: none`. Broad `terrain` labels and physical `walkable` remain unchanged, so a vegetation region can contain a locally exposed mineral face without silently changing navigation. Trails/endpoints retain their existing exact data. `landform-cover-v1` records this classification separately from terrain heights. Historical/fixed profiles do not gain these fields. See [fire/surface correction](fire-surface-cover.md).
+
 > Terrain foundation (2026-10-30): optional shared corner elevation data and pure sampling are now supported; see [terrain contract](terrain.md). The displayed surface and all runtime behavior remain flat until visual integration. Historical flat-only statements below describe the original foundation.
 
 > The foundation-only scope below is historical. The first seeded increment now supplies this same flat contract; see [seeded environment](seeded-environment.md). Fixed-map adapter/data and regression scenarios remain unchanged.

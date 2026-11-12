@@ -342,10 +342,10 @@ test('generation form validates/retains failures, locks active runs, and repeate
       current.map.cells.forEach((cell,index)=>{
         tiles.getColorAt(index,color);const hex=color.getHex();
         if(hex===0x478ecb) blue++;if(hex===0x55b69b) green++;
-        const exposed = ['terrain-structure-v3','terrain-routed-v4'].includes(current.map.elevation?.generation?.version)
+        const exposed = ['terrain-structure-v3','terrain-routed-v4','simulator-composition-v1','simulator-composition-v2'].includes(current.map.elevation?.generation?.version)
           && terrainCellGradients(current.map,index)[0] > Math.tan(28*Math.PI/180);
         if(cell.terrain==='route') assert.equal(hex,0x806247);
-        if(cell.terrain==='clearing'&&!exposed) assert.equal(hex,0xc4b38b);
+        if(cell.terrain==='clearing'&&!exposed) assert.equal(hex,current.map.rendering.terrainColors.clearing);
         if(cell.fuelType==='grass'&&!exposed) assert.equal(hex,0x91aa59);
         if(['route','clearing','start','safe'].includes(cell.terrain)) assert.equal(current.simulation.eligible(index),false);
       });

@@ -1,0 +1,6 @@
+/* Opt-in inspection only: equal canvas dimensions make camera POSITION and
+   projection identical as well as scale. Ordinary workspace layout is untouched. */
+.terrain-comparison #simulation-viewport { width:640px;max-width:100%;height:480px;flex:none; }
+.terrain-comparison .scene-column { align-self:start; }
+.terrain-comparison #viewport { width:642px;max-width:100%;height:482px;min-height:0; }
+.terrain-comparison #study-canvas { width:640px;max-width:100%;height:480px; }

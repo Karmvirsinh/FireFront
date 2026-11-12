@@ -12,11 +12,23 @@ export function createFireView(map, { treeCells, treeHeight, vegetationPoses = n
   let wasReduced = true;
   const treeIndices = [...treeCells];
   const treeSlots = new Map(treeIndices.map((cell, slot) => [cell, slot]));
+  const mineralNeighbors=new Set();
+  map.cells.forEach((cell,index)=>{
+    if(cell.surfaceCover!=='mineral')return;
+    const x=index%map.width,z=Math.floor(index/map.width);
+    for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
+      const nx=x+dx,nz=z+dz;
+      if(nx>=0&&nz>=0&&nx<map.width&&nz<map.height)mineralNeighbors.add(nz*map.width+nx);
+    }
+  });
   function batch(name, geometry, color, cells = null) {
     const material = new THREE.MeshBasicMaterial({ color });
     const mesh = new THREE.InstancedMesh(geometry, material, cells?.length ?? map.cells.length);
     if (cells) mesh.userData.cells = cells;
     mesh.name = name;
+    geometry.computeBoundingBox();
+    const box=geometry.boundingBox;
+    mesh.userData.horizontalExtent=Math.max(Math.abs(box.min.x),Math.abs(box.max.x),Math.abs(box.min.z),Math.abs(box.max.z));
     mesh.frustumCulled = false;
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     for (let i = 0; i < mesh.count; i += 1) mesh.setMatrixAt(i, hidden);
@@ -93,7 +105,13 @@ export function createFireView(map, { treeCells, treeHeight, vegetationPoses = n
     transform.position.set((gx-map.width/2)*map.cellSize,sampleTerrainHeight(map,gx,gz),(gz-map.height/2)*map.cellSize);
     const tree=treeCells.has(index);
     const height=pose?(tree?pose.height/treeHeight:Math.max(.7,pose.height/.32)):1;
-    const width=pose?(tree?Math.min(1.8,pose.radius*.7/.24):Math.max(.65,Math.min(1.5,pose.radius/.24))):1;
+    let width=pose?(tree?Math.min(1.8,pose.radius*.7/.24):Math.max(.65,Math.min(1.5,pose.radius/.24))):1;
+    // Keep a fuel-cell flame's lateral footprint off neighboring mineral faces.
+    // Preserve its height and flicker; this is not a simulation/fire-edge rule.
+    if(mineralNeighbors.has(index)&&mesh.userData.horizontalExtent>0){
+      const u=gx-Math.floor(gx),v=gz-Math.floor(gz);
+      width=Math.min(width,(Math.min(u,1-u,v,1-v)*map.cellSize-.01)/mesh.userData.horizontalExtent);
+    }
     transform.scale.set(width,scale*height,width);
     transform.updateMatrix();
     mesh.setMatrixAt(slot, active ? transform.matrix : hidden);
@@ -103,6 +121,7 @@ export function createFireView(map, { treeCells, treeHeight, vegetationPoses = n
   return {
     group,
     sync(index, state) {
+      if(map.cells[index]?.surfaceCover==='mineral')state='unburned';
       if (state === 'burning') burning.add(index);
       else burning.delete(index);
       const tree = treeCells.has(index);

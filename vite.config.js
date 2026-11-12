@@ -8,7 +8,7 @@ function git(...args) {
 
 export default defineConfig(({ command }) => ({
   base: '/FireFront/',
-  build: { rolldownOptions: { input: ['index.html', 'terrain-art.html'] } },
+  build: { rolldownOptions: { input: ['index.html', 'terrain-art.html', 'asset-terrain-comparison.html'] } },
   define: { __BUILD_INFO__: JSON.stringify({ commit: git('rev-parse', 'HEAD'),
     branch: git('branch', '--show-current'), uncommitted: git('status', '--short'),
     builtAt: new Date().toISOString(), productionBuild: command === 'build' }) },

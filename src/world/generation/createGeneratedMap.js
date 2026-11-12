@@ -1,8 +1,8 @@
-import { buildTerrainCandidate } from './buildTerrainCandidate.js';
+import { buildTerrainCandidate, buildTerrainCandidateV8, buildTerrainCandidateV9, buildTerrainCandidateV10 } from './buildTerrainCandidate.js';
 import { createTerrainStructure } from './createTerrainStructure.js';
 import { createForestVegetation } from './createForestVegetation.js';
 import { createTerrainV1 } from './createTerrainV1.js';
-import { normalizeSeed, seedStream, GENERATOR_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION, V7_SETTINGS, V7_VERSION } from './seed.js';
+import { normalizeSeed, seedStream, GENERATOR_SETTINGS, V8_SETTINGS, V9_SETTINGS, V10_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION, V7_SETTINGS, V7_VERSION } from './seed.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
@@ -40,6 +40,9 @@ const settingsCandidate = (seed, attempt) => buildTerrainCandidate(seed, attempt
 // The candidate seam permits controlled failure/retry tests, not a UI setting.
 export function createGeneratedMap(value, candidateFactory = settingsCandidate, settings = GENERATOR_SETTINGS, terrainFactory = settings === V5_SETTINGS ? createTerrainV1 : settings === V6_SETTINGS ? createTerrain : createTerrainStructure) {
   const seed = normalizeSeed(value);
+  // Reuse read-only terrain/routing across network attempts in this call only.
+  // No global cache, retained old maps or cross-regeneration ownership.
+  if(candidateFactory===settingsCandidate){const cache=new Map();candidateFactory=(seed,attempt)=>buildTerrainCandidate(seed,attempt,settings,cache);}
   let selected;
   for (let attempt = 0; attempt < (settings.maxAttempts ?? 4); attempt += 1) {
     try {
@@ -65,3 +68,10 @@ export const createGeneratedMapV6 = (value, factory = buildV6Candidate) => creat
 // Frozen pre-structure v7 terrain, for exact forest-checkpoint comparisons.
 export const createGeneratedMapV7Baseline = value => createGeneratedMap(value, buildCandidate, V7_SETTINGS, createTerrain);
 export const createGeneratedMapV7 = value => createGeneratedMap(value, buildCandidate, V7_SETTINGS, createTerrainStructure);
+
+// Exact terrain-first alpha profile, including original terrain and named streams.
+export const createGeneratedMapV8 = value => createGeneratedMap(value, buildTerrainCandidateV8, V8_SETTINGS);
+
+export const createGeneratedMapV9=value=>createGeneratedMap(value,buildTerrainCandidateV9,V9_SETTINGS);
+
+export const createGeneratedMapV10=(value,factory=buildTerrainCandidateV10)=>createGeneratedMap(value,factory,V10_SETTINGS);

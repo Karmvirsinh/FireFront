@@ -1,24 +1,29 @@
-import { GENERATOR_SETTINGS, GENERATOR_VERSION, seedStream } from './seed.js';
+import { GENERATOR_SETTINGS, GENERATOR_VERSION, V8_SETTINGS, V8_VERSION, V9_SETTINGS, V9_VERSION, V10_SETTINGS, V10_VERSION, seedStream } from './seed.js';
+import {applySurfaceFuelCover} from './surfaceFuelCover.js';
+import { createComposedTerrain } from './createComposedTerrain.js';
 import { createTerrainStructure } from './createTerrainStructure.js';
 import { createTerrainRouting } from './trailTerrain.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createForestVegetation } from './createForestVegetation.js';
 
-export function buildTerrainCandidate(seed,attempt) {
-  const settings=GENERATOR_SETTINGS;
+export const buildTerrainCandidateV8=(seed,attempt)=>buildTerrainCandidate(seed,attempt,V8_SETTINGS);
+export function buildTerrainCandidate(seed,attempt,settings=GENERATOR_SETTINGS,terrainCache=null) {
+  const historical=settings===V8_SETTINGS,legacyComposition=settings===V9_SETTINGS;
   // Terrain is selected before endpoints or network carving. No navigable mask
-  // exists yet, so the terrain fitter applies only its natural-slope bound.
+  // exists yet. Current composition is never graded to fit a network.
   const base={width:settings.width,height:settings.height,cellSize:settings.cellSize,
     cells:Array.from({length:settings.width*settings.height},()=>({walkable:false})),
     navigation:{mode:'path-first',allowedCells:Array(settings.width*settings.height).fill(false)}};
-  // Four bounded terrain candidates, each with eight network attempts. Independent
+  // Bounded terrain candidates (four historical / twelve current), each with eight network attempts. Independent
   // terrain streams never consume vegetation/rock/path randomness.
   const terrainSeedAttempt=Math.floor(attempt/8);
-  base.elevation=createTerrainStructure(base,seed,terrainSeedAttempt*12);
-  base.elevation.generation={...base.elevation.generation,version:'terrain-routed-v4',terrainFirst:true,
+  const cached=terrainCache?.get(terrainSeedAttempt);
+  base.elevation=cached?.elevation??(historical?createTerrainStructure(base,seed,terrainSeedAttempt*12):createComposedTerrain(base,seed,terrainSeedAttempt,!legacyComposition));
+  base.elevation.generation={...base.elevation.generation,version:historical?'terrain-routed-v4':settings.terrainVersion,terrainFirst:true,
     routingAttempt:terrainSeedAttempt,gradingMaxDisplacement:0};
-  const routing=createTerrainRouting(base);
+  const routing=cached?.routing??createTerrainRouting(base);
+  terrainCache?.set(terrainSeedAttempt,{elevation:base.elevation,routing});
   const proposed=placeEndpoints(settings,seedStream(seed,'endpoints'));
   const fit=(point,spawn)=>{
     const candidates=[];
@@ -38,10 +43,15 @@ export function buildTerrainCandidate(seed,attempt) {
   for(const i of network.cells)cells[i]={terrain:'route',fuelType:'none',walkable:true};
   for(const [name,zone] of Object.entries(endpoints.zones))for(let z=zone.z0;z<=zone.z1;z++)for(let x=zone.x0;x<=zone.x1;x++)
     cells[z*settings.width+x]={terrain:name==='start'?'start':'safe',fuelType:'none',walkable:true};
-  return {...base,...endpoints,cells,name:`Seed ${seed}`,
-    generation:{seed,version:GENERATOR_VERSION,settings:{...settings},attempt},
+  const map={...base,...endpoints,cells,name:`Seed ${seed}`,
+    generation:{seed,version:historical?V8_VERSION:legacyComposition?V9_VERSION:settings===V10_SETTINGS?V10_VERSION:GENERATOR_VERSION,settings:{...settings},attempt},
     pathNetwork:{widthCells:1,nodes:network.nodes,centerlines:network.centerlines,connections:network.connections,trailCells:[...network.cells].sort((a,b)=>a-b)},
     navigation:{mode:'path-first',allowedCells:cells.map(c=>['route','start','safe'].includes(c.terrain))},
-    rendering:{canopyVersion:settings.canopyVersion,canopySeed:seed,compactEndpoints:true,terrainColors:{route:0x806247,clearing:0xc4b38b},labels:[
+    rendering:{canopyVersion:settings.canopyVersion,canopySeed:seed,compactEndpoints:true,terrainColors:{route:0x806247,clearing:historical?0xc4b38b:0x9b896e},labels:[
       {text:'START',x:start.x,z:start.z+2.5,width:2.7},{text:'SAFE',x:safeZone.x,z:safeZone.z+1.5,width:2.7}]}};
+  return settings.surfaceFuelVersion?applySurfaceFuelCover(map):map;
 }
+
+export const buildTerrainCandidateV9=(seed,attempt)=>buildTerrainCandidate(seed,attempt,V9_SETTINGS);
+
+export const buildTerrainCandidateV10=(seed,attempt)=>buildTerrainCandidate(seed,attempt,V10_SETTINGS);

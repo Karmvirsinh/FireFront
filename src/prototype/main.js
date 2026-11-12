@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {applyLandscapePresentation,applyComparisonCamera} from '../rendering/landscapePresentation.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStudyMap,STUDIES,GALLERY} from './createStudyMap.js';
 import {createGaeaStudyMap} from './createGaeaStudyMap.js';
@@ -8,14 +9,16 @@ import {inspectTraversal} from './traversalScan.js';
 import {createStudyPicker,sampleStudyHeight,displayedSurface} from './studySurface.js';
 import {createCellOutline} from './createCellOutline.js';
 import './style.css';
+import '../rendering/comparison.css';
 
 const canvas=document.querySelector('#study-canvas'),viewport=canvas.parentElement;
+const comparison=new URLSearchParams(location.search).has('comparison');
+if(comparison)document.body.classList.add('terrain-comparison');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+renderer.shadowMap.enabled=!comparison;renderer.shadowMap.type=THREE.PCFShadowMap;
 renderer.setClearColor(0xafb9a6);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
 const scanLayer=new THREE.Scene(),scanDepthMaterial=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:true,side:THREE.DoubleSide});let scanOccluder;
-const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xf4edd6,0x53624a,2));
-const sun=new THREE.DirectionalLight(0xffebc5,3.2);sun.position.set(-16,27,14);sun.castShadow=true;
+const scene=new THREE.Scene();const sun=applyLandscapePresentation(renderer,scene);sun.castShadow=!comparison;
 sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:80});sun.shadow.normalBias=.04;sun.shadow.bias=-.00015;scene.add(sun);
 const camera=new THREE.PerspectiveCamera(43,1,.1,160);
 const controls=new OrbitControls(camera,canvas);controls.enableDamping=false;controls.screenSpacePanning=false;controls.mouseButtons={LEFT:null,MIDDLE:THREE.MOUSE.ROTATE,RIGHT:THREE.MOUSE.PAN};controls.minDistance=4;controls.maxDistance=110;controls.minPolarAngle=.12;controls.maxPolarAngle=Math.PI*.44;
@@ -24,6 +27,7 @@ let kind=new URLSearchParams(location.search).get('study')==='gaea'?'gaea':'wood
 let meshCorners=new URLSearchParams(location.search).get('mesh')==='257'?257:129;
 function setView(close=false){
  currentView=close?'detail':'overview';
+ if(comparison&&!close){applyComparisonCamera(camera,controls,viewport.clientHeight);document.querySelector('#view-tag').textContent='Matched camera/light/color · 0.12 units per CSS pixel · no shadows';return;}
  if(close){
   const [x,z]=map.prototype.detail;controls.target.set(x,sampleStudyHeight(map,x/map.cellSize+map.width/2,z/map.cellSize+map.height/2)+.7,z);
   camera.position.copy(controls.target).add(new THREE.Vector3(...map.prototype.look));
@@ -82,7 +86,7 @@ let press=null;
 on(canvas,'pointerdown',e=>{press=e.button===0?{x:e.clientX,y:e.clientY}:null;});
 on(canvas,'pointerup',e=>{if(e.button!==0||!press||Math.hypot(e.clientX-press.x,e.clientY-press.y)>4){press=null;return;}press=null;const i=pick(e.clientX,e.clientY);if(i===null)return;if(outline){scene.remove(outline.mesh);outline.dispose();}outline=createCellOutline(map,i);scene.add(outline.mesh);document.querySelector('#surface-status').textContent=`Cell (${i%map.width}, ${Math.floor(i/map.width)}) · ${map.cells[i].terrain}. ${inspectTraversal(map,i).reason}`;});
 on(canvas,'pointercancel',()=>{press=null;});on(canvas,'contextmenu',e=>e.preventDefault());on(window,'blur',()=>{press=null;});
-function resize(){const r=viewport.getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();if(view&&currentView==='overview')setView();}
+function resize(){const r=viewport.getBoundingClientRect();renderer.setSize(Math.max(1,viewport.clientWidth),Math.max(1,viewport.clientHeight),false);camera.aspect=viewport.clientWidth/Math.max(1,viewport.clientHeight);camera.updateProjectionMatrix();if(view&&currentView==='overview')setView();}
 const observer=new ResizeObserver(resize);observer.observe(viewport);replace();resize();
 renderer.setAnimationLoop(time=>{if(disposed)return;controls.update();if(scanning&&!scan.update(time/1000)){scanning=false;document.querySelector('#scan-status').textContent='Scan ended. Press T to repeat; cell inspection remains available.';}renderer.render(scene,camera);if(scanning){renderer.autoClear=false;renderer.clearDepth();renderer.render(scanLayer,camera);renderer.autoClear=true;}});
 function dispose(){if(disposed)return;disposed=true;renderer.setAnimationLoop(null);observer.disconnect();listeners.forEach(stop=>stop());controls.dispose();pick?.dispose();view?.dispose();scan?.dispose();outline?.dispose();sun.shadow.map?.dispose();scanDepthMaterial.dispose();renderer.dispose();}

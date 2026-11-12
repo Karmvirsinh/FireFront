@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FireFront · Asset and terrain comparison</title></head>
+<body><header><h1>FireFront · Isolated comparison</h1><p>Artwork and real surface detail · no simulation changes</p><nav><a href="./">Normal simulator</a> · <a href="terrain-art.html">Original terrain studies</a></nav></header>
+<main><section class="workspace" aria-label="Comparison viewport"><div class="viewport"><canvas id="comparison-canvas" aria-label="Active landscape comparison"></canvas></div><p id="view-note">Overview</p><p id="metrics" role="status">Loading…</p></section>
+<aside><h2>Compare one active scene</h2>
+<label>Landscape<select id="landscape"><option value="woodland">Gentler / 7</option><option value="plateau">Mixed / 34</option><option value="ridge">Rugged / 913</option><option value="gaea">Gaea · Sandstone Butte</option></select></label>
+<fieldset><legend>Artwork A / B</legend><button id="original" aria-pressed="true">A · Original artwork</button><button id="kenney" aria-pressed="false">B · Kenney · FireFront palette</button></fieldset>
+<p>Same original gallery placement, native A geometry/scales and lighting. B uses an adapted FireFront palette: natural greens, earthy bark and stone. Source GLBs and neutral source check remain unchanged.</p><p><a href="asset-terrain-comparison.html?modelCheck=1">Untouched Kenney model · neutral material check</a></p>
+<label>Surface mesh<select id="resolution"></select></label>
+<label>Terrain shading<select id="shading"><option value="smooth" selected>Smooth</option><option value="faceted">Faceted · gallery reference</option></select></label>
+<p>Shading affects terrain lighting only. Historical65 and corrected fine-field sampling differ in their source functions, not just vertex count. Gaea modes share the same heightmap source.</p>
+<p id="surface-note"></p><div class="row"><button id="overview">Overview / R</button><button id="detail">Close-up</button></div>
+<button id="scan" aria-pressed="false">Show surface scan</button>
+<p>Pale dot: ≤20°. Amber triangle: above20°–50°, permitted if physically clear. Red X: blocked. This is the prototype50° trial, not production navigation.</p>
+<p id="route-status"></p><p id="inspection" role="status">Click ground to inspect its logical cell and displayed fine-surface slope.</p>
+<h2>Controls & sources</h2><p>Wheel zoom · right drag pan · middle drag orbit · <kbd>R</kbd> overview. A/B and mesh changes retain the current view.</p>
+<p><a href="https://kenney.nl/assets/nature-kit">Kenney Nature Kit</a> · CC0. Eight models only. No automatic production adoption.</p>
+<p id="gaea-note" hidden>Gaea Community bundled Sandstone Butte: separate local educational/noncommercial comparison. 512² PNG16 source; 32-unit footprint, height=sample/65535×16. A513-corner mesh resamples those original512samples; it invents no additional source information. No routed trail in this authored study.</p>
+<p id="load-status" role="status"></p></aside></main><script type="module" src="/src/comparison/boot.js"></script></body></html>

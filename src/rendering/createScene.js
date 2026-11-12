@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import {applyLandscapePresentation,applyComparisonCamera} from './landscapePresentation.js';
+import {configureLandscapeShadows,setLandscapeShadowFlags} from './landscapeShadows.js';
 import { createCameraControls } from './createCameraControls.js';
 import { createMapView } from './createMapView.js';
 import { createGroundPicker } from './createGroundPicker.js';
@@ -16,17 +18,23 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
   camera.lookAt(0, 0, 0);
 
   const renderer = createRenderer({ canvas, antialias: true });
-  const navigation = createCameraControls(camera, canvas, window, getCameraBounds(map));
+  const comparison=new URLSearchParams(window.location?.search??'').has('comparison');
+  const bounds=getCameraBounds(map);
+  const navigation = createCameraControls(camera, canvas, window, comparison?{...bounds,centerY:4}:bounds);
+  if(comparison){const frame=navigation.frameMap;navigation.frameMap=aspect=>{frame(aspect);applyComparisonCamera(camera,navigation.controls,canvas.parentElement.clientHeight);};}
   const mapView = createMapView(map);
   scene.add(mapView.group);
   const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
   const agentView = agents ? createAgentView(map, agents) : null;
   if (agentView) scene.add(agentView.mesh);
 
+  let shadowSetup=null;
+  if(map.generation?.settings?.terrainFirst){const sun=applyLandscapePresentation(renderer,scene);setLandscapeShadowFlags(mapView.group);if(agentView)setLandscapeShadowFlags(agentView.mesh);shadowSetup=configureLandscapeShadows(renderer,sun,map,{enabled:!comparison});}else{
   scene.add(new THREE.HemisphereLight(0xffffff, 0x526247, 2));
   const sunlight = new THREE.DirectionalLight(0xffffff, 3);
   sunlight.position.set(4, 8, 5);
   scene.add(sunlight);
+  }
 
   const stopResizing = createViewportResize(canvas.parentElement, renderer, camera, navigation);
 
@@ -74,6 +82,7 @@ export function createScene(canvas, map, onFrame = () => {}, agents = null, onRe
       pickCell.dispose();
       mapView.dispose();
       agentView?.dispose();
+      shadowSetup?.dispose();
       renderer.dispose();
     },
   };

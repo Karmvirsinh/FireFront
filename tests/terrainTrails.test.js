@@ -1,11 +1,11 @@
 import {placeEndpoints} from '../src/world/generation/placeEndpoints.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGeneratedMap,createGeneratedMapV7} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV8 as createGeneratedMap,createGeneratedMapV7} from '../src/world/generation/createGeneratedMap.js';
 import {validateGeneratedMap} from '../src/world/generation/validateGeneratedMap.js';
 import {createTerrainStructure,inspectStructure} from '../src/world/generation/createTerrainStructure.js';
 import {createForestVegetation} from '../src/world/generation/createForestVegetation.js';
-import {GENERATOR_SETTINGS,seedStream} from '../src/world/generation/seed.js';
+import {V8_SETTINGS as GENERATOR_SETTINGS,seedStream} from '../src/world/generation/seed.js';
 import {terrainTrailCell,terrainTrailEdge,createTerrainRouting,validateTrailTerrain} from '../src/world/generation/trailTerrain.js';
 import {neighbors} from '../src/agents/findPath.js';
 import {createEvacuationSimulation} from '../src/simulation/createEvacuationSimulation.js';

@@ -1,6 +1,9 @@
 import alea from 'alea';
 
-export const GENERATOR_VERSION = 'forest-environment-v8';
+export const GENERATOR_VERSION = 'forest-composition-v11';
+export const V10_VERSION='forest-composition-v10';
+export const V9_VERSION = 'forest-composition-v9';
+export const V8_VERSION = 'forest-environment-v8';
 export const V7_VERSION = 'forest-environment-v7';
 export const V6_VERSION = 'forest-network-v6';
 export const V5_VERSION = 'forest-network-v5';
@@ -16,7 +19,10 @@ export const V6_SETTINGS = Object.freeze({ ...V5_SETTINGS, width:104, height:104
 
 export const V7_SETTINGS = Object.freeze({ ...V6_SETTINGS, vegetationVersion:'forest-regions-v2', canopyVersion:'woodland-v2' });
 
-export const GENERATOR_SETTINGS = Object.freeze({ ...V7_SETTINGS, terrainFirst:true, maxAttempts:32 });
+export const V8_SETTINGS = Object.freeze({ ...V7_SETTINGS, terrainFirst:true, maxAttempts:32 });
+export const V9_SETTINGS = Object.freeze({ ...V8_SETTINGS, terrainVersion:'simulator-composition-v1', canopyVersion:'woodland-v3', maxAttempts:96 });
+export const V10_SETTINGS=Object.freeze({...V9_SETTINGS,terrainVersion:'simulator-composition-v2'});
+export const GENERATOR_SETTINGS=Object.freeze({...V10_SETTINGS,surfaceFuelVersion:'landform-cover-v1'});
 
 // Decimal spelling only: no rounding, wrapping, exponent notation or random fallback.
 export function normalizeSeed(value) {
