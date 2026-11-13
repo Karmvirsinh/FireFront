@@ -237,7 +237,7 @@ Comparison correction: the65baseline now retains exact gallery face normals and 
 Presentation review: comparison terrain now defaults to Smooth, with an independent Faceted option at every mesh size. B uses a labelled FireFront natural palette; neutral source rendering remains available. Generated simulator/comparison shadows are restored with map-fitted coverage; simulation rules and historical fixture workloads remain unchanged. This work is uncommitted pending visual review.
 
 
-## Current production woodland integration (review pending)
+## Prior v12 woodland integration record (superseded by v13 below)
 
 The current working branch is `codex/production-woodland-integration`, based on
 comparison/shadow checkpoint `ef0df4b`. Normal generated environments now use
@@ -265,3 +265,41 @@ For a short complete-flow check, use Local / seed 0 / ignition (6,77): this smal
 fuel island allows 20 evacuations at approximately 113.35 simulation seconds in
 automated tracing. It is not a rerouting demonstration. Larger fuel components
 can leave runs unfinished at 180 seconds; details are documented above.
+
+
+## Assignment 5 functional setup (user-validated v13 checkpoint)
+
+Normal environments now use **forest-settlements-v13**: 2–3 labelled origins,
+2–3 safe destinations, and **20 agents total** distributed among outside entrance/
+assembly cells. Small original shelters have blocked footprints and trail-connected
+entrances; safe arrival is outside the structure. **Buildings do not burn or get
+destroyed in this version**, and interiors are not simulated. Original structures
+are used because suitable building models are not part of the curated local kit.
+
+Choose **A*** or **Dijkstra** before Start fire. Both use the same unit-cost
+four-neighbor graph, awareness, hazards and movement safety. Dijkstra is the same
+search with a zero heuristic; A* estimates distance to the nearest allowed goal.
+Routing can choose another reachable safe destination when known hazards block a
+route. Local still discovers hazards within four cells and uses its approved
+cautious retries. Planners are shortest-path alternatives, not new agent behavior
+trees. Different equal-cost route choices can change scenario timelines.
+
+Planner and awareness selectors lock during a run; Reset unlocks them and keeps
+their choices and camera. R resets only the camera. Reset restores all 20 agents,
+fire and original scene visuals; Generate replaces the map. Existing commands
+and local ports remain unchanged. The accepted corrected ground pipeline, Smooth
+257-corner surface, Kenney palette/variety, shadows and original boulders remain.
+Historical fixed/v5–v12 fixtures retain their explicit replay paths and default A*.
+See [map/endpoints/buildings contract](docs/map-contract.md) and
+[actual functional verification](docs/progress.md).
+
+
+Functional verification:197/197tests passed sequentially; production build passed.
+The user reports the full functional checklist passed. With Local Awareness,
+seed0/(6,77) completed at72.70simulation seconds for both planners; the larger
+seed0/(70,41) case included trapping/replanning and completed at150.30s. Global
+seed7/(24,97) completed at128.00s with either planner. These are automated traces,
+not user-reported timings or performance benchmarks. Alternate-destination
+switching is covered by controlled fixtures; those generated examples did not
+switch destinations. Some seeds still exhaust bounded base generation; failures
+retain the old map or visibly fall back to seed0 on initial load.

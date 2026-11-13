@@ -84,7 +84,7 @@ export function createSurfaceMaterials(map,{simulator=false}={}){
  let fireTexture=null,logicalTexture=null;
  if(simulator){
   map.cells.forEach((cell,i)=>{
-   const compactStart=cell.terrain==='start'&&i!==map.start.z*map.width+map.start.x;
+   const compactStart=cell.terrain==='start'&&!(map.origins??[map.start]).some(p=>i===p.z*map.width+p.x);
    kinds[i*4]=cell.terrain==='safe'?5:cell.terrain==='start'&&!compactStart?4:cell.fuelType!=='none'?0:['route','start'].includes(cell.terrain)?1:cell.terrain==='obstacle'||cell.surfaceCover==='mineral'?3:2;
    kinds[i*4+3]=states[i*4+3]=255;
   });

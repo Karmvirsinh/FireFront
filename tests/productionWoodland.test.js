@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Matrix4,Vector3,PerspectiveCamera,Raycaster} from 'three';
-import {createGeneratedMap,createGeneratedMapV11} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV12 as createGeneratedMap,createGeneratedMapV11} from '../src/world/generation/createGeneratedMap.js';
 import {sampleTerrainHeight,terrainCellGradients,validateTerrain} from '../src/world/terrain.js';
 import {terrainTrailCell,validateTrailTerrain} from '../src/world/generation/trailTerrain.js';
 import {createTerrainGeometry} from '../src/rendering/terrainGeometry.js';

@@ -7,12 +7,18 @@ export function neighbors(map, index) {
     .filter((next) => next >= 0 && next < map.cells.length && isNavigable(map, next));
 }
 
-// Four-neighbor A*: Manhattan distance and stable f/h/index tie-breaking.
+// Shared four-neighbor search: nearest-goal Manhattan A*, or zero-heuristic
+// Dijkstra. Stable f/h/index tie-breaking preserves the single-goal A* fixtures.
 // Normal planning never permits an unsafe start, destination or intermediate cell.
-export function findPath(map, start, goal, unsafe) {
-  if (!isNavigable(map, start) || !isNavigable(map, goal) || unsafe[start] || unsafe[goal]) return null;
-  const heuristic = (index) => Math.abs(index % map.width - goal % map.width)
-    + Math.abs(Math.floor(index / map.width) - Math.floor(goal / map.width));
+export function findPath(map, start, goal, unsafe, planner='astar') {
+  if(!['astar','dijkstra'].includes(planner)) throw new Error('Unknown route planner');
+  const goals=[...new Set(Array.isArray(goal)?goal:[goal])].filter(i=>isNavigable(map,i)&&!unsafe[i]);
+  if (!isNavigable(map, start) || unsafe[start] || !goals.length) return null;
+  const goalSet=new Set(goals);
+  // Minimum Manhattan distance is admissible for unit-cost edge-sharing moves.
+  const heuristic = index => planner==='dijkstra'?0:Math.min(...goals.map(goal=>
+    Math.abs(index % map.width - goal % map.width)
+    + Math.abs(Math.floor(index / map.width) - Math.floor(goal / map.width))));
   const open = new Set([start]);
   const cost = new Map([[start, 0]]);
   const parent = new Map();
@@ -25,8 +31,8 @@ export function findPath(map, start, goal, unsafe) {
       const bestF = current === null ? Infinity : cost.get(current) + bestH;
       if (f < bestF || (f === bestF && (h < bestH || (h === bestH && index < current)))) current = index;
     }
-    if (current === goal) {
-      const path = [goal];
+    if (goalSet.has(current)) {
+      const path = [current];
       while (parent.has(path[0])) path.unshift(parent.get(path[0]));
       return path;
     }

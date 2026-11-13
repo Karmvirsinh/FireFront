@@ -4,10 +4,10 @@ import { freshSeed } from '../app/startup.js';
 export const TOUR_STEPS = [
   ['.camera-hints', 'Camera controls', 'Wheel to zoom, right-drag to pan, middle-drag to orbit. R resets only the camera.'],
   ['.generation-actions', 'Environment', 'Enter a seed and Generate a forest. The same seed gives the same map. Reset replays the current map instead.'],
-  ['.awareness-setting', 'Awareness', 'Local agents discover nearby hazards and cautiously reassess old observations. Global agents know all current hazards.'],
+  ['.awareness-setting', 'Awareness', 'Local agents discover nearby hazards; Global agents know current hazards. A* or Dijkstra uses that same knowledge to route to a reachable safe destination.'],
   ['.simulation-actions', 'Fire', 'Place ignition or I enables selection. Click vegetation, then use the separate Start fire button. Bare trails cannot ignite.'],
   ['.agent-counts', 'Evacuation counts', 'Follow waiting, evacuating, trapped, evacuated and lost agents. Temporary trapping can recover.'],
-  ['#reset-simulation', 'Reset and results', 'Reset preserves your camera and awareness choice. Results let you replay, generate a new scenario or inspect the scene.'],
+  ['#reset-simulation', 'Reset and results', 'Reset preserves your camera, planner and awareness choices. Results let you replay, generate a new scenario or inspect the scene.'],
 ];
 
 // A single modal owner outside replaceable map sessions. No animation/timer loop.

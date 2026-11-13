@@ -1,4 +1,4 @@
-import { GENERATOR_SETTINGS, GENERATOR_VERSION, V8_SETTINGS, V8_VERSION, V9_SETTINGS, V9_VERSION, V10_SETTINGS, V10_VERSION, V11_SETTINGS, V11_VERSION, seedStream } from './seed.js';
+import { V12_SETTINGS as GENERATOR_SETTINGS, V12_VERSION as GENERATOR_VERSION, V8_SETTINGS, V8_VERSION, V9_SETTINGS, V9_VERSION, V10_SETTINGS, V10_VERSION, V11_SETTINGS, V11_VERSION, seedStream } from './seed.js';
 import {applySurfaceFuelCover} from './surfaceFuelCover.js';
 import {woodlandCharacter} from './woodlandCharacter.js';
 import {createFineComposedTerrain} from './createFineComposedTerrain.js';

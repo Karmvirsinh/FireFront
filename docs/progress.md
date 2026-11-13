@@ -1271,3 +1271,51 @@ Review links remain Development http://127.0.0.1:5178/FireFront/ and Production 
 ## 2026-11-12 — Ground correction accepted/checkpointed
 
 User-reported human visual acceptance of the corrected production ground/blending is confirmed. This supersedes that correction’s earlier pending visual status; automated focused tests, build and diff checks passed as recorded. No additional human checks are inferred. Ground correction is checkpointed separately before selectable planners, multiple endpoints and nonburnable functional buildings.
+
+
+## 2026-11-12 — Assignment 5 planners, multiple endpoints and functional facilities (uncommitted)
+
+Ground correction checkpoint **8d68595** (`fix: blend production ground coverage continuously`) records automated checks and the user's human visual acceptance. Work remains on **codex/production-woodland-integration**; no merge/push/deployment.
+
+Implemented:
+- Shared A*/Dijkstra search over the same unit-cost, four-neighbor Path-first graph. Dijkstra uses zero heuristic; A* uses admissible minimum Manhattan distance to arrival cells eligible under the agent’s planning knowledge. Stable original A* tie-breaking/default and explicit historical single-endpoint factories preserve regression scenarios. Multiple goals are evaluated using the supplied planning knowledge, never hidden authoritative hazards for Local.
+- Setup-only planner selector; run locks it, reset unlocks and preserves planner/awareness/camera. Changing setup planner preserves map, ignition selection and renderer. Session replacement/disposal removes the selector listener and retains the selected planner. Fixed benchmark remains explicitly A*/Global.
+- `forest-settlements-v13`: 2–3 origins and 2–3 destinations, 20 total agents distributed 10/10 or 7/7/6 across origin-owned outside assembly cells. All entrances and spawns have initial routes to a safe arrival under the displayed-surface20°constraint. The validated v12 terrain/network is retained, with separate deterministic placement of small facilities/attachments. Existing permitted trail/bypass cells and traces remain; building footprints never replace them. Classifications change only for facilities/access/indicators, so old timings are historical rather than current outcomes.
+- Original simple shelter artwork (no suitable building models in the curated local subset), blocked nonfuel footprints, clear doors/connected outside arrival cells and ORIGIN1…/SAFE1…labels. Footprint relief is limited; foundations use sampled terrain heights. Facilities have no simulated interiors and **cannot burn or be destroyed** in this increment. Building fuel/destruction is future work. Vegetation clearance now also protects footprints; original boulders/accepted ground/shadows and terrain stay intact.
+- Agents can plan to any safe arrival, reconsider destinations when known hazards invalidate a path, and evacuate at any valid safe cell. Actual unsafe entry, direct-active-fire loss, Local observation/retry semantics and emergency buffer escape remain unchanged. Outcome classification uses reachability from all safe arrivals, without sharing that actual mask with Local planners.
+
+Focused verification so far:36/36 planner/agent/awareness/retry/outcome checks, then16/16 map-session/planner/settlement checks; final5/5 settlement tests include independent BFS optimal-cost comparison, blocked-destination switching, Local knowledge isolation, every spawn/entrance, full-surface slopes, base bypass preservation, vegetation/footprint clearance, nonburnability, disposal and reset/selector guards. Production build passed111modules; existing warning threshold remains unchanged. Full sequential suite and final browser/diff checks follow.
+
+New functional traces (not benchmarks; bounded at180simulation seconds):
+| Seed / ignition | Awareness | Planner | Completion | Final counts |
+| --- | --- | --- | --- | --- |
+| 0 / (6,77) | Local | A* and Dijkstra, separately | 72.70 s each | 20 evacuated / 0 lost |
+| 7 / (24,97) | Global | A* and Dijkstra, separately | 128.00 s each | 20 evacuated / 0 lost |
+| 0 / (70,41) | Local | A* and Dijkstra, separately | 150.30 s each | 20 evacuated / 0 lost |
+
+Counts remained conserved. The larger0/(70,41)case included trapping and242total planning operations versus20initial plans; neither generated trace changed destination. Alternate-destination selection/reconsideration is separately demonstrated by controlled blocked-goal fixtures, not claimed as a visible generated outcome. The small fuel-island examples are complete-flow checks, not fire-driven rerouting demonstrations. Different planners need not have identical routes/timings on other maps.
+
+Known inherited limitation observed in the browser: fresh random seed2857319614 exhausted96base terrain/network attempts; startup correctly displayed a fallback-to-seed0notice. Direct inspection confirms the same failure in historicalv12 (`Could not place well-spaced forest nodes`), before facility placement. No layout rules were relaxed to conceal it. Seed34 and some other maps also retain synchronous generation pauses. Existing failure retention/fallback remains in place; this is not a guarantee every seed generates.
+
+The user subsequently reports the full functional checklist passed. This is user-reported validation of the functional increment, separate from the earlier ground acceptance; no exact timings or additional scenarios are inferred.
+
+
+Final verification:
+- Full suite run sequentially **once:197/197 passed**, zero failures, about367.14s. This includes fixed-map exact timing fixtures, historical generators, direct-fire loss, Global/Local observation/retry, camera/picking, rendering/lifecycle and resource ownership regressions. Final production build passed111modules; diff/UTF-8 checks passed. No dependencies, benchmark tooling or captures added.
+- Reused production browser: seed0 displays3origins/2destinations, distributed20waiting agents and connected shelters. Dijkstra/Local ignition(70,41) showed movement from separate origins, fire-driven trapping and continued evacuation (observed counts6evacuating/7trapped/7evacuated/0lost at one point). Reset restored20waiting, vegetation/ground/facilities and setup locks while preserving zoom and planner/awareness choices. Clicking the visible origin building rejected ignition.
+- A*/Global selected the same ignition and started normally with both selectors locked; active reset worked. Regeneration to seed7 produced2origins/2destinations and retained Global/A*, with one active canvas and clear console. These browser runs were not watched to completion; completion times above are automated traces. Destination switching is fixture evidence, not a claimed browser observation.
+- Final Development entry/Skip, seed7 generation, Dijkstra selection/reset and narrow390×740 layout passed. Header shows endpoint counts; page stacks/scrolls with no horizontal overflow. Both inspected Development and rebuilt preview consoles were clear. Final preview reload/generation/overview/close confirmed updated endpoint header, labels and structures. Temporary viewport override cleared; one reused tab, no duplicate servers or heavy overlapping jobs.
+- The UI’s routing eligibility is planning knowledge, not proof a destination is actually safe: unobserved Local hazards remain unknown, and uncertain old memory stays an optimistic assumption. Authoritative entry checks still prohibit unsafe movement.
+
+Functional checklist (subsequently all four items passed, user-reported):
+1. Generate0 and7: confirm labelled origins/safe buildings, outside entrances/assembly cells,20waiting total, readable trails/vegetation and honest nonfuel building/ground appearance.
+2. Select each planner before a run and try Global/Local. Seed0/(70,41),Local demonstrates trapping/reassessment in traces, completing about150.30simulation seconds for either planner. Safe destinations need not change on this particular scenario.
+3. For a shorter complete-flow check, seed0/(6,77),Local completes about72.70s in traces. Reset during/after a run should restore20waiting and all visuals, preserve camera/planner/awareness, and unlock setup; R remains camera-only.
+4. Check house/road ignition rejection, picking after camera movement, regeneration, narrow/short layout and consoles. Building interiors, burning/destruction, collisions between agents and universal success for every seed remain outside this increment.
+
+Local Development: http://127.0.0.1:5178/FireFront/ ; Production preview: http://127.0.0.1:4178/FireFront/ . Existing servers reused. Functional changes remain **uncommitted** on codex/production-woodland-integration at ground checkpoint8d68595. No merge, push, deployment or next feature.
+
+
+## 2026-11-12 — Functional increment accepted/checkpointed
+
+The user reports the full Dijkstra/multiple-endpoint/building functional checklist passed. Record this as human acceptance; automated197/197 tests, build and diff checks remain the separately recorded evidence. No exact timings or extra scenarios are inferred from this acceptance. Save the functional work separately before correcting endpoint counts. Next correction requires origins >= safe destinations; camp artwork is deferred until the next original camp reference and explicit implementation scope. Existing destinations remain functional.

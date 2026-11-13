@@ -10,7 +10,7 @@ export function createWoodlandLayout(map){
  const sample=(cell,salt)=>seedStream(seed,`woodland-pose:${cell}:${salt}`)();
  const clear=p=>{
   const r=p.radius/map.cellSize,x=Math.floor(p.gx),z=Math.floor(p.gz),reach=Math.ceil(r)+1;
-  for(let dz=-reach;dz<=reach;dz++)for(let dx=-reach;dx<=reach;dx++){const nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=map.width||nz>=map.height)continue;if(!map.navigation.allowedCells[nz*map.width+nx])continue;if(Math.hypot(Math.max(nx-p.gx,0,p.gx-nx-1),Math.max(nz-p.gz,0,p.gz-nz-1))*map.cellSize<p.radius+.04)return false;}
+  for(let dz=-reach;dz<=reach;dz++)for(let dx=-reach;dx<=reach;dx++){const nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=map.width||nz>=map.height)continue;if(!map.navigation.allowedCells[nz*map.width+nx]&&map.cells[nz*map.width+nx].terrain!=='building')continue;if(Math.hypot(Math.max(nx-p.gx,0,p.gx-nx-1),Math.max(nz-p.gz,0,p.gz-nz-1))*map.cellSize<p.radius+.04)return false;}
   return p.gx*map.cellSize>=p.radius&&p.gz*map.cellSize>=p.radius&&(map.width-p.gx)*map.cellSize>=p.radius&&(map.height-p.gz)*map.cellSize>=p.radius;
  };
  const assign=(p,kind)=>{

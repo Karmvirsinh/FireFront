@@ -1,3 +1,4 @@
+import {createBuildingView} from './createBuildingView.js';
 import {createVegetationView} from './createVegetationView.js';
 import {createSurfaceMaterials} from './surfaceMaterials.js';
 import {prepareSurfaceGeometry} from './prepareSurfaceGeometry.js';
@@ -10,7 +11,7 @@ import { getMapRendering } from '../world/mapContract.js';
 
 const COLORS = {
   obstacle: 0x8c9698, vegetation: 0x527648, route: 0xe0c58e,
-  start: 0x478ecb, safe: 0x55b69b, clearing: 0xc5bd8b,
+  start: 0x478ecb, safe: 0x55b69b, clearing: 0xc5bd8b, building: 0x80654d,
 };
 const FIRE_COLORS = { burning: 0x67482f, 'burned-hot': 0x332a29, 'burned-cool': 0x4e5663 };
 const FUEL_COLORS = { brush: 0x527648, grass: 0x91aa59, forest: 0x345b44 };
@@ -25,6 +26,8 @@ export function createMapView(map) {
   }
   const surfaceFinish=map.generation&&map.elevation?createSurfaceMaterials(map,{simulator:true}):null;
   const group = new THREE.Group();
+  const buildingView=map.buildings?.length?createBuildingView(map):null;
+  if(buildingView)group.add(buildingView.group);
   const resources = [];
   const transform = new THREE.Object3D();
   const color = new THREE.Color();
@@ -265,6 +268,7 @@ export function createMapView(map) {
     dispose() {
       fireView.dispose();
       vegetationView?.dispose();
+      buildingView?.dispose();
       group.children.forEach((child) => { if (child.isInstancedMesh) child.dispose(); });
       resources.forEach((resource) => resource.dispose());
     },

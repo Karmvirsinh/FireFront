@@ -113,3 +113,35 @@ Connection diagnostics still record Manhattan `directSteps`, pre-thinning `raste
 ## Optional fine authoritative surface (v12)
 
 `elevation.surface` may contain `{width,height,cellSize,units:'world',triangulation:'nw-se',cornerHeights}` spanning exactly the same world footprint. If present it supersedes the coarse reference corner array for all sampling/rendering/navigation. Missing surface preserves legacy behavior; missing elevation remains flat. Production104logical cells map to256surface cells by256/104, not an integer subdivision. sampleTerrainHeight handles this conversion; terrainCellGradients conservatively covers every intersecting fine triangle. Coarse reference samples remain plain data/compatibility metadata, not a second displayed surface. Fuel/walkability/nav cells remain104².
+
+
+## Multiple endpoints and functional buildings (Assignment 5)
+
+Maps may provide `origins: [{id,x,z,spawnCells,buildingId?}]` and
+`safeZones: [{id,x,z,arrivalCells?,buildingId?}]`. An omitted arrival list means
+that endpoint's `(x,z)` cell. The top-level `spawnCells` is the distinct union of
+origin-owned spawns. Population is still 20 in normal generated maps. `start`
+and `safeZone` remain first-endpoint aliases for legacy consumers; normalization
+can derive those aliases from plural data. Old fixtures without plural fields
+retain one origin/goal through accessor fallbacks, without rewriting their data.
+
+`buildings` contains `{id,kind,cells,entrance,x,z,dx,dz,baseY,nonburnable}`.
+`cells` are authoritative blocked, nonfuel logical footprints; `entrance` is a
+navigable assembly/arrival cell outside the footprint, touching its front and
+connected to the trail. Upright original structures use a foundation at the
+maximum sampled footprint corner height. There are no simulated interiors.
+Building fuel/destruction is not implemented: all buildings are nonburnable.
+
+The current `forest-settlements-v13` profile first validates a historical v12
+terrain/network, then adds 2–3 origin facilities and 2–3 safe facilities beside
+it. Sites are separated, slope-safe at entrances, and footprints never replace
+an existing permitted trail or bypass. New attachments are explicit in
+`pathNetwork.attachments`; `trailCells` enumerates the final permitted network.
+The base assembly apron remains connected. Spawns occupy connected nearby trail/
+assembly cells, not building interiors. All 20 spawns and every entrance are
+validated against any safe arrival, with the same displayed-surface 20° rule.
+
+Only facility footprints and new access/indicator cells change classifications.
+The v12 surface, vegetation streams, existing trail traces and connections remain.
+Versioned v12 and older factories preserve old single-endpoint scenarios. Their
+ignition coordinates and evacuation timings are not current v13 outcomes.

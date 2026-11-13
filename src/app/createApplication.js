@@ -1,3 +1,4 @@
+import {createPlannerControls} from '../ui/createPlannerControls.js';
 import { normalizeMap } from '../world/mapContract.js';
 import { createScene } from '../rendering/createScene.js';
 import { createEvacuationSimulation } from '../simulation/createEvacuationSimulation.js';
@@ -14,16 +15,18 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
   let current = null;
   let disposed = false;
   let generatedAwareness = 'local';
+  let generatedPlanner='astar';
   doc.documentElement.classList.toggle('benchmark-normal-animation', normalAnimation);
 
   function createSession(map) {
     const lockedToGlobal=benchmark||!map.generation;
     const simulation = createEvacuationSimulation(map,{...AGENT_CONFIG,population:map.spawnCells.length,
-      awareness:lockedToGlobal?'global':generatedAwareness});
+      awareness:lockedToGlobal?'global':generatedAwareness,planner:benchmark?'astar':generatedPlanner});
     const refreshCounts = createAgentCounts(panel, simulation.agents);
     let view = null;
     let ignition = null;
     let awarenessControls = null;
+    let plannerControls=null;
     let readout = null;
     let closed = false;
     let previousTime = null;
@@ -33,6 +36,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
       closed = true;
       ignition?.dispose();
       awarenessControls?.dispose();
+      plannerControls?.dispose();
       readout?.dispose();
       view?.dispose();
     }
@@ -57,7 +61,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
           os: host.navigator.platform, automationHint: host.navigator.webdriver,
           cpu: 'unknown', gpu: 'see WebGL renderer', ram: 'unknown',
           browserType: 'unknown; operator must record physical/automated/headless status',
-          awareness: simulation.agents.awareness, detectionRadius: simulation.agents.detectionRadius,
+          planner:simulation.agents.planner, awareness: simulation.agents.awareness, detectionRadius: simulation.agents.detectionRadius,
           grid: { width: map.width, height: map.height }, population: map.spawnCells.length,
         }),
       });
@@ -68,6 +72,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
         view.syncAgents();
         refreshCounts();
         awarenessControls?.refresh();
+        plannerControls?.refresh();
         onStateChange(current);
       }
       ignition = createIgnitionControls(canvas, panel, simulation, view.pickCell, changed, host);
@@ -75,6 +80,7 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
         generatedAwareness=simulation.agents.awareness;
         changed();
       },{lockedToGlobal});
+      plannerControls=createPlannerControls(panel,simulation,()=>{generatedPlanner=simulation.agents.planner;changed();},{lockedToAstar:benchmark});
       const text = (selector, value) => {
         const node = doc.querySelector(selector);
         if (node) node.textContent = value;
@@ -84,13 +90,14 @@ export function createApplication({ canvas, panel, fpsElement, initialMap, build
         : map.routes?.length === 2 ? 'Two routes · '
         : map.routes?.length ? `${map.routes.length} routes · ` : '';
       text('#map-summary', `· ${map.name ?? 'Map'} · ${map.width}×${map.height} grid`);
-      text('#population-summary', `${count} agents · ${routeHint}One ignition`);
+      const endpointsHint=map.origins?`${map.origins.length} origins / ${map.safeZones.length} destinations · `:routeHint;
+      text('#population-summary', `${count} agents · ${endpointsHint}One ignition`);
       text('#population-detail', `${count} agents`);
       doc.documentElement.classList.toggle('generated-environment', Boolean(map.generation));
       text('#navigation-note', map.generation && map.elevation
         ? (map.generation.settings?.surfaceFuelVersion ? 'Green and leaf-litter ground show continuous fuel between models. Vegetated slopes can burn; exposed mineral faces, bare paths and clearings have no fuel. The torch checks eligibility. Path-first agents stay on paths and endpoint areas.' : 'Regional green, earth and litter show surface cover; brown woodland and exposed slopes can contain fuel. Bare dirt paths and earth/gravel clearings have no fuel. The torch cursor checks ignition eligibility. Path-first agents stay on paths and endpoint areas.')
         : 'Ground color shows fuel coverage. Models do not mark fuel boundaries. Off-path vegetation is blocked.');
-      canvas.setAttribute('aria-label', `${map.name ?? 'Map'} with a start area, safe zone, vegetation and blocked ground`);
+      canvas.setAttribute('aria-label', `${map.name ?? 'Map'} with ${map.origins?.length??1} origins, ${map.safeZones?.length??1} safe destinations, vegetation and blocked ground`);
       return { map, simulation, view, dispose };
     } catch (error) { dispose(); throw error; }
   }

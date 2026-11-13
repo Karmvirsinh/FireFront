@@ -1,3 +1,4 @@
+import {getSafeCells} from '../world/mapContract.js';
 import { isNavigable } from '../world/navigationPolicy.js';
 import { observeHazards, rememberHazard, isObservedNow } from './observeHazards.js';
 import { AGENT_CONFIG } from './agentConfig.js';
@@ -5,6 +6,8 @@ import { findPath, findBufferExit } from './findPath.js';
 
 export function createAgentSimulation(map, config = AGENT_CONFIG) {
   let awareness = config.awareness ?? 'global';
+  let planner=config.planner??'astar';
+  if(!['astar','dijkstra'].includes(planner))throw new Error('Invalid planner');
   const detectionRadius = config.detectionRadius ?? 4;
   const retryDelay=config.retryDelaySeconds??5, retryInterval=config.retryIntervalSeconds??5;
   const memoryAge=config.hazardMemoryAgeSeconds??10;
@@ -15,7 +18,7 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
   if(!validModel(awareness)||!Number.isFinite(detectionRadius)||detectionRadius<0) {
     throw new Error('Invalid awareness model or detection radius.');
   }
-  const goal = map.safeZone.z * map.width + map.safeZone.x;
+  const goals=getSafeCells(map),goalSet=new Set(goals);
   const spawns = config.spawnCells ?? map.spawnCells ?? Array.from({ length: config.population }, (_, i) =>
     (map.start.z - 2 + Math.floor(i / 5)) * map.width + map.start.x - 2 + i % 5);
   if (spawns.length !== config.population || spawns.some((index) => !isNavigable(map, index))) {
@@ -27,7 +30,7 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
   function reset() {
     simulation.agents = spawns.map((cell, id) => ({ id, cell, x: cell % map.width + 0.5,
       z: Math.floor(cell / map.width) + 0.5, state: 'waiting', path: [], target: null,
-      needsPlan: true, centering: false, escaping: false,
+      needsPlan: true, centering: false, escaping: false, destination: null,
       observed: new Uint8Array(map.cells.length), observedUnsafe: new Uint8Array(map.cells.length),
       observedDirect: new Uint8Array(map.cells.length),
       lastObservedAt: new Float64Array(map.cells.length).fill(-Infinity),
@@ -52,7 +55,8 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
     simulation.plans += 1;
     agent.escaping = Boolean(unsafe[agent.cell]);
     const path = agent.escaping ? findBufferExit(map, agent.cell, unsafe, direct)
-      : findPath(map, agent.cell, goal, unsafe);
+      : findPath(map, agent.cell, goals, unsafe, planner);
+    agent.destination=!agent.escaping&&path?path.at(-1):null;
     agent.path = path?.slice(1) ?? [];
     agent.target = null;
     agent.centering = false;
@@ -93,6 +97,7 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
       // not the last visited center: check before any centering or escape movement.
       if (fireCells[agent.cell].state === 'burning') {
         agent.state = 'lost';
+        agent.destination=null;
         agent.path = [];
         agent.target = null;
         agent.needsPlan = agent.centering = agent.escaping = false;
@@ -129,7 +134,7 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
           } else plan(agent, knownUnsafe, knownDirect);
         }
         if (agent.state === 'trapped') break;
-        if (agent.cell === goal && atCenter(agent) && !unsafe[goal]) {
+        if (goalSet.has(agent.cell) && atCenter(agent) && !unsafe[agent.cell]) {
           agent.state = 'evacuated';
           agent.path = [];
           agent.target = null;
@@ -182,9 +187,11 @@ export function createAgentSimulation(map, config = AGENT_CONFIG) {
   }
   Object.defineProperties(simulation, {
     time: { get: () => elapsed },
+    planner:{get:()=>planner},
     awareness: { get: () => awareness }, detectionRadius: { get: () => detectionRadius },
   });
   return Object.assign(simulation, { reset, counts, advance,
+    setPlanner(value){if(simulation.started||!['astar','dijkstra'].includes(value))return false;planner=value;reset();return true;},
     setAwareness(value) {
       if(simulation.started||!validModel(value)) return false;
       awareness=value;reset();return true;

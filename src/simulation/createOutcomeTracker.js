@@ -1,3 +1,4 @@
+import {getSafeCells} from '../world/mapContract.js';
 import { isNavigable } from '../world/navigationPolicy.js';
 import { neighbors } from '../agents/findPath.js';
 
@@ -15,11 +16,8 @@ export function createOutcomeTracker(map) {
       // Once fire has settled, the actual map/hazards cannot change until reset.
       if (!settledReachable) {
         settledReachable = new Uint8Array(map.cells.length);
-        const goal = map.safeZone.z * map.width + map.safeZone.x;
         const queue = [];
-        if (isNavigable(map, goal) && !simulation.hazards[goal]) {
-          queue.push(goal); settledReachable[goal] = 1;
-        }
+        for(const goal of getSafeCells(map))if(isNavigable(map,goal)&&!simulation.hazards[goal]){queue.push(goal);settledReachable[goal]=1;}
         for (let head = 0; head < queue.length; head++) {
           for (const next of neighbors(map, queue[head])) {
             if (!simulation.hazards[next] && !settledReachable[next]) {
@@ -38,7 +36,7 @@ export function createOutcomeTracker(map) {
       stalled = false;
       outcome = Object.freeze({ kind, time: simulation.time,
         counts: Object.freeze({ ...counts }), remaining,
-        seed: map.generation?.seed ?? null, awareness: simulation.agents.awareness });
+        seed: map.generation?.seed ?? null, awareness: simulation.agents.awareness, planner:simulation.agents.planner });
     }
     return outcome;
   }

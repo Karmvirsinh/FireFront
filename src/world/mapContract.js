@@ -1,20 +1,24 @@
 import { validateTerrain } from './terrain.js';
 // Plain-data boundary shared by world factories, simulation and rendering.
-const TERRAINS = ['obstacle', 'vegetation', 'clearing', 'route', 'start', 'safe'];
+const TERRAINS = ['obstacle', 'vegetation', 'clearing', 'route', 'start', 'safe', 'building'];
 const FUELS = ['none', 'grass', 'brush', 'forest'];
+
+export const getOrigins=map=>map.origins??[{id:'origin-1',...map.start,spawnCells:map.spawnCells}];
+export const getSafeZones=map=>map.safeZones??[{id:'safe-1',...map.safeZone}];
+export const getSafeCells=map=>getSafeZones(map).flatMap(p=>p.arrivalCells??[p.z*map.width+p.x]);
 
 export function getMapRendering(map) {
   const relevant = map.cells.flatMap((cell, i) => cell.walkable || cell.fuelType !== 'none'
     ? [{ x: i % map.width, z: Math.floor(i / map.width) }] : []);
-  relevant.push(map.start, map.safeZone);
+  relevant.push(...getOrigins(map),...getSafeZones(map));
   for (const zone of Object.values(map.zones ?? {})) {
     relevant.push({ x: zone.x0, z: zone.z0 }, { x: zone.x1, z: zone.z1 });
   }
   const full = { x0: 0, x1: map.width - 1, z0: 0, z1: map.height - 1 };
   return {
     labels: [
-      { text: 'START', x: map.start.x, z: (map.zones?.start?.z1 ?? map.start.z) + 2, width: 2.7 },
-      { text: 'SAFE', x: map.safeZone.x, z: (map.zones?.safe?.z1 ?? map.safeZone.z) + 2, width: 2.7 },
+      ...(map.origins?map.origins.map((p,i)=>({text:`ORIGIN ${i+1}`,x:p.x,z:p.z+2,width:2.8})):[{ text: 'START', x: map.start.x, z: (map.zones?.start?.z1 ?? map.start.z) + 2, width: 2.7 }]),
+      ...(map.safeZones?map.safeZones.map((p,i)=>({text:`SAFE ${i+1}`,x:p.x,z:p.z+2,width:2.7})):[{ text: 'SAFE', x: map.safeZone.x, z: (map.zones?.safe?.z1 ?? map.safeZone.z) + 2, width: 2.7 }]),
       ...(map.routes ?? []).filter((route) => route.section).map((route) => ({ text: route.label ?? route.id,
         x: (route.section.x0 + route.section.x1) / 2,
         z: (route.section.z0 + route.section.z1) / 2, width: 3.2 })),
@@ -31,6 +35,8 @@ export function getMapRendering(map) {
 export function normalizeMap(input) {
   // Own a snapshot: caller changes must not alter a running map's reset baseline.
   const map = structuredClone(input);
+  map.start??=map.origins?.[0]&&{x:map.origins[0].x,z:map.origins[0].z};
+  map.safeZone??=map.safeZones?.[0]&&{x:map.safeZones[0].x,z:map.safeZones[0].z};
   function require(condition, message) { if (!condition) throw new Error(`Invalid map: ${message}`); }
   require(Number.isInteger(map.width) && map.width > 0
     && Number.isInteger(map.height) && map.height > 0, 'positive integer dimensions required');
@@ -55,6 +61,24 @@ export function normalizeMap(input) {
     require([...map.spawnCells, map.start.z * map.width + map.start.x,
       map.safeZone.z * map.width + map.safeZone.x].every((i) => map.navigation.allowedCells[i]),
     'endpoints/spawns must be allowed by navigation policy');
+  }
+  for(const [name,points] of [['origins',map.origins],['safeZones',map.safeZones]])if(points!==undefined){
+    require(Array.isArray(points)&&points.length>0&&new Set(points.map(p=>p.id)).size===points.length,`invalid ${name}`);
+    for(const p of points){require(p&&typeof p.id==='string'&&Number.isInteger(p.x)&&Number.isInteger(p.z)&&p.x>=0&&p.x<map.width&&p.z>=0&&p.z<map.height&&validIndex(p.z*map.width+p.x),`invalid ${name} point`);
+      const cells=name==='origins'?p.spawnCells:(p.arrivalCells??[p.z*map.width+p.x]);
+      require(Array.isArray(cells)&&cells.length>0&&cells.every(i=>validIndex(i)&&(!map.navigation||map.navigation.allowedCells[i])),`invalid ${name} cells`);
+    }
+  }
+  if(map.origins)require(map.origins.flatMap(p=>p.spawnCells).length===map.spawnCells.length&&new Set(map.origins.flatMap(p=>p.spawnCells)).size===map.spawnCells.length&&map.origins.flatMap(p=>p.spawnCells).every(i=>map.spawnCells.includes(i)),'origin spawn ownership');
+  require(new Set((map.buildings??[]).map(b=>b.id)).size===(map.buildings??[]).length,'duplicate building IDs');
+  const buildingCells=(map.buildings??[]).flatMap(b=>b.cells);
+  require(new Set(buildingCells).size===buildingCells.length,'overlapping building footprints');
+  for(const b of map.buildings??[]){
+    require(b&&typeof b.id==='string'&&['origin','safe'].includes(b.kind)&&Array.isArray(b.cells)&&b.cells.length>0&&b.cells.every(i=>Number.isInteger(i)&&i>=0&&i<map.cells.length&&!map.cells[i].walkable&&map.cells[i].fuelType==='none'&&map.cells[i].terrain==='building'&&!map.navigation?.allowedCells[i]),'invalid building footprint');
+    require(validIndex(b.entrance)&&(!map.navigation||map.navigation.allowedCells[b.entrance]),'invalid building entrance');
+  }
+  for(const [kind,points] of [['origin',map.origins],['safe',map.safeZones]])for(const p of points??[])if(p.buildingId){
+    require((map.buildings??[]).some(b=>b.id===p.buildingId&&b.kind===kind&&b.entrance===p.z*map.width+p.x),'endpoint/building entrance mismatch');
   }
   for (const zone of Object.values(map.zones ?? {})) {
     require(zone && [zone.x0, zone.x1, zone.z0, zone.z1].every(Number.isInteger)

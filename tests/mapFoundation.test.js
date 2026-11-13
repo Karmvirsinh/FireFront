@@ -9,7 +9,7 @@ import { createEvacuationSimulation } from '../src/simulation/createEvacuationSi
 import { createScene } from '../src/rendering/createScene.js';
 import { createApplication } from '../src/app/createApplication.js';
 import { measureScenario } from '../scripts/measurePacing.js';
-import { createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
+import { createGeneratedMapV12 as createGeneratedMap } from '../src/world/generation/createGeneratedMap.js';
 import { createGenerationControls } from '../src/ui/createGenerationControls.js';
 
 function smallMap() {
@@ -56,7 +56,7 @@ function fixture(benchmark = false, onStateChange = () => {}) {
   const viewport = { clientWidth: 920, clientHeight: 555 };
   const nodes = Object.fromEntries(['place-ignition', 'start-fire', 'reset-simulation', 'fire-status', 'ignition-label',
     'count-waiting', 'count-evacuating', 'count-trapped', 'count-evacuated', 'count-lost',
-    'map-summary', 'population-summary', 'population-detail', 'awareness-mode', 'awareness-note'].map((name) => [name, new Element()]));
+    'map-summary', 'population-summary', 'population-detail', 'awareness-mode', 'awareness-note', 'planner-mode', 'planner-note'].map((name) => [name, new Element()]));
   const panel = { querySelector: (id) => nodes[id.slice(1)] };
   const exports = [];
   const fps = Object.assign(new Element(), { parentElement: { append: (...items) => exports.push(...items) } });
@@ -414,4 +414,20 @@ test('benchmark forces explicit Global Awareness even if given a generated sessi
     assert.equal(f.nodes['awareness-mode'].disabled,true);f.nodes['awareness-mode'].value='local';emit(f.nodes['awareness-mode'],'change');
     assert.equal(f.app.current.simulation.agents.awareness,'global');}
   finally{f.close();}
+});
+
+
+test('planner setup preserves scene, ignition and camera, locks/reset retains choice and replacement cleans listeners',()=>{
+ const f=fixture();
+ try{
+  f.app.replaceMap(createGeneratedMap(0));f.tick();const current=f.app.current,camera=f.renderers.at(-1).camera;
+  camera.position.multiplyScalar(.9);const position=camera.position.clone(),i=current.map.cells.findIndex(c=>c.fuelType!=='none');current.simulation.select(i);
+  f.nodes['planner-mode'].value='dijkstra';emit(f.nodes['planner-mode'],'change');
+  assert.equal(f.app.current,current);assert.equal(current.simulation.selected,i);assert.equal(current.simulation.agents.planner,'dijkstra');assert.ok(camera.position.distanceTo(position)<1e-9);
+  emit(f.nodes['start-fire'],'click');assert.equal(f.nodes['planner-mode'].disabled,true);
+  f.nodes['planner-mode'].value='astar';emit(f.nodes['planner-mode'],'change');assert.equal(current.simulation.agents.planner,'dijkstra');
+  emit(f.nodes['reset-simulation'],'click');assert.equal(f.nodes['planner-mode'].disabled,false);assert.equal(f.nodes['planner-mode'].value,'dijkstra');
+  f.app.replaceMap(createGeneratedMap(7));assert.equal(f.app.current.simulation.agents.planner,'dijkstra');assert.equal(f.nodes['planner-mode'].listeners.get('change').size,1);
+  f.app.dispose();assert.equal(f.nodes['planner-mode'].listenerCount(),0);
+ }finally{f.close();}
 });

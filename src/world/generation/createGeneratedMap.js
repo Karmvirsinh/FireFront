@@ -1,8 +1,9 @@
+import {createSettlementMap,validateSettlementMap} from './createSettlementMap.js';
 import { buildTerrainCandidate, buildTerrainCandidateV8, buildTerrainCandidateV9, buildTerrainCandidateV10, buildTerrainCandidateV11 } from './buildTerrainCandidate.js';
 import { createTerrainStructure } from './createTerrainStructure.js';
 import { createForestVegetation } from './createForestVegetation.js';
 import { createTerrainV1 } from './createTerrainV1.js';
-import { normalizeSeed, seedStream, GENERATOR_SETTINGS, V8_SETTINGS, V9_SETTINGS, V10_SETTINGS, V11_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION, V7_SETTINGS, V7_VERSION } from './seed.js';
+import { normalizeSeed, seedStream, V12_SETTINGS as GENERATOR_SETTINGS, V8_SETTINGS, V9_SETTINGS, V10_SETTINGS, V11_SETTINGS, V5_SETTINGS, V5_VERSION, V6_SETTINGS, V6_VERSION, V7_SETTINGS, V7_VERSION } from './seed.js';
 import { placeEndpoints } from './placeEndpoints.js';
 import { createPathNetwork } from './createPathNetwork.js';
 import { createVegetation } from './createVegetation.js';
@@ -38,7 +39,7 @@ const settingsCandidate = (seed, attempt) => buildTerrainCandidate(seed, attempt
 
 // Bounded deterministic retries; caller installs only the validated result.
 // The candidate seam permits controlled failure/retry tests, not a UI setting.
-export function createGeneratedMap(value, candidateFactory = settingsCandidate, settings = GENERATOR_SETTINGS, terrainFactory = settings === V5_SETTINGS ? createTerrainV1 : settings === V6_SETTINGS ? createTerrain : createTerrainStructure) {
+function generateProfile(value, candidateFactory = settingsCandidate, settings = GENERATOR_SETTINGS, terrainFactory = settings === V5_SETTINGS ? createTerrainV1 : settings === V6_SETTINGS ? createTerrain : createTerrainStructure) {
   const seed = normalizeSeed(value);
   // Reuse read-only terrain/routing across network attempts in this call only.
   // No global cache, retained old maps or cross-regeneration ownership.
@@ -60,20 +61,30 @@ export function createGeneratedMap(value, candidateFactory = settingsCandidate, 
 
 // Explicit historical profile: never reconstruct old scenarios with current rules.
 export const buildV5Candidate = (seed, attempt) => buildCandidate(seed, attempt, V5_SETTINGS);
-export const createGeneratedMapV5 = (value, factory = buildV5Candidate) => createGeneratedMap(value, factory, V5_SETTINGS);
+export const createGeneratedMapV5 = (value, factory = buildV5Candidate) => generateProfile(value, factory, V5_SETTINGS);
 
 export const buildV6Candidate = (seed, attempt) => buildCandidate(seed, attempt, V6_SETTINGS);
-export const createGeneratedMapV6 = (value, factory = buildV6Candidate) => createGeneratedMap(value, factory, V6_SETTINGS);
+export const createGeneratedMapV6 = (value, factory = buildV6Candidate) => generateProfile(value, factory, V6_SETTINGS);
 
 // Frozen pre-structure v7 terrain, for exact forest-checkpoint comparisons.
-export const createGeneratedMapV7Baseline = value => createGeneratedMap(value, buildCandidate, V7_SETTINGS, createTerrain);
-export const createGeneratedMapV7 = value => createGeneratedMap(value, buildCandidate, V7_SETTINGS, createTerrainStructure);
+export const createGeneratedMapV7Baseline = value => generateProfile(value, buildCandidate, V7_SETTINGS, createTerrain);
+export const createGeneratedMapV7 = value => generateProfile(value, buildCandidate, V7_SETTINGS, createTerrainStructure);
 
 // Exact terrain-first alpha profile, including original terrain and named streams.
-export const createGeneratedMapV8 = value => createGeneratedMap(value, buildTerrainCandidateV8, V8_SETTINGS);
+export const createGeneratedMapV8 = value => generateProfile(value, buildTerrainCandidateV8, V8_SETTINGS);
 
-export const createGeneratedMapV9=value=>createGeneratedMap(value,buildTerrainCandidateV9,V9_SETTINGS);
+export const createGeneratedMapV9=value=>generateProfile(value,buildTerrainCandidateV9,V9_SETTINGS);
 
-export const createGeneratedMapV10=(value,factory=buildTerrainCandidateV10)=>createGeneratedMap(value,factory,V10_SETTINGS);
+export const createGeneratedMapV10=(value,factory=buildTerrainCandidateV10)=>generateProfile(value,factory,V10_SETTINGS);
 
-export const createGeneratedMapV11=(value,factory=buildTerrainCandidateV11)=>createGeneratedMap(value,factory,V11_SETTINGS);
+export const createGeneratedMapV11=(value,factory=buildTerrainCandidateV11)=>generateProfile(value,factory,V11_SETTINGS);
+
+
+// Explicit historical v12 replay; normal environments add validated settlements.
+export const createGeneratedMapV12=value=>generateProfile(value);
+export function createGeneratedMap(value){
+  const base=createGeneratedMapV12(value);
+  let cause;
+  for(let attempt=0;attempt<8;attempt++)try{return validateSettlementMap(createSettlementMap(base,attempt));}catch(error){cause=error;}
+  throw new Error(`Could not place connected settlements for seed ${base.generation.seed}. Current map retained.`,{cause});
+}

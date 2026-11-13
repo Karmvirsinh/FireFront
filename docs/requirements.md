@@ -280,3 +280,26 @@ Record v10 checklist as user-reported passed. Correct the seed7/(37,80) bare-fac
 ## Approved selected production direction — 2026-11-12
 
 Checkpoint existing comparison/shadows, then integrate curated Kenney temperate vegetation with FireFront palette and deterministic regional woodland characters. Preserve per-cell fuel ownership/lifecycle/reset, existing boulders/materials and validated bare-mineral fire agreement. Scale remains provisional, not globally reduced. Production targets Smooth257surface corners over unchanged104²logical cells, using continuous analytic landforms and true displayed-surface20°routing/spawn/bypass validation; no50°trial adoption. Changed layouts are versioned with historical replay retained. No new simulation rules/timings/dependencies, water/buildings or publication. Checklist mostly passed is not blanket acceptance of this integration.
+
+
+## Subsequently approved Assignment 5 functional increment — 2026-11-12
+
+Add setup-selectable A* / Dijkstra, locked during a run. Both use the same
+unit-cost, edge-sharing Path-first graph and Global/Local hazard knowledge.
+Dijkstra has zero heuristic; A* uses minimum Manhattan distance to permitted
+known-safe goals. Arrival at any safe endpoint evacuates an agent. Hazards can
+invalidate a destination and cause replanning without granting Local remote
+knowledge. Preserve emergency buffer escape and direct-active-fire-only loss.
+
+Normal generated maps target 2–3 origins and 2–3 safe destinations with 20 agents
+total. Every spawn/entrance initially reaches safety under production's 20°
+trail constraint. Facilities have blocked nonfuel footprints and connected
+outside entrance/assembly/arrival cells; no interior spawning. Buildings are
+nonburnable for this increment; fuel/destruction is separate future work.
+Use original simple structures if suitable curated buildings are not readily
+available. Preserve accepted ground, Kenney woodland, fine terrain, shadows,
+fire/reset/camera behavior and historical fixtures. No water/bridges or unrelated
+navigation redesign. The user subsequently reports the full functional checklist passed; exact timings are not inferred.
+
+Ground correction status: the user explicitly accepted its corrected appearance
+and blending; earlier pending visual status for that correction is superseded.
