@@ -11,7 +11,7 @@ import { getMapRendering } from '../world/mapContract.js';
 
 const COLORS = {
   obstacle: 0x8c9698, vegetation: 0x527648, route: 0xe0c58e,
-  start: 0x478ecb, safe: 0x55b69b, clearing: 0xc5bd8b, building: 0x80654d,
+  start: 0x478ecb, safe: 0x55b69b, clearing: 0xc5bd8b, building: 0x80654d, camp: 0x937651,
 };
 const FIRE_COLORS = { burning: 0x67482f, 'burned-hot': 0x332a29, 'burned-cool': 0x4e5663 };
 const FUEL_COLORS = { brush: 0x527648, grass: 0x91aa59, forest: 0x345b44 };
@@ -155,7 +155,7 @@ export function createMapView(map) {
   }
   instances(new THREE.DodecahedronGeometry(0.22, 0),
     new THREE.MeshStandardMaterial({ color: 0x687276 }), rocks);
-  function label(text, x, z, width) {
+  function label(text, x, z, width, lift=0.35) {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 128;
@@ -173,13 +173,21 @@ export function createMapView(map) {
     const sprite = new THREE.Sprite(material);
     sprite.name = 'map-label';
     sprite.userData.text = text;
-    sprite.position.set(...positionFor(x, z, 0.35));
+    sprite.position.set(...positionFor(x, z, lift));
     sprite.scale.set(width, width / 4, 1);
     sprite.renderOrder = 1;
     group.add(sprite);
     resources.push(texture, material);
   }
-  for (const item of labels) label(item.text, item.x, item.z, item.width);
+  for (const item of labels) {
+    const camp=map.buildings?.find(b=>b.kind==='safe'&&b.id===(item.campId??item.buildingId));
+    if(camp){
+      const x=camp.entrance%map.width,z=Math.floor(camp.entrance/map.width);
+      // Existing ground-offset labels can land across a tent/roof depending on
+      // facility orientation. Lift a compact label over the outside arrival.
+      label(item.text,x,z,Math.min(item.width,1.8),camp.baseY+1.65-sampleTerrainHeight(map,x+.5,z+.5));
+    }else label(item.text, item.x, item.z, item.width);
+  }
 
   // Hollow square marks the exact logical cell, unlike the tapered active flames.
   function outline(size, thickness, hex) {

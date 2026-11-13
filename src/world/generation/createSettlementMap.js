@@ -1,4 +1,4 @@
-import {seedStream,GENERATOR_SETTINGS,GENERATOR_VERSION} from './seed.js';
+import {seedStream,V14_SETTINGS as GENERATOR_SETTINGS,V14_VERSION as GENERATOR_VERSION,V13_SETTINGS,V13_VERSION} from './seed.js';
 import {normalizeMap,getSafeCells} from '../mapContract.js';
 import {neighbors} from '../../agents/findPath.js';
 import {sampleTerrainHeight} from '../terrain.js';
@@ -7,11 +7,16 @@ import {terrainTrailCell,terrainTrailEdge,validateTrailTerrain} from './trailTer
 export const SETTLEMENT_VERSION=GENERATOR_VERSION;
 const directions=[[0,-1],[1,0],[0,1],[-1,0]];
 
+export function settlementCounts(random,{legacy=false}={}){
+ const origins=2+Number(random()<.5),drawnSafe=2+Number(random()<.5);
+ return {origins,safe:legacy?drawnSafe:Math.min(origins,drawnSafe)};
+}
+
 // Add small facilities beside the selected, validated terrain-first network.
 // No existing trail is removed, widened, or routed through a building.
-export function createSettlementMap(base,attempt=0){
+export function createSettlementMap(base,attempt=0,{legacy=false}={}){
  const map=structuredClone(base),random=seedStream(base.generation.seed,'settlements-v1',attempt);
- const countOrigins=2+Number(random()<.5),countSafe=2+Number(random()<.5);
+ const {origins:countOrigins,safe:countSafe}=settlementCounts(random,{legacy});
  const sites=[];
  for(let e=0;e<map.cells.length;e++)if(map.navigation.allowedCells[e]){
   const x=e%map.width,z=Math.floor(e/map.width);
@@ -65,15 +70,17 @@ export function createSettlementMap(base,attempt=0){
  delete map.zones;
  map.pathNetwork.trailCells=map.navigation.allowedCells.flatMap((allowed,i)=>allowed?[i]:[]);
  map.rendering.labels=[...map.origins.map((p,i)=>({...p,text:`ORIGIN ${i+1}`,z:p.z+2.5,width:2.8})),...map.safeZones.map((p,i)=>({...p,text:`SAFE ${i+1}`,z:p.z+2.5,width:2.7}))];
- map.generation={...map.generation,version:SETTLEMENT_VERSION,baseVersion:base.generation.version,settlementAttempt:attempt,settings:{...GENERATOR_SETTINGS}};
+ map.generation={...map.generation,version:legacy?V13_VERSION:SETTLEMENT_VERSION,baseVersion:base.generation.version,settlementAttempt:attempt,settings:{...(legacy?V13_SETTINGS:GENERATOR_SETTINGS)}};
  return map;
 }
 
 export function validateSettlementMap(candidate){
  const map=normalizeMap(candidate),fail=s=>{throw new Error(`Invalid settlements: ${s}`);};
- if(Object.entries(GENERATOR_SETTINGS).some(([k,v])=>map.generation?.settings?.[k]!==v))fail('settings');
- if(map.generation?.version!==SETTLEMENT_VERSION||map.width!==104||map.height!==104||map.cellSize!==.5||map.spawnCells.length!==20||new Set(map.spawnCells).size!==20)fail('profile/population');
+ const legacy=map.generation?.version===V13_VERSION;
+ if(Object.entries(legacy?V13_SETTINGS:GENERATOR_SETTINGS).some(([k,v])=>map.generation?.settings?.[k]!==v))fail('settings');
+ if(![SETTLEMENT_VERSION,V13_VERSION].includes(map.generation?.version)||map.width!==104||map.height!==104||map.cellSize!==.5||map.spawnCells.length!==20||new Set(map.spawnCells).size!==20)fail('profile/population');
  if(![2,3].includes(map.origins?.length)||![2,3].includes(map.safeZones?.length)||map.buildings.length!==map.origins.length+map.safeZones.length)fail('endpoint counts');
+ if(!legacy&&map.origins.length<map.safeZones.length)fail('origins must be at least safe destinations');
  const goals=getSafeCells(map),seen=new Set(goals),queue=[...goals];
  for(let h=0;h<queue.length;h++)for(const j of neighbors(map,queue[h]))if(!seen.has(j)){seen.add(j);queue.push(j);}
  if([...map.spawnCells,...map.origins.map(o=>o.z*map.width+o.x)].some(i=>!seen.has(i))||map.navigation.allowedCells.some((v,i)=>v&&!seen.has(i)))fail('unreachable assembly/network');

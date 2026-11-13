@@ -145,3 +145,37 @@ Only facility footprints and new access/indicator cells change classifications.
 The v12 surface, vegetation streams, existing trail traces and connections remain.
 Versioned v12 and older factories preserve old single-endpoint scenarios. Their
 ignition coordinates and evacuation timings are not current v13 outcomes.
+
+
+Count revision: current `forest-settlements-v14` enforces origins >= safe zones
+at generation and validation. It uses2/2,3/2or3/3 and still20agents. v13 remains
+available explicitly through `createGeneratedMapV13()`, including historical
+2/3layouts. No planner, awareness, movement, terrain or camp-art change accompanies
+this count-only revision.
+
+
+## Radial camp contract (v15)
+
+Normal `forest-camps-v15` adds plain `camps` descriptors: id, logical center x/z,
+cardinal dx/dz, world radius/seeded phase, clearingCells, setbackCells,
+setbackWidthCells, assemblyCells, entrance, connectionCells and structures with
+world-local dimensions/physical cell reservations. Nominal radius2.7units;
+`campRadius` defines the shared irregular radial boundary. Cell intersection is
+conservative. Reservation includes a1-unit radial margin and two complete grid
+cells around the cleared cells, guaranteeing the requested setback at diagonals.
+
+Walkable camp cells use terrain `camp`, no fuel, and are explicitly permitted by
+Path-first. Outside setback stays off-policy except existing/new trails; cleared
+setback is physically walkable except rocks/structures. Structural blocker cells
+use `building`, no fuel, walkablefalse. A roof alone is not a ground blocker.
+`safeZones[].campId` links to a camp and its20assembly arrival cells; representative
+x/z is inside the assembly. `buildings` holds the structural blockers/entrance,
+not an all-blocked camp floor. Arrival at any assembly cell evacuates an agent.
+There is no admission capacity, seat assignment or inter-agent collision system.
+
+The normal factory selects/validates camps before replacing an active session;
+no height grading occurs. `createGeneratedMapV14()` preserves small count-correct
+settlements and `createGeneratedMapV13()` its earlier counts. Origin cabins/spawns,
+base terrain and original trail/bypass graph remain. V15 fuel connectivity can
+change due to actual camp/setback clearing. Historical timings are not current
+v15claims. Rendering uses the same height sampler and accepted material coverage.

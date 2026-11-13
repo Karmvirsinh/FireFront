@@ -1,6 +1,6 @@
 import { validateTerrain } from './terrain.js';
 // Plain-data boundary shared by world factories, simulation and rendering.
-const TERRAINS = ['obstacle', 'vegetation', 'clearing', 'route', 'start', 'safe', 'building'];
+const TERRAINS = ['obstacle', 'vegetation', 'clearing', 'route', 'start', 'safe', 'building', 'camp'];
 const FUELS = ['none', 'grass', 'brush', 'forest'];
 
 export const getOrigins=map=>map.origins??[{id:'origin-1',...map.start,spawnCells:map.spawnCells}];

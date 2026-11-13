@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {findPath,neighbors} from '../src/agents/findPath.js';
 import {createAgentSimulation} from '../src/agents/createAgentSimulation.js';
 import {AGENT_CONFIG} from '../src/agents/agentConfig.js';
-import {createGeneratedMap,createGeneratedMapV12} from '../src/world/generation/createGeneratedMap.js';
+import {createGeneratedMapV13 as createGeneratedMap,createGeneratedMapV12} from '../src/world/generation/createGeneratedMap.js';
 import {normalizeMap,getSafeCells} from '../src/world/mapContract.js';
 import {validateTrailTerrain} from '../src/world/generation/trailTerrain.js';
 import {createPlannerControls} from '../src/ui/createPlannerControls.js';

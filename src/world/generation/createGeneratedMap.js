@@ -1,3 +1,4 @@
+import {createCampMap,validateCampMap} from './createCampMap.js';
 import {createSettlementMap,validateSettlementMap} from './createSettlementMap.js';
 import { buildTerrainCandidate, buildTerrainCandidateV8, buildTerrainCandidateV9, buildTerrainCandidateV10, buildTerrainCandidateV11 } from './buildTerrainCandidate.js';
 import { createTerrainStructure } from './createTerrainStructure.js';
@@ -82,9 +83,16 @@ export const createGeneratedMapV11=(value,factory=buildTerrainCandidateV11)=>gen
 
 // Explicit historical v12 replay; normal environments add validated settlements.
 export const createGeneratedMapV12=value=>generateProfile(value);
-export function createGeneratedMap(value){
+function generateSettlements(value,legacy=false,withBase=false){
   const base=createGeneratedMapV12(value);
   let cause;
-  for(let attempt=0;attempt<8;attempt++)try{return validateSettlementMap(createSettlementMap(base,attempt));}catch(error){cause=error;}
+  for(let attempt=0;attempt<8;attempt++)try{const map=validateSettlementMap(createSettlementMap(base,attempt,{legacy}));return withBase?{map,base}:map;}catch(error){cause=error;}
   throw new Error(`Could not place connected settlements for seed ${base.generation.seed}. Current map retained.`,{cause});
+}
+export const createGeneratedMapV13=value=>generateSettlements(value,true);
+export const createGeneratedMapV14=value=>generateSettlements(value);
+export function createGeneratedMap(value){
+ const {map,base}=generateSettlements(value,false,true),cache={};let cause;
+ for(let attempt=0;attempt<8;attempt++)try{return validateCampMap(createCampMap(map,base,attempt,cache));}catch(error){cause=error;}
+ throw new Error(`Could not reserve gentle camps for seed ${map.generation.seed}. Current map retained.`,{cause});
 }

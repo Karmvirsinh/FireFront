@@ -303,3 +303,41 @@ navigation redesign. The user subsequently reports the full functional checklist
 
 Ground correction status: the user explicitly accepted its corrected appearance
 and blending; earlier pending visual status for that correction is superseded.
+
+
+## Endpoint-count correction approved — 2026-11-12
+
+Normal generated profiles must have originCount >= safeZoneCount. With current
+ranges, permitted combinations are2origins/2safe,3origins/2safe,3origins/3safe.
+Keep20agents, initial per-spawn reachability, planners/awareness and failure
+handling unchanged. Version affected layouts and preserve v13 replay. Camp
+artwork remains deferred until the next original camp reference; existing safe
+destinations remain functional. The preceding functional checklist passed,
+as reported by the user; the count correction needs its own review.
+
+
+## Safe-camp visual pass authorized — 2026-11-12
+
+The user confirmed the camp reference image is already attached and instructed
+continuation. This supersedes the earlier deferral. Use the existing licensed
+camp subset and simple original pavilion/seating to distinguish safe destinations
+from origin cabins. Preserve existing blocked footprints and outside arrival,
+20 agents, v14 count correction and all simulation/navigation/terrain behavior.
+Camps remain nonburnable; the fire ring is unlit. No interiors, new capacity rules,
+water/bridges or map expansion. Camp visual acceptance remains pending.
+
+
+## Safe-camp scale/layout correction approved — 2026-11-12
+
+The compact camp appearance is rejected; functional acceptance remains separate.
+Supersede the old3×3safe footprint with a real, modestly irregular world-radial
+clearing reserved on gentle terrain, plus a complete two-cell nonfuel setback.
+Size against the0.42-unit agent, with room for20agents, an open assembly, human-
+scaled shelter/tents/seats, partial fencing/open approaches, one safe marker and
+optional unlit ring outside assembly. Only safe destinations become camps;
+origins retain cabins. Clearings/setbacks contain no burnable vegetation and use
+accepted continuous material blending. Structures/blockers cannot obstruct
+arrivals or preserved trails. Keep origin>=safe counts,20agents, planners/awareness
+and failure retention. V15arrival moves into accessible camp assembly cells;
+no capacity or destruction system. Historical fixtures are explicit. Human visual
+review is pending; no water/bridges, merge, push or deployment.

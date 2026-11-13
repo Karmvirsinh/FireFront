@@ -1319,3 +1319,199 @@ Local Development: http://127.0.0.1:5178/FireFront/ ; Production preview: http:/
 ## 2026-11-12 — Functional increment accepted/checkpointed
 
 The user reports the full Dijkstra/multiple-endpoint/building functional checklist passed. Record this as human acceptance; automated197/197 tests, build and diff checks remain the separately recorded evidence. No exact timings or extra scenarios are inferred from this acceptance. Save the functional work separately before correcting endpoint counts. Next correction requires origins >= safe destinations; camp artwork is deferred until the next original camp reference and explicit implementation scope. Existing destinations remain functional.
+
+
+## 2026-11-12 — Endpoint-count correction (uncommitted review)
+
+Accepted functional checkpoint: **ad8854c**, `feat: add selectable planners and functional settlements`, on codex/production-woodland-integration. User reports the full four-item functional checklist passed; no additional scenarios or exact timings inferred. Ground acceptance remains separately checkpointed at8d68595.
+
+Current profile becomes **forest-settlements-v14**. Count selection keeps the same two seeded random draws and caps safe count at origin count, permitting only2/2,3/2,3/3. Both construction and final validation enforce the rule. Twenty agents remain distributed across origins with all spawns/entrances connected to safety and production20°constraints unchanged. The same bounded facility retries and base-generation failure retention/fallback are preserved.
+
+Explicit `createGeneratedMapV13()` reproduces the accepted prior profile, including its formerly allowed2/3case; v12/older/fixed fixtures also remain. New v14 identity/settings distinguish the correction. At an identical placement attempt, already-allowed count draws retain all layout data; changed eligibility can also allow an earlier retry to succeed. Historical timings are not remeasured or relabeled as new v14 observations.
+
+Camp artwork is **not implemented** in this correction. The supplied broad concept shows roofed shelters, seating/fencing and a fire-ring gathering area. Inspection of the existing Nature Kit archive confirms four tent GLBs, four campfire/ring arrangements, fence/gate variants, logs/stacks and a sign. Those extra props are local archive inventory, not newly imported runtime assets. Exact pictured pavilions/cabins/seating are not present as matching kit buildings. Existing original safe structures remain functional. Wait for the next original camp reference and bounded approval before camp visual work; no water/bridges or other visual changes.
+
+Verification completed: **19/19 focused tests passed** sequentially (about 61.12 s), covering all count draws, deterministic current maps, 20 distinct reachable spawns, displayed-surface trail slopes, v13 replay, both planners/Local knowledge, selectors/reset/session cleanup and generation-failure retention. Seeds 0, 2, 7, 34 and 2026 were checked. Seed 2 changes from historical v13 2/3 to v14 2/2; sampled compliant seeds 0, 7, 34 and 2026 match exactly except version/settings. A mislabeled v14 2/3 map is rejected by validation. Final production build passed (111 modules); diff checks passed. Existing warnings remain visible; no full-suite/benchmark repetition or asset changes.
+
+New count-correction human review remains pending. Refresh the rebuilt preview, Generate seed 2 (2/2), seed 0 (3/2) and seed 34 (3/3); confirm 20 waiting agents and reset/regeneration. No new browser or human pass is claimed for this correction. Development http://127.0.0.1:5178/FireFront/ ; Production preview http://127.0.0.1:4178/FireFront/ . The correction remains uncommitted; no merge/push/deploy.
+
+
+## 2026-11-12 — Reference-guided compact safe camps (uncommitted visual review)
+
+The user clarified that the attached concept image already supplies the camp
+reference and asked to proceed with available assets. This supersedes the earlier
+camp deferral. Preserved all uncommitted v14 endpoint-count work on
+codex/production-woodland-integration, HEADad8854c; no additional checkpoint,
+merge, push or deployment.
+
+Implemented safe destination presentation:
+- Original open-sided moss-roof pavilion with posts, deck, table/bench and a
+  green safe marker; origin cabins remain distinct and unchanged in appearance.
+- Four existing Kenney Nature Kit CC0 props: `tent_smallOpen.glb`,
+  `campfire_stones.glb`, `log.glb`, `fence_simpleLow.glb`. Source GLBs are copied
+  byte-identically from the existing archive, with license/source/SHA-256 records
+  in public/camp/kenney/SOURCE.md. No downloads, new dependencies or full-pack import.
+  The reproducible offline converter is scripts/prepareCampArtwork.mjs; runtime
+  shares compiled geometry and materials across camps, without a GLTF fetch.
+- Muted canvas, earthy wood and warm stone colors preserve named material parts.
+  The stone ring is unlit: no decorative fire, light, heat or simulation hazard.
+- Props fit the existing3×3blocked facility footprint, with a clear outside arrival
+  cell. No new clearing, trail, footprint, fuel, endpoint or terrain data changes.
+  Facilities remain nonburnable and have no traversable/simulated interiors.
+  These are compact camp symbols within current logical capacity, not a scaled
+  reproduction of the large concept camps or a new occupancy/capacity model.
+- Safe labels are smaller and lifted above the existing arrival point rather
+  than covering the tent/roof. Label rendering only; map metadata and camera
+  controls/framing logic are unchanged. Logical historical fixtures remain;
+  the shared safe-building renderer now displays camps for their building data.
+
+Actual checks:
+- Sequential9/9focused camp, planner and count tests passed. Final2/2camp tests
+  passed again after label/resource cleanup, including world-space containment,
+  no emissive fire, unchanged arrival/map/state, reset restoration, compact label
+  position and exactly-once shared-resource disposal. The prior197-test functional
+  checkpoint remains separate evidence, not a claim that its run included camp art.
+- Production build passed113modules and diff checks passed. Main entry is about
+  116.87kB gzip (four-prop compiled artwork adds about18kB over the count-only
+  build). Existing warnings remain visible. No benchmark tooling/captures.
+- Reused one browser and existing servers, with heavy checks sequential.
+  Production seeds0and8 and Development seed8 inspected at overview/close range.
+  Seed8 gives a convenient central SAFE2 for review. Camp floor/props follow the
+  existing sampled foundation and remain clear of the trail/arrival. Compact labels
+  no longer lie across the pavilion; no apparent sustained slowdown in inspected
+  views (settled readout around144FPS, ordinary local observation only).
+- Development camp click rejected ignition; nearby fuel(48,60) remained selectable.
+  Start fire entered evacuation with20agents; reset restored20waiting and retained
+  the camera and camp appearance. No complete evacuation timing run was repeated.
+  Both inspected consoles clear; preview narrow390×740 retains one canvas and no
+  horizontal overflow. Temporary viewport override removed; final preview remains
+  on seed8overview. Screenshots stored outside the repository.
+
+Human visual validation is pending. Refresh Development
+http://127.0.0.1:5178/FireFront/ or rebuilt preview
+http://127.0.0.1:4178/FireFront/, Generate8 and inspect SAFE2 closely (pan/zoom as
+needed). Check the pavilion/tent/seating/fence/ring, outside arrival, label
+readability, camp ignition rejection and reset. Count correction remains separately
+uncommitted and pending review as previously recorded. No unrelated features.
+
+
+## 2026-11-12 — Enlarged radial safe camps (uncommitted visual review)
+
+User feedback: the small camp artwork was rejected as underscaled/cramped. The
+prior full functional checklist acceptance remains recorded separately atad8854c;
+no acceptance is inferred for this correction. All prior uncommitted count and
+artwork work is preserved, including explicit v14/smaller historical factories.
+
+Current normal profile: **forest-camps-v15**. It builds from validated v14, keeps
+origin cabins/spawns and the origin>=safe rule, then reserves real radial safe
+camp cells before installation. No terrain heights are modified. Obsolete safe
+hut cells/access spurs are restored from the v12 baseline before reserving camps,
+so old square soil/fuel stamps are not left behind. Original trail/bypass
+connections remain navigable, and every spawn reaches at least one safe arrival.
+
+Dimensions/proportions:
+- Agent:0.16×0.42×0.16world units. Nominal radial camp diameter **5.4world units**,
+  about12.9standing-agent heights; boundary has modest seeded3/5harmonic irregularity.
+- In seed8, the conservative cell-intersection clearing envelope is **13×13cells
+  =6.5×6.5world units**, with121actual clearing cells rather than a square pad.
+  This raster envelope is larger than the nominal radial curve; it is not hidden
+  or presented as an exact5.4-unit logical diameter.
+- A further **two complete logical cells** of nonfuel vegetation setback is
+  guaranteed around the actual cleared cells, including diagonals. The world
+  radial1-unit margin is unioned with this conservative grid setback. Seed8's
+  combined envelope is17×17cells=8.5×8.5world units,241reserved cells per camp
+  (121clearing+120setback). Burnable plants/crowns are excluded from both.
+- Each camp has **20distinct clear assembly cells**, a5×4cell arrangement
+  (2.5×2.0world units), plus other connected camp floor around props. No capacity,
+  collision-between-agents, reservation or seat-assignment system was added;
+  agents can still overlap under the existing rules.
+- Shelter roof1.8×1.1units, at least1.0unit clearance above the sampled surface.
+  Upright posts meet their individual terrain heights. Two perimeter tents are
+  individually fitted to0.95unit total height. Native doorway inspection gives
+  about0.75unit opening height and about0.20unit width at the agent's0.42-unit
+  head height, exceeding its0.16width. Openings face the assembly area.
+- Log seats are about0.20unit high; partial0.28-unit fencing has generous gaps.
+  An unlit0.55-unit stone ring sits outside the assembly. One green safe marker
+  and compact SAFE label identify each camp. Props are not uniformly scaled.
+
+Generation/access safeguards:
+- Entire clearing/setback must satisfy the same complete-surface20°bound; main
+  clearing center-height range is limited to0.65unit. Terrain-only selection and
+  bounded camp retries reject unsuitable ground rather than flattening landforms.
+- Full reservations cannot intersect each other or origin buildings/spawns.
+  Existing paths connect through open entrances into the camp floor. Structural
+  blockers are mapped for tent bodies, supports, seats, tables, marker posts and
+  fences; roofs with standing clearance do not block the floor underneath.
+- Fence segments are kept only when they preserve actual cell connectivity and
+  existing trails; sites need at least3usable fence sections. Early checks caught
+  perimeter pockets and insufficient fencing, corrected through conditional fence
+  placement/site rejection rather than silently permitting blocked access.
+- **Arrival changes intentionally:** v15 agents evacuate on entering a clear
+  central assembly cell, instead of stopping at the old outside hut point. All20
+  assembly cells are eligible goals. Goal selection still uses the selected
+  A*/Dijkstra and Local/Global knowledge; actual unsafe entry/loss rules remain.
+  A* caches each node's unchanged nearest-goal Manhattan estimate within a search
+  to avoid repeated work for60possible arrival cells; costs/tie-breaking are unchanged.
+- Camp surfaces use the accepted continuous ground treatment on actual nonfuel
+  data. No square/circular floor overlay is added. Ring/fences follow the actual
+  terrain; small individual tent/log supports handle local ground differences.
+  Nonburnable structures and no interior/destruction model remain limitations.
+
+Verification:
+- Final sequential focused run **22/22passed** (~78.52s): seeds8/0/2/34 determinism,
+  complete reservation/setback fuel exclusion, all-spawn A*/Dijkstra reachability
+  and equal costs, historical v13/v14 count preservation, unchanged origins/heights,
+  loss/escape/reset regressions and exact fixed-map pacing. Model tests verify
+  actual blocker alignment, doorway/roof clearance, terrain grounding, plant/crown
+  exclusion and exactly-once shared resource cleanup. A deliberately unsuitable
+  terrain fixture rejects placement without mutating the previous usable map.
+- Controlled hazard fixture burns every remaining fuel cell simultaneously:
+  clearing cells stay outside the existing one-cell navigation buffer. This is an
+  automated protection-bound test, not a normal browser fire scenario or new rule.
+- New normal-run example, **seed8/(49,12), Local**, isolated one-cell fuel island:
+  both A* and Dijkstra finish with20evacuated/0lost at **55.95simulation seconds**.
+  SAFE2 receives7agents (first at45.35s), SAFE1 receives13, SAFE3 receives0. This
+  is a complete-flow/scale example, not evidence of fire-driven rerouting.
+- Rebuilt production preview confirmed the same55.95sresult with20evacuated;
+  Inspect scene shows actual terminal agents beside the shelter/tents in SAFE2.
+  Screenshots are real normal-run agents, not decorative scale proxies. Reset
+  restores20waiting, selectors and camp/ground appearance while preserving camera;
+  picking in camp ground rejects ignition after zoom. R and regeneration work.
+- Seed8SAFE2and seed2 reviewed at overview/close oblique camera views. Lower orbit
+  angles/physical mouse remain part of human review, not claimed automated passes.
+  Development generation/entry/Skip and390×740layout work, one canvas/no horizontal
+  overflow. Inspected dev/preview consoles clear. FPS varied during interactions
+  and settled around144in inspected views; no benchmark/performance claim.
+- Observed initial random seed1975023467 correctly fell back visibly to0. Direct
+  v14inspection confirms the same pre-camp96-attempt trail-connection failure;
+  it is inherited. Camp constraints can also reject unsuitable maps; failures
+  retain the existing session. No constraints were relaxed to conceal failure.
+
+Prior v13/v14 ignition coordinates/timings are historical and may now be nonfuel
+or have changed outcomes. Only current example above is newly traced. New larger
+nonfuel clearings legitimately alter fire connectivity; fire spread, timings,
+awareness, agent speed and direct-active-fire loss rules remain unchanged.
+
+Human visual acceptance remains pending. Review seed8SAFE2 and seed2 for scale,
+rounded real ground/setback, tent openings, shelter/seat height, open arrival and
+prop gaps. Refresh the rebuilt preview; use seed8/(49,12),Local for the short
+55.95s automated example, then Inspect to compare actual agents. Existing servers
+are reused. No new commit, merge, push or deployment.
+
+Final checkpoint verification: production build passed (116 modules); existing bundle-size warning remains visible. git diff --check passed. All camp/count changes remain uncommitted on codex/production-woodland-integration at ad8854c.
+
+
+## 2026-11-12 — Accepted camps/count release checkpoint
+
+The user explicitly accepted the current enlarged camps/count build for submission
+and authorized release, public main push and the existing Pages deployment. This
+supersedes the pending visual-acceptance status above. Functional acceptance and
+camp appearance acceptance are recorded separately; no new exact manual timings
+or additional scenarios are inferred. Origin cabins remain, origins >= safe zones,
+20 agents, rounded protected camps and accessible assembly arrivals are retained.
+No water/bridge implementation was started or included. Historical experiments,
+branches, source/license records and prior performance evidence are preserved.
+The 22 passing focused camp/navigation/pacing checks and completed dev/preview
+smoke evidence above are reused for this accepted checkpoint. Release build/diff
+checks, production ZIP and short final smoke/deployment verification follow.
+No new benchmark or feature/cosmetic expansion is part of release preparation.

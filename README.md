@@ -1,10 +1,32 @@
 # FireFront
 
-FireFront is an educational 3D wildfire and evacuation simulator for a university project. It explores how changing fire hazards affect navigation through forest paths, with an authored two-route regression scenario. It uses JavaScript, Three.js, Vite/npm and HTML/CSS, with no runtime AI service or external assets.
+FireFront is an educational 3D wildfire and evacuation simulator for a university project. It explores how changing fire hazards affect navigation through forest paths, with an authored two-route regression scenario. It uses JavaScript, Three.js, Vite/npm and HTML/CSS, with no runtime AI service. Curated Kenney CC0 nature/camp artwork is included with source and license records.
 
 **Live demo:** [FireFront on GitHub Pages](https://karmvirsinh.github.io/FireFront/)
 
-## Current scope
+## Current submission scope — November 12 Beta
+
+The accepted simulator uses **forest-camps-v15**, **104×104 logical cells**, a
+smooth 257×257 terrain surface, and **20 agents total**. Generated layouts have
+2–3 origins and 2–3 safe camps, with origins >= safe destinations. Origin cabins
+connect to narrow terrain-safe trails; safe camps provide rounded nonfuel
+clearings, a two-cell protected setback, open shelters/tents and clear assembly
+arrivals. Select A* or Dijkstra and Global or Local Awareness before starting.
+The single-ignition fire lifecycle, hazard-aware evacuation/recovery, direct-fire
+loss, entry/tour/results, reset, FPS readout, regional ground materials, curated
+woodland and shadows are implemented. Fixed/historical fixtures remain available.
+
+Current short demonstration: seed **8**, Local, ignite **(49,12)**. Automated
+A*/Dijkstra checks completed with 20 evacuated at 55.95 simulated seconds; this
+isolated ignition demonstrates flow and camp scale, not fire-driven rerouting.
+Old generated coordinates/timings below are historical. No water, bridges,
+weather, capacity system or building destruction is implemented. Buildings and
+camps are nonburnable; agents can overlap. No new performance benchmark is claimed.
+
+### Historical development scope and checkpoints
+
+The following records describe earlier versions and remain for comparison; the
+submission scope above supersedes their old current/pending/publication wording.
 
 Normal local environments now use **forest-composition-v11: 104×104 cells**, cell size 0.5 world units, 20 agents, one START and one SAFE. Networks contain 14–18 ordinary nodes with narrow trails and occasional useful loops. Forest coverage now uses broad cores and transitional woodland with denser, irregular instanced trees; visual acceptance is pending. Terrain is established before final trails and slope-safe endpoints/spawns; terrain-feasible routing preserves its shape without grading. Current local terrain genuinely shares the prototype landform operators: irregular polygon tablelands/terraces, asymmetric ridges, hills, basin/flat blends and branching dry cuts. The 52-unit composition profile is `simulator-composition-v2`; carved trails retain the production 20-degree constraint without grading away landforms. Human visual acceptance remains pending. Seed input reproduces the selected generator version's environment.
 
@@ -303,3 +325,46 @@ not user-reported timings or performance benchmarks. Alternate-destination
 switching is covered by controlled fixtures; those generated examples did not
 switch destinations. Some seeds still exhaust bounded base generation; failures
 retain the old map or visibly fall back to seed0 on initial load.
+
+
+Current endpoint-count revision: **forest-settlements-v14** permits **2 origins /
+2 safe zones**, **3 / 2**, or **3 / 3**, with 20 agents total and initial reachability
+preserved. Historical v13 is replayable explicitly; its accepted functional
+checkpoint is **ad8854c**. The count correction passed 19 focused tests and the
+production build; human review remains pending. Compact safe-camp visuals are now implemented for review; existing arrivals remain functional.
+
+
+### Safe camps (visual review pending)
+
+Safe destinations now show an open-sided shelter, tent, log seating, low fencing,
+safe marker and an **unlit stone fire ring**, using four CC0 Kenney props plus
+original structures. Origin cabins stay distinct. Camps use existing blocked
+footprints: agents arrive at the outside safe cell, with no simulated interiors
+or building fire/destruction. No terrain, trail, fuel or planner changes accompany
+this visual pass. Shared resources dispose with each map. See
+[camp asset source/license](public/camp/kenney/SOURCE.md) and the actual checks in
+[progress](docs/progress.md). Generate seed8 and inspect SAFE2 for a convenient
+close view. Refresh preview after rebuilding to see the new artwork.
+
+
+### Enlarged safe camps — current v15 (visual review pending)
+
+The small camps were rejected and are superseded by **forest-camps-v15**. Safe
+sites now reserve real rounded, irregular nonfuel clearings with a two-cell
+vegetation setback. Origins keep cabins; counts remain2/2,3/2or3/3 and20agents.
+
+Nominal camp diameter is5.4world units against the0.42-unit agent (12.9heights).
+Seed8's conservative logical clearing envelope is13×13cells=6.5×6.5units; with
+setback17×17cells=8.5×8.5units. Each camp has20clear assembly cells and separate
+human-scaled shelter, tents, seating, partial fencing, marker and unlit ring.
+No whole-camp pad covers the terrain. Camps are selected on gentle ground without
+flattening hills; props follow the authoritative surface. **Agents now evacuate
+inside the accessible assembly area**, rather than at the old hut doorstep.
+There is no capacity/interior/destruction system; overlapping agents remain possible.
+
+For a current example: generate **seed8**, Local, ignite **(49,12)**. Automated
+A*/Dijkstra runs both finish at55.95simulation seconds with20evacuated; production
+preview confirmed the A* result. Inspect scene shows actual agents in SAFE2 for
+scale review. The small isolated ignition is not a rerouting demonstration.
+V13/v14factories and historical timing evidence remain; their coordinates may no
+longer be valid in v15. See progress for22focused checks and pending human review.

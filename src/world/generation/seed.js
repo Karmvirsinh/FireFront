@@ -1,6 +1,8 @@
 import alea from 'alea';
 
-export const GENERATOR_VERSION='forest-settlements-v13';
+export const GENERATOR_VERSION='forest-camps-v15';
+export const V14_VERSION='forest-settlements-v14';
+export const V13_VERSION='forest-settlements-v13';
 export const V12_VERSION='forest-woodland-v12';
 export const V11_VERSION='forest-composition-v11';
 export const V10_VERSION='forest-composition-v10';
@@ -27,7 +29,9 @@ export const V10_SETTINGS=Object.freeze({...V9_SETTINGS,terrainVersion:'simulato
 export const V11_SETTINGS=Object.freeze({...V10_SETTINGS,surfaceFuelVersion:'landform-cover-v1'});
 export const V12_SETTINGS=Object.freeze({...V11_SETTINGS,terrainVersion:'simulator-continuous-surface-v3',surfaceCorners:257,woodlandArtwork:'kenney-woodland-v1'});
 
-export const GENERATOR_SETTINGS=Object.freeze({...V12_SETTINGS,settlements:'connected-buildings-v1'});
+export const V13_SETTINGS=Object.freeze({...V12_SETTINGS,settlements:'connected-buildings-v1'});
+export const V14_SETTINGS=Object.freeze({...V13_SETTINGS,endpointCounts:'origins-at-least-safe-v1'});
+export const GENERATOR_SETTINGS=Object.freeze({...V14_SETTINGS,camps:'radial-camps-v1'});
 
 // Decimal spelling only: no rounding, wrapping, exponent notation or random fallback.
 export function normalizeSeed(value) {

@@ -16,9 +16,14 @@ export function findPath(map, start, goal, unsafe, planner='astar') {
   if (!isNavigable(map, start) || unsafe[start] || !goals.length) return null;
   const goalSet=new Set(goals);
   // Minimum Manhattan distance is admissible for unit-cost edge-sharing moves.
-  const heuristic = index => planner==='dijkstra'?0:Math.min(...goals.map(goal=>
-    Math.abs(index % map.width - goal % map.width)
-    + Math.abs(Math.floor(index / map.width) - Math.floor(goal / map.width))));
+  const estimates=planner==='astar'?new Int32Array(map.cells.length).fill(-1):null;
+  const heuristic=index=>{
+    if(planner==='dijkstra')return 0;
+    if(estimates[index]>=0)return estimates[index];
+    let distance=Infinity;
+    for(const goal of goals)distance=Math.min(distance,Math.abs(index%map.width-goal%map.width)+Math.abs(Math.floor(index/map.width)-Math.floor(goal/map.width)));
+    return estimates[index]=distance;
+  };
   const open = new Set([start]);
   const cost = new Map([[start, 0]]);
   const parent = new Map();

@@ -1,4 +1,7 @@
+import {validateCampMap} from './createCampMap.js';
+import {GENERATOR_VERSION as CURRENT_VERSION} from './seed.js';
 import {validateSettlementMap,SETTLEMENT_VERSION} from './createSettlementMap.js';
+import {V13_VERSION} from './seed.js';
 import { validateTrailTerrain } from './trailTerrain.js';
 import { normalizeMap } from '../mapContract.js';
 import { isNavigable } from '../navigationPolicy.js';
@@ -6,7 +9,8 @@ import { neighbors } from '../../agents/findPath.js';
 import { V12_SETTINGS as SETTINGS, V12_VERSION as GENERATOR_VERSION, V8_VERSION, V8_SETTINGS, V9_VERSION, V9_SETTINGS, V10_VERSION, V10_SETTINGS, V11_VERSION, V11_SETTINGS, V5_VERSION, V5_SETTINGS, V6_VERSION, V6_SETTINGS, V7_VERSION, V7_SETTINGS, normalizeSeed } from './seed.js';
 
 export function validateGeneratedMap(candidate) {
-  if(candidate.generation?.version===SETTLEMENT_VERSION)return validateSettlementMap(candidate);
+  if(candidate.generation?.version===CURRENT_VERSION)return validateCampMap(candidate);
+  if([SETTLEMENT_VERSION,V13_VERSION].includes(candidate.generation?.version))return validateSettlementMap(candidate);
   const map = normalizeMap(candidate);
   const settings = map.generation?.version === V5_VERSION ? V5_SETTINGS : map.generation?.version === V6_VERSION ? V6_SETTINGS : map.generation?.version === V7_VERSION ? V7_SETTINGS : map.generation?.version === V8_VERSION ? V8_SETTINGS : map.generation?.version === V9_VERSION ? V9_SETTINGS : map.generation?.version === V10_VERSION ? V10_SETTINGS : map.generation?.version===V11_VERSION?V11_SETTINGS:SETTINGS;
   const fail = (message) => { throw new Error(`Generated map invalid: ${message}`); };
