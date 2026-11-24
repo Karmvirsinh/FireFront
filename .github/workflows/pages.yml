@@ -33,6 +33,16 @@ jobs:
         run: npm test
       - name: Build production site
         run: npm run build
+      - name: Check out the Assignment 6 playtest snapshot
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: 5a99b6fe9f929348f32e99d320532f3bb466370a
+          path: assignment-6-snapshot
+          persist-credentials: false
+      - name: Add the playtest alongside Assignment 5
+        run: |
+          mkdir -p dist/assignment-6
+          tar --exclude=.git -C assignment-6-snapshot -cf - . | tar -xf - -C dist/assignment-6
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
