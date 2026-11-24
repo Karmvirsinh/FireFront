@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FireFront | Simulation workspace</title>
+    <link rel="icon" href="data:," />
+    <script type="module" crossorigin src="/FireFront/assignment-6/assets/index-Dwp03g8k.js"></script>
+    <link rel="stylesheet" crossorigin href="/FireFront/assignment-6/assets/index-BsraTy_b.css">
+  </head>
+  <body>
+    <main id="app" aria-label="FireFront simulation workspace">
+      <header class="workspace-header">
+        <h1>FireFront</h1>
+        <p>Wildfire &amp; evacuation <span id="map-summary">· 64×64 grid</span></p>
+        <div class="workspace-tools"><button id="help-tour" type="button">Help / Tour</button></div>
+      </header>
+      <div class="workspace">
+        <section class="scene-column" aria-labelledby="viewport-title">
+          <div class="viewport-heading">
+            <h2 id="viewport-title">Simulation viewport</h2>
+            <span id="population-summary">20 agents · One ignition</span>
+            <span id="fps-readout" aria-label="Rendered frames per second">FPS: …</span>
+          </div>
+          <div id="simulation-viewport">
+            <canvas id="scene" tabindex="0" aria-label="FireFront environment"
+              aria-describedby="camera-help" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight + - R"></canvas>
+            <div id="map-wind" class="map-wind" hidden>
+              <span aria-hidden="true">N <span id="map-north-arrow" class="map-direction-arrow">➜</span></span>
+              <span id="map-wind-arrow" class="map-direction-arrow" aria-hidden="true" hidden>➜</span>
+              <span id="map-wind-readout">Calm</span>
+            </div>
+          </div>
+          <div id="camera-tools" class="camera-tools" role="group" aria-label="Camera controls">
+            <div class="camera-mode" role="group" aria-label="Drag mode">
+              <button type="button" data-camera-mode="pan" aria-pressed="true">Pan</button>
+              <button type="button" data-camera-mode="orbit" aria-pressed="false">Orbit</button>
+            </div>
+            <div class="camera-zoom" role="group" aria-label="Zoom controls">
+              <button type="button" data-camera-action="out" aria-label="Zoom out" title="Zoom out">−</button>
+              <button type="button" data-camera-action="in" aria-label="Zoom in" title="Zoom in">+</button>
+            </div>
+            <button type="button" data-camera-action="reset">Reset view</button>
+          </div>
+          <p id="camera-help" class="visually-hidden">Choose Pan or Orbit and drag the map. Scroll or pinch to zoom.
+            With the map focused, use the arrow keys to pan or orbit, plus or minus to zoom, and R to reset the view.</p>
+        </section>
+        <aside id="simulation-panel" aria-label="Simulation controls and statistics">
+          <section class="panel-section run-panel" aria-labelledby="simulation-title">
+            <h2 id="simulation-title">Start an evacuation</h2>
+            <p id="fire-status" role="status"></p>
+            <p id="locked-setup" class="note" aria-label="Locked setup" hidden></p>
+            <div class="simulation-actions">
+              <button id="start-fire" type="button" hidden disabled>Start fire</button>
+              <button id="place-ignition" type="button" aria-pressed="false" aria-keyshortcuts="I"><span id="ignition-label">Place ignition</span> <kbd aria-hidden="true">I</kbd></button>
+              <button id="view-results" type="button" hidden>View results</button>
+              <button id="reset-simulation" type="button">Reset simulation</button>
+            </div>
+            <p id="action-feedback" role="status" hidden></p>
+          </section>
+          <form id="generation-form" class="panel-section" aria-labelledby="environment-title" novalidate>
+            <h2 id="environment-title">Environment</h2>
+            <div class="generation-actions">
+              <label for="seed-input">Seed <input id="seed-input" type="text" inputmode="numeric" value="42" autocomplete="off" aria-describedby="generation-status" /></label>
+              <button id="generate-map" type="submit">Generate</button>
+            </div>
+            <p id="generation-status" class="note" role="status"></p>
+            <details id="setup-details">
+            <summary>Evacuation setup</summary>
+            <div class="awareness-setting">
+              <label for="awareness-mode">Awareness</label>
+              <select id="awareness-mode" aria-describedby="awareness-note">
+                <option value="global">Global</option><option value="local">Local</option>
+              </select>
+            </div>
+            <div class="awareness-setting">
+              <label for="planner-mode">Route planner</label>
+              <select id="planner-mode" aria-describedby="planner-note"><option value="astar">A*</option><option value="dijkstra">Dijkstra</option></select>
+            </div>
+            <div class="awareness-setting">
+              <label for="navigation-mode">Navigation</label>
+              <select id="navigation-mode" aria-describedby="navigation-mode-note">
+                <option value="path-first">Path-first</option><option value="flexible">Flexible</option>
+              </select>
+            </div>
+            <details class="setup-explanations">
+              <summary>What do these choices mean?</summary>
+              <p class="note" id="awareness-note"></p>
+              <p class="note" id="planner-note"></p>
+              <p class="note" id="navigation-mode-note"></p>
+            </details>
+            </details>
+          </form>
+          <section id="weather-section" class="panel-section" aria-label="Weather">
+            <fieldset id="fire-weather" class="fire-weather">
+              <legend>Weather</legend>
+              <div class="awareness-setting">
+                <label for="wind-direction">Wind direction</label>
+                <select id="wind-direction">
+                  <option value="north">Toward north</option>
+                  <option value="northeast">Toward northeast</option>
+                  <option value="east" selected>Toward east</option>
+                  <option value="southeast">Toward southeast</option>
+                  <option value="south">Toward south</option>
+                  <option value="southwest">Toward southwest</option>
+                  <option value="west">Toward west</option>
+                  <option value="northwest">Toward northwest</option>
+                </select>
+              </div>
+              <label class="weather-slider" for="wind-speed">
+                Wind speed <output id="wind-speed-value" for="wind-speed">0 km/h</output>
+                <input id="wind-speed" type="range" min="0" max="40" value="0" />
+              </label>
+              <label class="weather-slider" for="air-temperature">
+                Temperature <output id="air-temperature-value" for="air-temperature">20 °C</output>
+                <input id="air-temperature" type="range" min="0" max="40" value="20" />
+              </label>
+            </fieldset>
+          </section>
+          <section class="panel-section" aria-labelledby="counts-title">
+            <h2 id="counts-title">Evacuation <span id="population-detail" class="section-detail">20 agents</span></h2>
+            <dl class="agent-counts" aria-label="Evacuation counts">
+              <div><dt>Waiting</dt><dd id="count-waiting">20</dd></div>
+              <div><dt>Evacuating</dt><dd id="count-evacuating">0</dd></div>
+              <div><dt>Trapped</dt><dd id="count-trapped">0</dd></div>
+              <div><dt>Evacuated</dt><dd id="count-evacuated">0</dd></div>
+              <div><dt>Lost</dt><dd id="count-lost">0</dd></div>
+            </dl>
+          </section>
+          <details id="map-details" class="panel-section">
+            <summary>Map &amp; fuel</summary>
+            <p id="cell-inspection" class="note">Tap the map to inspect a cell.</p>
+            <ul class="map-legend" aria-label="Map legend">
+              <li><span class="swatch start"></span>Origin / assembly</li>
+              <li><span class="swatch safe"></span>Safe destination</li>
+              <li><span class="swatch route"></span>Path / road · no fuel</li>
+              <li><span class="swatch clearing"></span>Clearing · no fuel</li>
+              <li><span class="swatch water"></span>Open water · blocked · no fuel</li>
+              <li><span class="swatch bridge"></span>Wood bridge · walkable while intact</li>
+              <li><span class="swatch obstacle"></span>Blocked / rocks / buildings</li>
+              <li><span class="swatch grass"></span>Grass fuel</li>
+              <li><span class="swatch vegetation"></span>Brush fuel</li>
+              <li><span class="swatch forest"></span>Forest-floor fuel</li>
+            </ul>
+            <p id="navigation-note" class="note">Ground color shows fuel coverage. Models do not mark fuel boundaries. Off-path vegetation is blocked.</p>
+            <h2>Fire states</h2>
+            <ul class="map-legend" aria-label="Fire legend">
+              <li><span class="swatch selected"></span>Selected ignition · cell outline</li>
+              <li><span class="swatch burning"></span>Burning · hazardous · flames</li>
+              <li><span class="swatch hot"></span>Burned-hot · hazardous · embers</li>
+              <li><span class="swatch cool"></span>Burned-cool · no direct hazard · ash</li>
+            </ul>
+            <details class="setup-explanations">
+              <summary>Simulation details</summary>
+              <p id="active-seed" class="note"></p>
+              <p id="building-note" class="note">Buildings block movement.</p>
+              <p class="note">Local hikers sense within four cells and can reconsider older hazards after five seconds trapped.
+                Flexible also permits eligible open ground and fully cooled brush on slopes up to 40°. Generated trails use a 20° limit.
+                Collapsed decks stay closed.</p>
+            </details>
+          </details>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>
