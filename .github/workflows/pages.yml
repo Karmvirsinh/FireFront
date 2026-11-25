@@ -43,6 +43,11 @@ jobs:
         run: |
           mkdir -p dist/assignment-6
           tar --exclude=.git -C assignment-6-snapshot -cf - . | tar -xf - -C dist/assignment-6
+      - name: Add the Assignment 6 simulator-only entry
+        run: |
+          mkdir -p dist/assignment-6/simulator
+          sed '/<\/head>/i\    <style>body.assignment-playtest{display:block}#playtest-feedback,.assignment-playtest .feedback-jump{display:none!important}</style>' \
+            dist/assignment-6/index.html > dist/assignment-6/simulator/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
